@@ -2,11 +2,15 @@ from typing import TYPE_CHECKING, NamedTuple, Optional
 
 from BaseClasses import ItemClassification as IC, Item
 
-from ...constants import get_game_base_id
+from ...game_helpers import (get_items as _get_items, game_item_groups,
+                             create_item as _create_item, create_items as _create_items)
 from ...options import PorgyRadar
 
 if TYPE_CHECKING:
     from ... import UFO50World
+
+
+GAME_NAME = "Porgy"
 
 
 class ItemInfo(NamedTuple):
@@ -37,37 +41,21 @@ item_table: dict[str, ItemInfo] = {
 }
 
 
-# this is for filling out item_name_to_id, it should be static regardless of yaml options
 def get_items() -> dict[str, int]:
-    return {f"Porgy - {name}": data.id_offset + get_game_base_id("Porgy") for name, data in item_table.items()}
+    return _get_items(GAME_NAME, item_table)
 
 
-# this should return the item groups for this game, independent of yaml options
 def get_item_groups() -> dict[str, set[str]]:
-    item_groups: dict[str, set[str]] = {"Porgy": {f"Porgy - {item_name}" for item_name in item_table.keys()}}
-    return item_groups
+    return game_item_groups(GAME_NAME, item_table)
 
 
-# for when the world needs to create an item at random (like with random filler items)
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
-    base_id = get_game_base_id("Porgy")
-    if item_name.startswith("Porgy - "):
-        item_name = item_name.split(" - ", 1)[1]
-    item_data = item_table[item_name]
-    return Item(f"Porgy - {item_name}", item_class or item_data.classification,
-                base_id + item_data.id_offset, world.player)
+    return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
-# for when the world is getting the items to place into the multiworld's item pool
 def create_items(world: "UFO50World") -> list[Item]:
-    items_to_create: dict[str, int] = {item_name: data.quantity for item_name, data in item_table.items()}
-    porgy_items: list[Item] = []
-    if world.options.porgy_radar == PorgyRadar.option_always_on:
-        items_to_create["Radar System Module"] = 0
-    for item_name, quantity in items_to_create.items():
-        for _ in range(quantity):
-            porgy_items.append(create_item(item_name, world))
-    return porgy_items
+    overrides = {"Radar System Module": 0} if world.options.porgy_radar == PorgyRadar.option_always_on else None
+    return _create_items(GAME_NAME, item_table, world, overrides)
 
 
 filler_items = ["Porgy - Fuel Tank", "Porgy - Torpedo Upgrade"]

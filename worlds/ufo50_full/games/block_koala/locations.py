@@ -1,12 +1,17 @@
 from typing import TYPE_CHECKING, NamedTuple
 
-from BaseClasses import Region, Location, Item, ItemClassification
-from worlds.generic.Rules import add_rule
+from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
+from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
+                               place_completion_event)
 
 if TYPE_CHECKING:
     from ... import UFO50World
+
+
+GAME_NAME = "Block Koala"
 
 
 class LocationInfo(NamedTuple):
@@ -90,27 +95,22 @@ sphere_1_locs: list[str] = ["Level 1", "Garden"]
 
 
 def get_locations() -> dict[str, int]:
-    return {f"Block Koala - {name}": data.id_offset + get_game_base_id("Block Koala") for name, data in location_table.items()}
+    return _get_locations(GAME_NAME, location_table)
 
 
 def get_location_groups() -> dict[str, set[str]]:
-    location_groups: dict[str, set[str]] = {"Block Koala": {f"Block Koala - {loc_name}"
-                                                             for loc_name in location_table.keys()}}
-    return location_groups
+    return game_location_groups(GAME_NAME, location_table)
 
 
 def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
+    base_id = get_game_base_id(GAME_NAME)
     for loc_name, loc_data in location_table.items():
-        if loc_name == "Cherry" and "Block Koala" not in world.options.cherry_allowed_games:
+        region = regions[loc_data.region_name]
+        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
             break
-        if loc_name in ["Gold", "Cherry"] and "Block Koala" in world.goal_games:
-            if (loc_name == "Gold" and "Block Koala" not in world.options.cherry_allowed_games) or loc_name == "Cherry":
-                loc = Location(world.player, f"Block Koala - {loc_name}", None, regions[loc_data.region_name])
-                loc.place_locked_item(Item("Completed Block Koala", ItemClassification.progression, None, world.player))
-                add_rule(world.get_location("Completed All Games"), lambda state: state.has("Completed Block Koala", world.player))
-                regions[loc_data.region_name].locations.append(loc)
-                break
+        if is_completion_event_location(world, GAME_NAME, loc_name):
+            place_completion_event(world, GAME_NAME, loc_name, region)
+            break
 
-        loc = Location(world.player, f"Block Koala - {loc_name}", get_game_base_id("Block Koala") + loc_data.id_offset,
-                       regions[loc_data.region_name])
-        regions[loc_data.region_name].locations.append(loc)
+        loc = Location(world.player, f"{GAME_NAME} - {loc_name}", base_id + loc_data.id_offset, region)
+        region.locations.append(loc)

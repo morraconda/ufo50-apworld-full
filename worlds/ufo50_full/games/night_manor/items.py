@@ -1,18 +1,16 @@
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification as IC, Item
 
-from ...constants import get_game_base_id
+from ...game_helpers import (ItemInfo, get_items as _get_items, game_item_groups,
+                             create_item as _create_item, create_items as _create_items)
 from .locations import sphere_1_locs
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-class ItemInfo(NamedTuple):
-    id_offset: int
-    classification: IC
-    quantity: int = 1
+GAME_NAME = "Night Manor"
 
 
 # TODO: Add conditional item classification based on if victory type needed is gift, gold, cherry.
@@ -93,12 +91,11 @@ item_table: dict[str, ItemInfo] = {
 
 
 def get_items() -> dict[str, int]:
-    return {f"Night Manor - {name}": data.id_offset + get_game_base_id("Night Manor") for name, data in item_table.items()}
+    return _get_items(GAME_NAME, item_table)
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    item_groups: dict[str, set[str]] = {"Night Manor": {
-        f"Night Manor - {item_name}" for item_name in item_table.keys()}}
+    item_groups = game_item_groups(GAME_NAME, item_table)
     item_groups.update({
         "Night Manor - Journal Entries": {
             "Night Manor - Journal Entry 1",
@@ -145,28 +142,18 @@ def get_item_groups() -> dict[str, set[str]]:
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
-    base_id = get_game_base_id("Night Manor")
-    if item_name.startswith("Night Manor - "):
-        item_name = item_name.split(" - ", 1)[1]
-    item_data = item_table[item_name]
-    return Item(f"Night Manor - {item_name}", item_class or item_data.classification,
-                base_id + item_data.id_offset, world.player)
+    return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    items_to_create: dict[str, int] = {item_name: data.quantity for item_name, data in item_table.items()}
-    night_manor_items: list[Item] = []
+    overrides = None
     if world.options.nm_early_pin:
-        items_to_create["Hairpin"] = 0
         hairpin = create_item("Hairpin", world)
-        loc = world.get_location("Night Manor - " + world.random.choice(sphere_1_locs))
+        loc = world.get_location(f"{GAME_NAME} - " + world.random.choice(sphere_1_locs))
         loc.place_locked_item(hairpin)
-
-    for item_name, quantity in items_to_create.items():
-        for _ in range(quantity):
-            night_manor_items.append(create_item(item_name, world))
-    return night_manor_items
+        overrides = {"Hairpin": 0}
+    return _create_items(GAME_NAME, item_table, world, overrides)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return "Night Manor - Yellow Note"
+    return f"{GAME_NAME} - Yellow Note"

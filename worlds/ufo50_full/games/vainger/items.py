@@ -1,18 +1,16 @@
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification as IC, Item
-from ...constants import get_game_base_id
+
+from ...game_helpers import (ItemInfo, get_items as _get_items, game_item_groups,
+                             create_item as _create_item, create_items as _create_items)
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 # adapted from Barbuta, thanks Scipio! <3
 
-
-class ItemInfo(NamedTuple):
-    id_offset: int
-    classification: IC
-    quantity: int
+GAME_NAME = "Vainger"
 
 
 item_table: dict[str, ItemInfo] = {
@@ -32,32 +30,24 @@ item_table: dict[str, ItemInfo] = {
 
 
 def get_items() -> dict[str, int]:
-    return {f"Vainger - {name}": data.id_offset + get_game_base_id("Vainger") for name, data in item_table.items()}
+    return _get_items(GAME_NAME, item_table)
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    item_groups: dict[str, set[str]] = {"Vainger": {f"Vainger - {item_name}" for item_name in item_table.keys()},
-                                        "Vainger - Mods": {f"Vainger - {item_name}" for item_name in ["Heat Mod", "Multi Mod", "Pulse Mod", "Force Mod"]},
-                                        "Vainger - Key Codes": {f"Vainger - Key Code {letter}" for letter in ["A", "B", "C", "D"]}}
+    item_groups = game_item_groups(GAME_NAME, item_table)
+    item_groups[f"{GAME_NAME} - Mods"] = {f"{GAME_NAME} - {name}"
+                                          for name in ["Heat Mod", "Multi Mod", "Pulse Mod", "Force Mod"]}
+    item_groups[f"{GAME_NAME} - Key Codes"] = {f"{GAME_NAME} - Key Code {letter}" for letter in ["A", "B", "C", "D"]}
     return item_groups
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
-    if item_name.startswith("Vainger - "):
-        item_name = item_name.split(" - ", 1)[1]
-    item_data = item_table[item_name]
-    return Item(f"Vainger - {item_name}", item_data.classification,
-                item_data.id_offset + get_game_base_id("Vainger"), world.player)
+    return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    items_to_create: dict[str, int] = {item_name: data.quantity for item_name, data in item_table.items()}
-    vainger_items: list[Item] = []
-    for item_name, quantity in items_to_create.items():
-        for _ in range(quantity):
-            vainger_items.append(create_item(item_name, world))
-    return vainger_items
+    return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return "Vainger - Shield Upgrade"
+    return f"{GAME_NAME} - Shield Upgrade"

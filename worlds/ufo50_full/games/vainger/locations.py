@@ -1,18 +1,27 @@
 from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, ItemClassification, Item, Location
-from worlds.generic.Rules import add_rule
 
 from ...constants import get_game_base_id
+from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
+                               place_completion_event)
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 # adapted from Barbuta, thanks Scipio! <3
 
+GAME_NAME = "Vainger"
+
 
 class LocationInfo(NamedTuple):
     id_offset: int | None
     region_name: str
+
+
+def _is_real_location(_name: str, data: LocationInfo) -> bool:
+    """Vainger's ``id_offset is None`` entries are event locations, not real checks."""
+    return data.id_offset is not None
 
 
 # the letter is the column (left to right), the number is the row (top to bottom)
@@ -85,32 +94,25 @@ location_table: dict[str, LocationInfo] = {
 
 
 def get_locations() -> dict[str, int]:
-    return {f"Vainger - {name}": data.id_offset + get_game_base_id("Vainger") for name, data in location_table.items()
-            if data.id_offset is not None}
+    return _get_locations(GAME_NAME, location_table, _is_real_location)
 
 
 def get_location_groups() -> dict[str, set[str]]:
-    location_groups: dict[str, set[str]] = {"Vainger": {f"Vainger - {loc_name}" for loc_name, loc_data in location_table.items()
-                                                        if loc_data.id_offset is not None}}
-    return location_groups
+    return game_location_groups(GAME_NAME, location_table, _is_real_location)
 
 
 def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
     for loc_name, loc_data in location_table.items():
-        if loc_name == "Cherry" and "Vainger" not in world.options.cherry_allowed_games:
+        region = regions[f"{GAME_NAME} - {loc_data.region_name}"]
+        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
             break
-        region = regions[f"Vainger - {loc_data.region_name}"]
-        if loc_name in ["Gold", "Cherry"] and "Vainger" in world.goal_games:
-            if (loc_name == "Gold" and "Vainger" not in world.options.cherry_allowed_games) or loc_name == "Cherry":
-                loc = Location(world.player, f"Vainger - {loc_name}", None, region)
-                loc.place_locked_item(Item("Completed Vainger", ItemClassification.progression, None, world.player))
-                add_rule(world.get_location("Completed All Games"), lambda state: state.has("Completed Vainger", world.player))
-                region.locations.append(loc)
-                break
+        if is_completion_event_location(world, GAME_NAME, loc_name):
+            place_completion_event(world, GAME_NAME, loc_name, region)
+            break
 
-        loc = Location(world.player, f"Vainger - {loc_name}",
-                       loc_data.id_offset + get_game_base_id("Vainger") if loc_data.id_offset is not None else None, region)
+        loc = Location(world.player, f"{GAME_NAME} - {loc_name}",
+                       loc_data.id_offset + get_game_base_id(GAME_NAME) if loc_data.id_offset is not None else None, region)
         if loc_data.id_offset is None:      # this is an event location
-            loc.place_locked_item(Item(f"Vainger - {loc_name}", ItemClassification.progression, None,
+            loc.place_locked_item(Item(f"{GAME_NAME} - {loc_name}", ItemClassification.progression, None,
                                        world.player))
         region.locations.append(loc)

@@ -10,18 +10,11 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Block Koala"
+GAME_NAME = "Waldorf's Journey"
 
-regions: list[str] = [
-    "Menu",
-    "Start",
-    "Bottom Left",
-    "Bottom Right",
-    "Mid Left",
-    "Mid Right",
-    "Top",
-    "Boss",
-]
+# Waldorf's Journey is a short game; every check is reachable from the start, so there
+# is just the required Menu region plus one region holding everything.
+regions: list[str] = ["Menu", "Island"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

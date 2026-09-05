@@ -3,14 +3,6 @@ from typing import Dict
 GAME_NAME: str = "UFO 50"
 BASE_ID: int = 21061550_00_000  # UFO50, 2 digits for the game number, 3 digits for its items/locations
 
-# client installation data
-CLIENT_NAME = f"{GAME_NAME.replace(' ', '')}Client"
-GAME_HASH = "b2408e0357ef3cb62bae6af109cd5819"  # md5 for data.win
-DLL_NAME = "gm-apclientpp.dll"
-DLL_URL = "https://api.github.com/repos/black-sliver/gm-apclientpp/releases"
-PATCH_NAME = "ufo_50_basepatch.bsdiff4"
-PATCH_URL = "https://api.github.com/repos/UFO-50-Archipelago/basepatch/releases"
-
 
 # the ids here are the internal ids, the order is the in-game order
 game_ids: dict[str, int] = {

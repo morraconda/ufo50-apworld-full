@@ -1,18 +1,15 @@
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification as IC, Item
 
-from ...constants import get_game_base_id
+from ...game_helpers import (ItemInfo, get_items as _get_items, game_item_groups,
+                             create_item as _create_item, create_items as _create_items)
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-class ItemInfo(NamedTuple):
-    id_offset: int
-    classification: IC
-    quantity: int
-
+GAME_NAME = "Barbuta"
 
 item_table: dict[str, ItemInfo] = {
     "$50": ItemInfo(0, IC.progression, 5),
@@ -31,42 +28,21 @@ item_table: dict[str, ItemInfo] = {
 }
 
 
-# this is for filling out item_name_to_id, it should be static regardless of yaml options
 def get_items() -> dict[str, int]:
-    return {f"Barbuta - {name}": data.id_offset + get_game_base_id("Barbuta") for name, data in item_table.items()}
+    return _get_items(GAME_NAME, item_table)
 
 
-# this should return the item groups for this game, independent of yaml options
-# you should include a group that contains all items for this game that is called the same thing as the game
 def get_item_groups() -> dict[str, set[str]]:
-    item_groups: dict[str, set[str]] = {"Barbuta": {f"Barbuta - {item_name}" for item_name in item_table.keys()}}
-    return item_groups
+    return game_item_groups(GAME_NAME, item_table)
 
 
-# for when the world needs to create an item at random (like with random filler items)
-# the first argument must be the item name. It must be able to handle the world giving it an actual item name
-# the second argument must be the world class
-# the third argument is an item classification, `item_class: ItemClassification = None`
-# you must put the third argument in, but you are not required to use it
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
-    base_id = get_game_base_id("Barbuta")
-    if item_name.startswith("Barbuta - "):
-        item_name = item_name.split(" - ", 1)[1]
-    item_data = item_table[item_name]
-    return Item(f"Barbuta - {item_name}", item_class or item_data.classification,
-                base_id + item_data.id_offset, world.player)
+    return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
-# for when the world is getting the items to place into the multiworld's item pool
-# you must pass in the world class as the argument
 def create_items(world: "UFO50World") -> list[Item]:
-    items_to_create: dict[str, int] = {item_name: data.quantity for item_name, data in item_table.items()}
-    barbuta_items: list[Item] = []
-    for item_name, quantity in items_to_create.items():
-        for _ in range(quantity):
-            barbuta_items.append(create_item(item_name, world))
-    return barbuta_items
+    return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return "Barbuta - Egg"
+    return f"{GAME_NAME} - Egg"

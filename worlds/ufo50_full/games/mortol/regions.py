@@ -3,25 +3,18 @@ from typing import TYPE_CHECKING
 from BaseClasses import Region
 
 from ...game_helpers import build_regions
-from .locations import create_locations
+from .locations import LEVEL_NAMES, create_locations
 from .rules import create_rules
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Block Koala"
+GAME_NAME = "Mortol"
 
-regions: list[str] = [
-    "Menu",
-    "Start",
-    "Bottom Left",
-    "Bottom Right",
-    "Mid Left",
-    "Mid Right",
-    "Top",
-    "Boss",
-]
+# Linear progression: Menu -> 1-A -> 1-B -> ... -> 4-B, one region per level. Each
+# level's clear location and its life pickups live in that level's region.
+regions: list[str] = ["Menu"] + list(LEVEL_NAMES)
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

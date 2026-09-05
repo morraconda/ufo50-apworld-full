@@ -1,53 +1,37 @@
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification as IC, Item
 
-from ...constants import get_game_base_id
+from ...game_helpers import (ItemInfo, get_items as _get_items, game_item_groups,
+                             create_item as _create_item, create_items as _create_items)
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-class ItemInfo(NamedTuple):
-    id_offset: int
-    classification: IC
-    quantity: int = 1
-
+GAME_NAME = "Party House"
 
 item_table: dict[str, ItemInfo] = {
     "+1 Starting Cash": ItemInfo(0, IC.filler, 3),
-    "+1 Starting Popularity": ItemInfo(1, IC.filler, 2)
+    "+1 Starting Popularity": ItemInfo(1, IC.filler, 2),
 }
 
 
 def get_items() -> dict[str, int]:
-    return {f"Party House - {name}": data.id_offset + get_game_base_id("Party House") for name, data in item_table.items()}
+    return _get_items(GAME_NAME, item_table)
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    item_groups: dict[str, set[str]] = {"Party House": {
-        f"Party House - {item_name}" for item_name in item_table.keys()}}
-    return item_groups
+    return game_item_groups(GAME_NAME, item_table)
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
-    base_id = get_game_base_id("Party House")
-    if item_name.startswith("Party House - "):
-        item_name = item_name.split(" - ", 1)[1]
-    item_data = item_table[item_name]
-    return Item(f"Party House - {item_name}", item_class or item_data.classification,
-                base_id + item_data.id_offset, world.player)
+    return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    items_to_create: dict[str, int] = {item_name: data.quantity for item_name, data in item_table.items()}
-    party_house_items: list[Item] = []
-
-    for item_name, quantity in items_to_create.items():
-        for _ in range(quantity):
-            party_house_items.append(create_item(item_name, world))
-    return party_house_items
+    return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return world.random.choice(["Party House - +1 Starting Cash", "Party House - +1 Starting Popularity"])
+    return world.random.choice([f"{GAME_NAME} - +1 Starting Cash", f"{GAME_NAME} - +1 Starting Popularity"])

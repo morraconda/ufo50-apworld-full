@@ -1,68 +1,40 @@
 from typing import ClassVar, Any, Union
 
-import Utils
 from BaseClasses import Tutorial, Region, Item, ItemClassification, Location
 from Options import OptionError
-from settings import Group, UserFilePath, LocalFolderPath, Bool
+from settings import Group, Bool
 from worlds.AutoWorld import World, WebWorld
 from worlds.generic.Rules import add_rule
-from worlds.LauncherComponents import components, Component, launch_subprocess, Type as ComponentType
 
 from .constants import *
 from . import options
 
 from .general_items import cartridge_items, cartridge_item_group
 
-from .games import barbuta, porgy, vainger, night_manor, party_house, block_koala
+from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koala, rail_heist, mortol,
+                    waldorf)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
 from .games.night_manor import items, locations, regions
 from .games.party_house import items, locations, regions
 from .games.block_koala import items, locations, regions
-
-
-def launch_client(*args: str):
-    from .Client import launch
-    launch_subprocess(launch(*args), name=CLIENT_NAME)
-
-
-components.append(
-    Component(f"UFO 50", game_name="UFO 50", func=launch_client, component_type=ComponentType.CLIENT,
-              supports_uri=True)
-)
+from .games.rail_heist import items, locations, regions
+from .games.mortol import items, locations, regions
+from .games.waldorf import items, locations, regions
 
 
 class UFO50Settings(Group):
-    class GamePath(UserFilePath):
-        """Path to the game executable"""
-        is_exe = True
+    # The game is modded via the UFO 50 Mod Loader (GMLoader); there is no Archipelago-side
+    # installer or launcher. Connection details are entered on the in-game connection screen.
 
-    class InstallFolder(LocalFolderPath):
-        """Path to the mod installation folder"""
-        description = "the folder to install UFO 50 Archipelago to (do not select vanilla UFO 50 folder)"
-
-    class LaunchGame(Bool):
-        """Set this to false to never autostart the game"""
-
-    class LaunchCommand(str):
-        """
-        The console command that will be used to launch the game
-        The command will be executed with the installation folder as the current directory
-        """
-
-    class AllowUnimplemented (Bool):
+    class AllowUnimplemented(Bool):
         """
         Allow the player to choose unimplemented games.
         These games will only send checks when the player does the Garden, Gold, or Cherry checks.
         This can cause issues because the time per check is much higher than normal, and some games are very long.
         """
 
-    exe_path: GamePath = GamePath("ufo50.exe")
-    install_folder: InstallFolder = InstallFolder("UFO 50")
-    launch_game: Union[LaunchGame, bool] = True
-    launch_command: LaunchCommand = LaunchCommand("ufo50.exe" if Utils.is_windows
-                                                  else "wine ufo50.exe")
     allow_unimplemented: Union[AllowUnimplemented, bool] = False
 
 
@@ -86,14 +58,17 @@ class UFO50Web(WebWorld):
 # try to keep them in the same order as on the main menu
 ufo50_games: dict = {
     "Barbuta": barbuta,
+    "Waldorf's Journey": waldorf,
+    "Mortol": mortol,
     "Block Koala": block_koala,
     "Porgy": porgy,
+    "Rail Heist": rail_heist,
     "Vainger": vainger,
     "Night Manor": night_manor,
     "Party House": party_house,
 }
 
-allowable_unimplemented: set[str] = {"Ninpek", "Magic Garden", "Velgress", "Waldorf's Journey"}
+allowable_unimplemented: set[str] = {"Ninpek", "Magic Garden", "Velgress"}
 
 
 # for the purpose of generically making the gift, gold, and cherry locations
@@ -229,7 +204,8 @@ class UFO50World(World):
             string_end = " - Gold"
             if game_name in self.options.cherry_allowed_games:
                 string_end = " - Cherry"
-            add_rule(victory_location, lambda state: state.can_reach_location(game_name + string_end, self.player))
+            add_rule(victory_location, lambda state, loc=game_name + string_end:
+                     state.can_reach_location(loc, self.player))
 
         for game_name in self.included_games:
             game = ufo50_games[game_name]

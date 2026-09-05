@@ -1,0 +1,61 @@
+"""UFO 50's internal game ids, 1..50, in numeric order.
+
+This is the same data as ``constants.game_ids`` (which is kept in in-game menu
+order); this module lists it by id for quick reference. ``id_to_name`` is the
+inverse map.
+"""
+
+game_ids: dict[str, int] = {
+    "Mortol II": 1,
+    "Attactics": 2,
+    "Campanella": 3,
+    "Camouflage": 4,
+    "Devilition": 5,
+    "Golfaria": 6,
+    "Vainger": 7,
+    "Campanella 3": 8,
+    "Fist Hell": 9,
+    "Porgy": 10,
+    "Mooncat": 11,
+    "Grimstone": 12,
+    "Rail Heist": 13,
+    "Quibble Race": 14,
+    "Velgress": 15,
+    "Warptank": 16,
+    "Star Waspir": 17,
+    "Block Koala": 18,
+    "Divers": 19,
+    "Bug Hunter": 20,
+    "Waldorf's Journey": 21,
+    "Bushido Ball": 22,
+    "Pingolf": 23,
+    "Rakshasa": 24,
+    "Combatants": 25,
+    "Kick Club": 26,
+    "Magic Garden": 27,
+    "The Big Bell Race": 28,
+    "Mortol": 29,
+    "Overbold": 30,
+    "Elfazar's Hat": 31,
+    "Onion Delivery": 32,
+    "Lords of Diskonia": 33,
+    "Ninpek": 34,
+    "Valbrace": 35,
+    "Party House": 36,
+    "Pilot Quest": 37,
+    "Campanella 2": 38,
+    "Night Manor": 39,
+    "Barbuta": 40,
+    "Mini & Max": 41,
+    "Hyper Contender": 42,
+    "Hot Foot": 43,
+    "Rock On! Island": 44,
+    "Cyber Owls": 45,
+    "Caramel Caramel": 46,
+    "Seaside Drive": 47,
+    "Planet Zoldath": 48,
+    "Paint Chase": 49,
+    "Avianos": 50,
+}
+
+id_to_name: dict[int, str] = {num: name for name, num in game_ids.items()}

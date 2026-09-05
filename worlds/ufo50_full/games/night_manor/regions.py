@@ -1,7 +1,8 @@
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
+from ...game_helpers import build_regions
 from .locations import create_locations
 from .rules import create_rules
 
@@ -9,10 +10,7 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-# not sure if we really need this yet, but making it in case we need it later since it's easy to remove
-class RegionInfo(NamedTuple):
-    rooms: list[str] = []  # rooms this region contains, for the purpose of the garden prize access rule
-
+GAME_NAME = "Night Manor"
 
 regions: list[str] = [
     "Menu",  # the non-existent start menu, every game needs a region named "Game Name - Menu"
@@ -30,11 +28,4 @@ regions: list[str] = [
 # it must return the regions that it created
 # it is recommended that you prepend each region name with the game it is from to avoid overlap
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:
-    night_manor_regions: dict[str, Region] = {}
-    for region_name in regions:
-        night_manor_regions[region_name] = Region(f"Night Manor - {region_name}", world.player, world.multiworld)
-
-    create_locations(world, night_manor_regions)
-    create_rules(world, night_manor_regions)
-
-    return night_manor_regions
+    return build_regions(world, GAME_NAME, regions, create_locations, create_rules)

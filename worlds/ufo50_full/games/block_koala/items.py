@@ -1,19 +1,16 @@
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification as IC, Item
-from worlds.sc2.item import item_groups
 
-from ...constants import get_game_base_id
+from ...game_helpers import (ItemInfo, get_items as _get_items, game_item_groups,
+                             create_item as _create_item, create_items as _create_items)
 from .locations import sphere_1_locs
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-class ItemInfo(NamedTuple):
-    id_offset: int
-    classification: IC
-    quantity: int = 1
+GAME_NAME = "Block Koala"
 
 item_table: dict[str, ItemInfo] = {
     "Start Gate": ItemInfo(0, IC.progression),
@@ -22,41 +19,30 @@ item_table: dict[str, ItemInfo] = {
     "Mid Left Gate": ItemInfo(3, IC.progression),
     "Top Right Gates": ItemInfo(4, IC.progression),
     "Boss Gate": ItemInfo(6, IC.progression),
-    "Koala Fact": ItemInfo(101, IC.filler, quantity=44)
+    "Koala Fact": ItemInfo(101, IC.filler, quantity=44),
 }
 
 
 def get_items() -> dict[str, int]:
-    return {f"Block Koala - {name}": data.id_offset + get_game_base_id("Block Koala") for name, data in item_table.items()}
+    return _get_items(GAME_NAME, item_table)
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    return {"Block Koala": {f"Block Koala - {item_name}" for item_name in item_table.keys()}}
+    return game_item_groups(GAME_NAME, item_table)
+
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
-    base_id = get_game_base_id("Block Koala")
-    if item_name.startswith("Block Koala - "):
-        item_name = item_name.split(" - ", 1)[1]
-    item_data = item_table[item_name]
-    return Item(f"Block Koala - {item_name}", item_class or item_data.classification,
-                base_id + item_data.id_offset, world.player)
+    return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    items_to_create: dict[str, int] = {item_name: data.quantity for item_name, data in item_table.items()}
-    block_koala_items: list[Item] = []
+    overrides = None
     if world.options.block_koala_early_start_gate:
-        items_to_create["Start Gate"] = 0
         start_gate = create_item("Start Gate", world)
-        loc = world.get_location("Block Koala - " + world.random.choice(sphere_1_locs))
-        loc.place_locked_item(start_gate)
-
-    for item_name, quantity in items_to_create.items():
-        for _ in range(quantity):
-            block_koala_items.append(create_item(item_name, world))
-    return block_koala_items
+        world.get_location(f"{GAME_NAME} - " + world.random.choice(sphere_1_locs)).place_locked_item(start_gate)
+        overrides = {"Start Gate": 0}
+    return _create_items(GAME_NAME, item_table, world, overrides)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return "Block Koala - Koala Fact"
-
+    return f"{GAME_NAME} - Koala Fact"

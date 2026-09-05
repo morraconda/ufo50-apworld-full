@@ -1,7 +1,8 @@
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
+from ...game_helpers import build_regions
 from .locations import create_locations
 from .rules import create_rules
 
@@ -10,9 +11,7 @@ if TYPE_CHECKING:
 
 # adapted from Barbuta, thanks Scipio! <3
 
-
-class RegionInfo(NamedTuple):
-    pass
+GAME_NAME = "Vainger"
 
 
 # using genepods as the main regions instead of rooms/entrances to avoid having to use
@@ -53,11 +52,4 @@ regions: list[str] = [
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:
-    vainger_regions: dict[str, Region] = {}
-    for region_name in regions:
-        vainger_regions[f"Vainger - {region_name}"] = Region(f"Vainger - {region_name}", world.player, world.multiworld)
-
-    create_locations(world, vainger_regions)
-    create_rules(world, vainger_regions)
-
-    return vainger_regions
+    return build_regions(world, GAME_NAME, regions, create_locations, create_rules, prefix_keys=True)

@@ -10,17 +10,14 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Block Koala"
+GAME_NAME = "Rail Heist"
 
+# Rail Heist has no in-game progression gating: every level can be selected from the
+# main menu at the start of the game. The only region besides the required Menu is the
+# one that holds all of the level checks.
 regions: list[str] = [
     "Menu",
-    "Start",
-    "Bottom Left",
-    "Bottom Right",
-    "Mid Left",
-    "Mid Right",
-    "Top",
-    "Boss",
+    "Levels",
 ]
 
 

@@ -2,12 +2,17 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, NamedTuple
 
 from BaseClasses import Region, Location, Item, ItemClassification
-from worlds.generic.Rules import add_rule
 
 from ...constants import get_game_base_id
+from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
+                               place_completion_event)
 
 if TYPE_CHECKING:
     from ... import UFO50World
+
+
+GAME_NAME = "Porgy"
 
 
 class Hidden(IntEnum):
@@ -147,32 +152,25 @@ event_table: dict[str, EventInfo] = {
 
 # this is for filling out location_name_to_id, it should be static regardless of yaml options
 def get_locations() -> dict[str, int]:
-    return {f"Porgy - {name}": data.id_offset + get_game_base_id("Porgy") for name, data in location_table.items()}
+    return _get_locations(GAME_NAME, location_table)
 
 
-# this should return the location groups for this game, independent of yaml options
-# you should include a group that contains all location for this game that is called the same thing as the game
 def get_location_groups() -> dict[str, set[str]]:
-    location_groups: dict[str, set[str]] = {"Porgy": {f"Porgy - {loc_name}" for loc_name in location_table.keys()}}
-    return location_groups
+    return game_location_groups(GAME_NAME, location_table)
 
 
-# this is not a required function, but a recommended one -- the world class does not call this function
 def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
+    base_id = get_game_base_id(GAME_NAME)
     for loc_name, loc_data in location_table.items():
-        if loc_name == "Cherry" and "Porgy" not in world.options.cherry_allowed_games:
+        region = regions[loc_data.region_name]
+        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
             break
-        if loc_name in ["Gold", "Cherry"] and "Porgy" in world.goal_games:
-            if (loc_name == "Gold" and "Porgy" not in world.options.cherry_allowed_games) or loc_name == "Cherry":
-                loc = Location(world.player, f"Porgy - {loc_name}", None, regions[loc_data.region_name])
-                loc.place_locked_item(Item("Completed Porgy", ItemClassification.progression, None, world.player))
-                add_rule(world.get_location("Completed All Games"), lambda state: state.has("Completed Porgy", world.player))
-                regions[loc_data.region_name].locations.append(loc)
-                break
+        if is_completion_event_location(world, GAME_NAME, loc_name):
+            place_completion_event(world, GAME_NAME, loc_name, region)
+            break
 
-        loc = Location(world.player, f"Porgy - {loc_name}", get_game_base_id("Porgy") + loc_data.id_offset,
-                       regions[loc_data.region_name])
-        regions[loc_data.region_name].locations.append(loc)
+        loc = Location(world.player, f"{GAME_NAME} - {loc_name}", base_id + loc_data.id_offset, region)
+        region.locations.append(loc)
 
     for event_name, event_data in event_table.items():
         event_loc = Location(world.player, f"Porgy - {event_name}", None, regions[event_data.region_name])

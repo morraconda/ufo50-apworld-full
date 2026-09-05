@@ -1,12 +1,17 @@
 from typing import TYPE_CHECKING, NamedTuple
 
-from BaseClasses import Region, Location, Item, ItemClassification
-from worlds.generic.Rules import add_rule
+from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
+from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
+                               place_completion_event)
 
 if TYPE_CHECKING:
     from ... import UFO50World
+
+
+GAME_NAME = "Party House"
 
 
 class LocationInfo(NamedTuple):
@@ -28,28 +33,22 @@ location_table: dict[str, LocationInfo] = {
 
 
 def get_locations() -> dict[str, int]:
-    return {f"Party House - {name}": data.id_offset + get_game_base_id("Party House") for name, data in location_table.items()}
+    return _get_locations(GAME_NAME, location_table)
 
 
 def get_location_groups() -> dict[str, set[str]]:
-    location_groups: dict[str, set[str]] = {"Party House": {f"Party House - {loc_name}"
-                                                            for loc_name in location_table.keys()}}
-    return location_groups
+    return game_location_groups(GAME_NAME, location_table)
 
 
 def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
+    base_id = get_game_base_id(GAME_NAME)
     for loc_name, loc_data in location_table.items():
-        if loc_name == "Cherry" and "Party House" not in world.options.cherry_allowed_games:
+        region = regions[loc_data.region_name]
+        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
             break
-        if loc_name in ["Gold", "Cherry"] and "Party House" in world.goal_games:
-            if (loc_name == "Gold" and "Party House" not in world.options.cherry_allowed_games) or loc_name == "Cherry":
-                loc = Location(world.player, f"Party House - {loc_name}", None, regions[loc_data.region_name])
-                loc.place_locked_item(Item("Completed Party House", ItemClassification.progression, None, world.player))
-                add_rule(world.get_location("Completed All Games"),
-                         lambda state: state.has("Completed Party House", world.player))
-                regions[loc_data.region_name].locations.append(loc)
-                break
+        if is_completion_event_location(world, GAME_NAME, loc_name):
+            place_completion_event(world, GAME_NAME, loc_name, region)
+            break
 
-        loc = Location(world.player, f"Party House - {loc_name}", get_game_base_id("Party House") + loc_data.id_offset,
-                       regions[loc_data.region_name])
-        regions[loc_data.region_name].locations.append(loc)
+        loc = Location(world.player, f"{GAME_NAME} - {loc_name}", base_id + loc_data.id_offset, region)
+        region.locations.append(loc)
