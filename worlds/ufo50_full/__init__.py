@@ -12,7 +12,7 @@ from . import options
 from .general_items import cartridge_items, cartridge_item_group
 
 from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koala, rail_heist, mortol,
-                    waldorf)
+                    waldorf, magic_garden, mortol_ii)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
@@ -22,6 +22,8 @@ from .games.block_koala import items, locations, regions
 from .games.rail_heist import items, locations, regions
 from .games.mortol import items, locations, regions
 from .games.waldorf import items, locations, regions
+from .games.magic_garden import items, locations, regions
+from .games.mortol_ii import items, locations, regions
 
 
 class UFO50Settings(Group):
@@ -58,6 +60,8 @@ class UFO50Web(WebWorld):
 # try to keep them in the same order as on the main menu
 ufo50_games: dict = {
     "Barbuta": barbuta,
+    "Mortol II": mortol_ii,
+    "Magic Garden": magic_garden,
     "Waldorf's Journey": waldorf,
     "Mortol": mortol,
     "Block Koala": block_koala,
@@ -68,7 +72,7 @@ ufo50_games: dict = {
     "Party House": party_house,
 }
 
-allowable_unimplemented: set[str] = {"Ninpek", "Magic Garden", "Velgress"}
+allowable_unimplemented: set[str] = {"Ninpek", "Velgress"}
 
 
 # for the purpose of generically making the gift, gold, and cherry locations
@@ -294,7 +298,7 @@ class UFO50World(World):
         self.multiworld.itempool += created_items
 
     # games where the filler is a nothing item, so let's just exclude these where we can
-    bad_filler_games: set[str] = {"Night Manor"}
+    bad_filler_games: set[str] = {"Night Manor", "Magic Garden"}
 
     def get_filler_item_name(self) -> str:
         if not self.included_games:

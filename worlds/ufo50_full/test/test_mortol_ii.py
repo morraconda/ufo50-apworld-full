@@ -1,8 +1,8 @@
-"""Waldorf's Journey: the goal is reachable and the seed fills + beats."""
+"""Mortol II: the goal is reachable and the seed fills + beats."""
 
 from . import UFO50GenTestBase, generate
 
-_GAME = "Waldorf's Journey"
+_GAME = "Mortol II"
 
 _SOLO_GOAL = {
     "always_on_games": [_GAME], "starting_game_amount": 1,
@@ -18,9 +18,9 @@ _MIXED = {
 }
 
 
-class WaldorfGenerationTest(UFO50GenTestBase):
+class MortolIIGenerationTest(UFO50GenTestBase):
     def _check(self, options: dict) -> None:
-        multiworld = generate(options, seed=4)
+        multiworld = generate(options, seed=1)
         self.assert_all_reachable(multiworld)
         self.assert_beatable_after_fill(multiworld)
 

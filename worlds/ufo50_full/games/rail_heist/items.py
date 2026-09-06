@@ -59,7 +59,16 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
     return _create_item(GAME_NAME, item_table, item_name, world, item_class)
 
 
+STARTING_TIME_ITEM = f"{LEVEL_NAMES[1]} Time"  # "A Simple Heist Time"
+
+
 def create_items(world: "UFO50World") -> list[Item]:
+    # "A Simple Heist Time" is precollected -- it's the sphere-1 seed (all three of
+    # Level 1's checks are reachable with no other items), replacing the old hardcoded
+    # LEVEL_1_START_TIME. Its normal pool copy is kept: it does nothing extra in logic
+    # (Level 1 is already fully open) but it keeps the fill's slack where the old
+    # design's inert Level 1 Time item used to sit.
+    world.multiworld.push_precollected(create_item(STARTING_TIME_ITEM, world))
     return _create_items(GAME_NAME, item_table, world)
 
 

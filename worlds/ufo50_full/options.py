@@ -15,7 +15,7 @@ class AlwaysOnGames(OptionSet):
     There is a host.yaml setting that you must enable to include unimplemented games.
     Unimplemented games will only have Garden, Gold, and/or Cherry checks.
     The host.yaml setting is not required for the following games due to their short length:
-    Ninpek, Magic Garden, Velgress, and Waldorf's Journey
+    Ninpek and Velgress
     """
     internal_name = "always_on_games"
     display_name = "Always On Games"

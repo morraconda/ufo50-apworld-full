@@ -25,11 +25,16 @@ def level_bullets_item(level: int) -> str:
 # ---------------------------------------------------------------------------
 # Time model
 #
-# Every run of a level starts with BASE_TIME seconds and no bullets (Level 1 is the
-# exception, see LEVEL_1_START_TIME). Time is extended by two item types:
+# Every run of a level starts with BASE_TIME seconds and no bullets. Time is extended
+# by two item types:
 #   * "All Levels +2 Seconds"  - global, flat, additive            (x20 in the pool)
 #   * "<level> Time"           - grants that level's full speed-star time budget,
 #                               LEVEL_STAR_TIME[level]              (x1 each, per level)
+#
+# "A Simple Heist Time" (Level 1's "<level> Time") is precollected -- see
+# items.create_items -- and, for Level 1 only, also grants the Devil Star buffer, so
+# all three "A Simple Heist" checks are the sphere-1 seed for the fill with no other
+# items. This replaces the old hardcoded LEVEL_1_START_TIME.
 #
 # get_run_time() returns how many seconds are bankable on a given level.
 # has_time() compares that against a per-check requirement.
@@ -53,19 +58,16 @@ LEVEL_STAR_TIME: dict[int, int] = {
     16: 76,  17: 45,  18: 50,  19: 53,  20: 94,
 }
 
-# Level 1 is hardcoded to start with a bigger clock so all of its checks are in logic
-# with zero items -- it is the guaranteed sphere-1 seed for the fill (Garden used to
-# fill that role but is now pushed back to Level 10).
-# Keep this >= LEVEL_STAR_TIME[1] + DEVIL_TIME_BONUS (Level 1's hardest check).
-LEVEL_1_START_TIME: int = 54
-
-
 def get_run_time(level: int, state: CollectionState, world: "UFO50World") -> int:
     player = world.player
-    start = LEVEL_1_START_TIME if level == 1 else BASE_TIME
-    seconds = start + PLUS_2_VALUE * state.count(plus_2_seconds, player)
+    seconds = BASE_TIME + PLUS_2_VALUE * state.count(plus_2_seconds, player)
     if state.has(level_time_item(level), player):
         seconds += LEVEL_STAR_TIME[level]
+        # Level 1's "Time" item is the sphere-1 seed (it's precollected -- see
+        # items.create_items). It grants the Devil Star buffer too, so all three of
+        # "A Simple Heist"'s checks are reachable with no other items.
+        if level == 1:
+            seconds += DEVIL_TIME_BONUS
     return seconds
 
 
@@ -87,8 +89,8 @@ def has_bullets(level: int, state: CollectionState, world: "UFO50World") -> bool
 #
 # Bullets: only the Devil Star needs them (you have to gun down every officer) -- except
 # on the levels in ALL_BULLET_LEVELS, where every check needs bullets. Level 1's Devil
-# Star is exempt from the bullet requirement so all three Level 1 checks stay in logic
-# with zero items.
+# Star is exempt so all three "A Simple Heist" checks are reachable with only its
+# (precollected) Time item.
 # ---------------------------------------------------------------------------
 
 ANGEL_TIME_BONUS: int = 10
@@ -119,7 +121,7 @@ class CheckReq(NamedTuple):
 def get_check_req(level: int, check_type: str) -> CheckReq:
     time = LEVEL_STAR_TIME[level] + CHECK_TIME_BONUS[check_type]
     needs_bullets = check_type == DEVIL or level in ALL_BULLET_LEVELS
-    if level == 1:  # sphere-1 seed: keep every Level 1 check reachable with zero items
+    if level == 1:  # sphere-1 seed -- keep every "A Simple Heist" check bullet-free
         needs_bullets = False
     return CheckReq(time=time, bullets=needs_bullets)
 

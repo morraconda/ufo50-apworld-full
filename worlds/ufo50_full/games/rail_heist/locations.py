@@ -79,9 +79,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# Level 1 ("A Simple Heist") is hardcoded to be fully accessible from the start (see
-# rules.get_run_time / LEVEL_1_START_TIME); these are the guaranteed sphere-1 locations.
-# The Garden prize is NOT sphere 1 -- it only comes into logic at Level 10.
+# "A Simple Heist Time" is precollected (see items.create_items), so all three of Level
+# 1's checks are always reachable and seed the fill. The Garden prize (Level 10) is NOT
+# sphere 1.
 sphere_1_locs: list[str] = [f"{LEVEL_NAMES[1]} - {check_type}" for check_type in CHECK_TYPES]
 
 
