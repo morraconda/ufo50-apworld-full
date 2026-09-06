@@ -1,8 +1,7 @@
-from typing import ClassVar, Any, Union
+from typing import Any
 
 from BaseClasses import Tutorial, Region, Item, ItemClassification, Location
 from Options import OptionError
-from settings import Group, Bool
 from worlds.AutoWorld import World, WebWorld
 from worlds.generic.Rules import add_rule
 
@@ -12,7 +11,7 @@ from . import options
 from .general_items import cartridge_items, cartridge_item_group
 
 from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koala, rail_heist, mortol,
-                    waldorf, magic_garden, mortol_ii)
+                    waldorf, magic_garden, mortol_ii, attactics, kick_club, velgress, campanella_2)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
@@ -24,20 +23,10 @@ from .games.mortol import items, locations, regions
 from .games.waldorf import items, locations, regions
 from .games.magic_garden import items, locations, regions
 from .games.mortol_ii import items, locations, regions
-
-
-class UFO50Settings(Group):
-    # The game is modded via the UFO 50 Mod Loader (GMLoader); there is no Archipelago-side
-    # installer or launcher. Connection details are entered on the in-game connection screen.
-
-    class AllowUnimplemented(Bool):
-        """
-        Allow the player to choose unimplemented games.
-        These games will only send checks when the player does the Garden, Gold, or Cherry checks.
-        This can cause issues because the time per check is much higher than normal, and some games are very long.
-        """
-
-    allow_unimplemented: Union[AllowUnimplemented, bool] = False
+from .games.attactics import items, locations, regions
+from .games.kick_club import items, locations, regions
+from .games.velgress import items, locations, regions
+from .games.campanella_2 import items, locations, regions
 
 
 class UFO50Web(WebWorld):
@@ -64,15 +53,17 @@ ufo50_games: dict = {
     "Magic Garden": magic_garden,
     "Waldorf's Journey": waldorf,
     "Mortol": mortol,
+    "Attactics": attactics,
+    "Kick Club": kick_club,
     "Block Koala": block_koala,
     "Porgy": porgy,
     "Rail Heist": rail_heist,
     "Vainger": vainger,
     "Night Manor": night_manor,
     "Party House": party_house,
+    "Velgress": velgress,
+    "Campanella 2": campanella_2,
 }
-
-allowable_unimplemented: set[str] = {"Ninpek", "Velgress"}
 
 
 # for the purpose of generically making the gift, gold, and cherry locations
@@ -110,8 +101,6 @@ class UFO50World(World):
 
     options_dataclass = options.UFO50Options
     options: options.UFO50Options
-    settings_key = "ufo_50_settings"
-    settings: ClassVar[UFO50Settings]
 
     # for universal tracker support
     using_ut: bool
@@ -169,25 +158,6 @@ class UFO50World(World):
             else:
                 self.included_unimplemented_games.append(game_name)
 
-        if self.included_unimplemented_games and not self.settings.allow_unimplemented:
-            for game_name in self.included_unimplemented_games:
-                if game_name in allowable_unimplemented:
-                    break
-            else:
-                raise OptionError(f"UFO 50: {self.player_name} has selected an unimplemented game, but the host "
-                                  f"does not have them enabled. Please enable the host.yaml setting or remove the "
-                                  f"unimplemented games from the selected games.\n"
-                                  f"Unimplemented games: {self.included_unimplemented_games}")
-
-        if not self.included_games and not self.settings.allow_unimplemented:
-            for game_name in self.included_unimplemented_games:
-                if game_name in allowable_unimplemented:
-                    break
-            else:
-                raise OptionError(f"UFO 50: {self.player_name} has not selected any games that have implementations. "
-                                  f"Please select at least one game that has an actual implementation, or have the "
-                                  f"host enable the host.yaml setting to allow them.\n"
-                                  f"The following games have actual implementations: {[name for name in ufo50_games]}")
         self.options.goal_games.value = [game_name for game_name in self.options.goal_games if game_name in included_game_names]
         potential_goal_games = [game_name for game_name in included_game_names if game_name in self.options.goal_games]
         if self.options.goal_game_amount >= len(potential_goal_games):
@@ -298,7 +268,7 @@ class UFO50World(World):
         self.multiworld.itempool += created_items
 
     # games where the filler is a nothing item, so let's just exclude these where we can
-    bad_filler_games: set[str] = {"Night Manor", "Magic Garden"}
+    bad_filler_games: set[str] = {"Night Manor", "Magic Garden", "Attactics"}
 
     def get_filler_item_name(self) -> str:
         if not self.included_games:

@@ -77,7 +77,8 @@ LOCATION_RULES: dict[str, Callable[[CollectionState, int], bool]] = {
     "Key C": wse,                                                            # (wse)
     "Key D": lambda s, p: has(s, p, ENGINEER),                               # e
     "Key E": lambda s, p: wse(s, p) and has(s, p, BOMBER),                   # (wse) + b
-    "Key F": lambda s, p: ws(s, p) and eb(s, p),                            # (ws) + (eb)
+    "Key F": lambda s, p: (has(s, p, WARRIOR) and has(s, p, ENGINEER))       # w + e
+                          or (ws(s, p) and has(s, p, BOMBER)),               # / (ws) + b
     "Key G": ws,                                                             # (ws)
     "Key H": lambda s, p: has(s, p, SCOUT) or (has(s, p, WARRIOR) and eb(s, p)),  # s / w + (eb)
     "Key I": _key_i,

@@ -19,8 +19,7 @@ Barbuta, Night Manor, Porgy, and Vainger.
 Yes. You can also choose which games you need to beat to reach your goal and which games you need to cherry.
 
 ## Can I play unimplemented games?
-Yes. The host will have to specifically allow it by modifying a setting in their `host.yaml`, and you need to have at least one implemented game selected as well.
-For unimplemented games, the only checks are the Garden item, Gold, and Cherry.
+Yes, any game can be selected with no extra setup. For unimplemented games, the only checks are the Garden item, Gold, and Cherry.
 
 ## Do you start with all games unlocked at once?
 You can! You can also choose to only have a certain number of cartridges unlocked at the start. Please review the yaml options for more details.

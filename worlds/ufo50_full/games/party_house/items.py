@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from BaseClasses import ItemClassification as IC, Item
 
@@ -11,9 +11,137 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Party House"
 
+
+class Guest(NamedTuple):
+    """One of the 43 unlockable guests. ``id`` is the vanilla o36_Game ``CHAR_*``
+    type value (11..44 standard, 50..58 prestige); the AP item id/offset is the
+    1-based position in ``GUESTS``. ``cost`` is the popularity price to add the
+    guest, ``is_trouble`` its base troublemaker flag, ``is_star`` whether it carries
+    prestige (a "star guest"). ``money_score`` / ``pop_score`` / ``util_score`` rate
+    how much the guest contributes to cash / popularity / utility -- all 0 for now,
+    to be filled in for the scenario_outcome model."""
+    name: str
+    id: int
+    cost: int
+    is_trouble: bool
+    is_star: bool
+    money_score: int
+    pop_score: int
+    util_score: int
+
+
+# Rolodex order: the 34 standard characters (CHAR_START..CHAR_END = 11..44) then the 9
+# prestige characters (CHAR_PRESTIGE_START..CHAR_PRESTIGE_END = 50..58). The 3 starter
+# types (Old Friend / Rich Pal / Wild Buddy) are NOT items -- you always have them.
+# Names are the in-game card names (ext/ENGLISH/36_Text.json), de-abbreviated;
+# cost/is_trouble/is_star are read from scr36_CreateCard.
+GUESTS: list[Guest] = [
+    Guest("Dancer", 11, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Hippy", 12, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Cute Dog", 13, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Security", 14, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Wrestler", 15, cost=9, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Watch Dog", 16, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Spy", 17, cost=8, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Driver", 18, cost=3, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Private I.", 19, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Grillmaster", 20, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Athlete", 21, cost=6, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Mr. Popular", 22, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Celebrity", 23, cost=11, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Comedian", 24, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Photographer", 25, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Caterer", 26, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Ticket Taker", 27, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Auctioneer", 28, cost=9, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Monkey", 29, cost=3, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Rock Star", 30, cost=5, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Gangster", 31, cost=6, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Gambler", 32, cost=7, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Werewolf", 33, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Mascot", 34, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Introvert", 35, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Counselor", 36, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Stylist", 37, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Bartender", 38, cost=11, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Writer", 39, cost=8, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Social Climber", 40, cost=12, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Cupid", 41, cost=8, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Magician", 42, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Greeter", 43, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Cheerleader", 44, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
+    Guest("Alien", 50, cost=40, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Dinosaur", 51, cost=25, is_trouble=True, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Leprechaun", 52, cost=50, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Genie", 53, cost=55, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Mermaid", 54, cost=35, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Dragon", 55, cost=30, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Ghost", 56, cost=45, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Unicorn", 57, cost=45, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Superhero", 58, cost=50, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+]
+NUM_GUESTS = len(GUESTS)
+assert NUM_GUESTS == 43
+
+# The guests each fixed scenario's shop offers (from scr36_SetupScenarios), 13 apiece.
+# Random Scenario (the 6th) has a randomised pool, so it has no fixed list.
+SCENARIO_GUESTS: dict[str, list[str]] = {
+    "Alien Invitation": [
+        "Alien", "Auctioneer", "Security", "Driver", "Rock Star", "Dancer", "Comedian",
+        "Monkey", "Ticket Taker", "Caterer", "Watch Dog", "Hippy", "Mr. Popular",
+    ],
+    "High or Low": [
+        "Wrestler", "Grillmaster", "Gangster", "Spy", "Cute Dog", "Private I.", "Mascot",
+        "Writer", "Social Climber", "Introvert", "Gambler", "Superhero", "Mermaid",
+    ],
+    "Best Wishes": [
+        "Photographer", "Stylist", "Hippy", "Celebrity", "Counselor", "Bartender",
+        "Athlete", "Cheerleader", "Wrestler", "Monkey", "Rock Star", "Dinosaur", "Genie",
+    ],
+    "A Magical Night": [
+        "Spy", "Private I.", "Photographer", "Comedian", "Ticket Taker", "Caterer",
+        "Gangster", "Security", "Athlete", "Stylist", "Cute Dog", "Dragon", "Leprechaun",
+    ],
+    "Money Management": [
+        "Gambler", "Werewolf", "Celebrity", "Cupid", "Introvert", "Auctioneer",
+        "Social Climber", "Dancer", "Watch Dog", "Greeter", "Magician", "Unicorn", "Ghost",
+    ],
+}
+
+_guest_names = {g.name for g in GUESTS}
+assert all(name in _guest_names for names in SCENARIO_GUESTS.values() for name in names)
+
+MAX_TROUBLE = "+1 Max Trouble"
+SHOP_STOCK = "+1 Shop Stock"
+MAX_POPULARITY = "+5 Max Popularity"
+MAX_CASH = "+2 Max Cash"
+DAY = "+1 Day"
+START_POPULARITY = "+1 Starting Popularity"
+START_CASH = "+1 Starting Cash"
+
+# The two "starting" items double as this game's filler.
+FILLER_NAMES: tuple[str, ...] = (START_POPULARITY, START_CASH)
+
+# id offset layout inside Party House's 1000-id block (game-wide items live in 1..99,
+# below scenario 1's 100-id block):
+#    1..43   the 43 unlockable guests (GUESTS order): Dancer .. Superhero
+#   44       +1 Max Trouble      (x4)
+#   45       +1 Shop Stock       (x4)
+#   46       +5 Max Popularity   (x18)
+#   47       +2 Max Cash         (x14)
+#   48       +1 Day              (x25)
+#   49       +1 Starting Popularity (x10, also filler)
+#   50       +1 Starting Cash    (x10, also filler)
+#   locations: see locations.py; 997/998/999 = Garden / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
-    "+1 Starting Cash": ItemInfo(0, IC.filler, 3),
-    "+1 Starting Popularity": ItemInfo(1, IC.filler, 2),
+    **{g.name: ItemInfo(i, IC.progression, 1) for i, g in enumerate(GUESTS, start=1)},
+    MAX_TROUBLE: ItemInfo(44, IC.progression, 4),
+    SHOP_STOCK: ItemInfo(45, IC.progression, 4),
+    MAX_POPULARITY: ItemInfo(46, IC.progression, 18),
+    MAX_CASH: ItemInfo(47, IC.progression, 14),
+    DAY: ItemInfo(48, IC.progression, 25),
+    START_POPULARITY: ItemInfo(49, IC.progression, 10),
+    START_CASH: ItemInfo(50, IC.progression, 10),
 }
 
 
@@ -22,7 +150,9 @@ def get_items() -> dict[str, int]:
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    return game_item_groups(GAME_NAME, item_table)
+    groups = game_item_groups(GAME_NAME, item_table)
+    groups[f"{GAME_NAME} - Guests"] = {f"{GAME_NAME} - {g.name}" for g in GUESTS}
+    return groups
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
@@ -30,8 +160,10 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
+    # 43 guests + the capacity/head-start items (128 total); the framework pads the
+    # rest with filler, which is "+1 Starting Popularity" or "+1 Starting Cash".
     return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return world.random.choice([f"{GAME_NAME} - +1 Starting Cash", f"{GAME_NAME} - +1 Starting Popularity"])
+    return f"{GAME_NAME} - " + world.random.choice(FILLER_NAMES)

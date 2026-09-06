@@ -3,15 +3,18 @@ from typing import TYPE_CHECKING
 from BaseClasses import Region
 
 from ...game_helpers import build_regions
-from .locations import GAME_NAME, SCENARIOS, create_locations
+from .locations import create_locations
 from .rules import create_rules
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-# One region per scenario, all reachable straight from the menu.
-regions: list[str] = ["Menu"] + list(SCENARIOS)
+GAME_NAME = "Velgress"
+
+# Every check is reachable from the start, so there is just the required Menu region
+# plus one region holding the whole climb.
+regions: list[str] = ["Menu", "Tower"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:
