@@ -2,7 +2,7 @@
 
 ## What does randomization do in this game?
 On the whole, the mod limits which games in the UFO 50 collection the player can play, making it so for each specific game an item must be found to unlock it.
-Unlocking the Garden Gift and getting Gold and Cherry become locations the player can check.
+Earning the Gift and getting Gold and Cherry become locations the player can check.
 
 Other than this, what the mod does depends on the game being played. You can expect that, if a game has items and upgrades, then those are things you can receive from other players. At the same time, they will become locations to check on your end.
 
@@ -16,15 +16,15 @@ This will bring you to your `templates` folder, where you can find a UFO 50 temp
 Barbuta, Night Manor, Porgy, and Vainger.
 
 ## Can I pick and choose which games I play?
-Yes. Every game you list in the **Games** option is enabled and is a goal -- to finish you must get Gold in all of them. **Random Choice Games** are enabled too but are never goals. Getting Cherry in a game is always just a check, never a goal.
+Yes. Every game you list in the **Games** option is enabled and is a goal -- to finish you must get Gold in all of them. **Random Choice Games** are enabled too but are never goals. Getting Cherry in a game is always just a location, never a goal.
 
 ## Can I play unimplemented games?
-Yes, any game can be selected with no extra setup. For unimplemented games, the only checks are the Garden item, Gold, and Cherry.
+Yes, any game can be selected with no extra setup. For unimplemented games, the only locations are the Gift, Gold, and Cherry.
 
 ## Do you start with all games unlocked at once?
 You can! You can also choose to only have a certain number of cartridges unlocked at the start. Please review the yaml options for more details.
 
 ## Is there a tracker pack?
-At this time, there are no tracker packs. You can use the Universal Tracker (by Faris and qwint) to find a complete list of what checks are in logic with yoru current items.
+At this time, there are no tracker packs. You can use the Universal Tracker (by Faris and qwint) to find a complete list of what locations are in logic with yoru current items.
 You can find it on the Archipelago Discord, in its post in the future-game-design channel. This tracker is an extension of the regular Archipelago Text Client.
 The proper work has been implemented into this pack to have Universal Tracker work fully without issues with randomness.

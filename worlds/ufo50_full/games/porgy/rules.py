@@ -540,7 +540,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
 
         loc = "Abyss Upper Left - Egg on Seaweed above Torpedo Upgrade"
         add_rule(get_porgy_location(loc, world),
-                 # see this check in the on touch section
+                 # see this location in the on touch section
                  rule=lambda state:
                  (state.has(depth_charge, player) and has_fuel_and_slots(8, loc, 1, state, world))
                  or (state.has_all((drill, buster, urchin_rock), player)
@@ -710,7 +710,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
                  (state.has_any((depth_charge, drill), player) and has_fuel_and_slots(11, loc, 1, state, world))
                  or (state.has(buster, player) and has_fuel_and_slots(12, loc, 1, state, world)))
 
-    add_rule(get_porgy_location("Garden", world),
+    add_rule(get_porgy_location("Gift", world),
              rule=lambda state: get_porgy_location("Lamia", world).can_reach(state))
 
     add_rule(get_porgy_location("Gold", world),

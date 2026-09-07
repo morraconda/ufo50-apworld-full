@@ -1,7 +1,7 @@
-"""Shared handling for the per-game Garden / Gold / Cherry goal locations.
+"""Shared handling for the per-game Gift / Gold / Cherry goal locations.
 
-Every game's ``location_table`` ends with ``"Garden"``, ``"Gold"``, ``"Cherry"``. All
-three are always real, sendable checks; the only special case is the slot's goal
+Every game's ``location_table`` ends with ``"Gift"``, ``"Gold"``, ``"Cherry"``. All
+three are always real, sendable locations; the only special case is the slot's goal
 games, whose ``"Gold"`` location additionally carries a locked item. ``create_locations``
 routes them through the helpers here instead of copy-pasting the block:
 
@@ -14,7 +14,7 @@ routes them through the helpers here instead of copy-pasting the block:
 
 The goal is always the **Gold** condition. A slot's goal game still gets a *real,
 sendable* Gold location (``<base> + 998``) rather than an addressless event: the client
-has to be able to send that check so the multiworld records it and it survives a
+has to be able to send that location so the multiworld records it and it survives a
 reconnect. Gen must not put a randomized item there though -- the Gold location is only
 reachable once the whole game is beaten, so it carries a locked filler item, exactly as
 the old ``"Completed <game>"`` event did. ``"Completed All Games"`` is gated on being
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 # id offsets of the three goal locations inside a game's 1000-id block
-GOAL_LOCATION_OFFSETS: dict[str, int] = {"Garden": 997, "Gold": 998, "Cherry": 999}
+GOAL_LOCATION_OFFSETS: dict[str, int] = {"Gift": 997, "Gold": 998, "Cherry": 999}
 
 
 def is_goal_location(world: "UFO50World", game_name: str, loc_name: str) -> bool:
@@ -50,7 +50,7 @@ def place_goal_location(world: "UFO50World", game_name: str, loc_name: str, regi
     """Create this game's Gold location as a real (sendable) location with a locked
     filler item on it, and require reaching it for ``"Completed All Games"``.
 
-    The address is kept so the client can send the check and the server records it
+    The address is kept so the client can send the location and the server records it
     (surviving a reconnect). The locked item keeps gen from trying to place progression
     behind a "beat the whole game" requirement. Only call this when
     ``is_goal_location(world, game_name, loc_name)`` is true.

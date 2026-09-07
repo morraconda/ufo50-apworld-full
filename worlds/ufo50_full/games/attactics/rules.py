@@ -60,7 +60,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
             regions[rank_region(r)],
             rule=lambda state, promo=needs_promo: not promo or _promoted(state, player))
 
-    # Cherry check (vanilla scrWin(2)) additionally needs the whole campaign beaten, not
+    # Cherry location (vanilla scrWin(2)) additionally needs the whole campaign beaten, not
     # just rank 100.
     set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
              lambda state: (_turn_time(state, player) >= NUM_LEVELS and _promoted(state, player))

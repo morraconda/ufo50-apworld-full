@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Magic Garden"
 
-# One gameplay region holds every check; per-location item gating lives in rules.py.
+# One gameplay region holds every location; per-location item gating lives in rules.py.
 regions: list[str] = ["Menu", "Field"]
 
 

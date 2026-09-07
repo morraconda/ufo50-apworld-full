@@ -56,8 +56,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
             if not (name == "Burrows" and roman == "I"):
                 table[f"{name} {roman} Shop Item"] = LocationInfo(level_id(level, shop_slot), region)
     # goal locations last so create_locations' Cherry/Gold handling can break out.
-    # Garden only needs world B; Gold/Cherry are the finale (world D).
-    table["Garden"] = LocationInfo(997, "B")
+    # Gift only needs world B; Gold/Cherry are the finale (world D).
+    table["Gift"] = LocationInfo(997, "B")
     table["Gold"] = LocationInfo(998, "D")
     table["Cherry"] = LocationInfo(999, "D")
     return table

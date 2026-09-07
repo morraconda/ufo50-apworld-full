@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Bug Hunter"
 
-# every check is reachable from the start, so there is just the required Menu region
-# plus one region holding all the job checks
+# every location is reachable from the start, so there is just the required Menu region
+# plus one region holding all the job locations
 regions: list[str] = ["Menu", "The Hunt"]
 
 

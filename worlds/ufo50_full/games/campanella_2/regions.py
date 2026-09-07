@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Campanella 2"
 
-# One region per world; every stage's checks (and the goal locations) live in the
+# One region per world; every stage's locations (and the goal locations) live in the
 # world they belong to, so the world-entry rules in rules.py gate them.
 regions: list[str] = ["Menu", "A", "B", "C", "D"]
 

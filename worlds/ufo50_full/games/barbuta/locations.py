@@ -42,9 +42,9 @@ location_table: dict[str, LocationInfo] = {
     "Chest - R7C5": LocationInfo(20, "Starting Area"),  # necklace chest
     "Chest - R8C5": LocationInfo(21, "Starting Area"),  # $100, be fast before the ledge breaks
     "Chest - R8C7": LocationInfo(22, "R7C7 and Nearby"),  # $50
-    "Wand Trade - R8C7": LocationInfo(23, "Wand Trade Room"),  # probably should just have it give you the check
+    "Wand Trade - R8C7": LocationInfo(23, "Wand Trade Room"),  # probably should just have it give you the location
 
-    "Garden": LocationInfo(997, "Menu"),
+    "Gift": LocationInfo(997, "Menu"),
     "Gold": LocationInfo(998, "Boss Area"),
     "Cherry": LocationInfo(999, "Boss Area")
 }

@@ -13,27 +13,27 @@ if TYPE_CHECKING:
 GAME_NAME = "Attactics"
 
 # The 24 campaign levels in play order, by their in-game names (ext/ENGLISH/2_Text.json
-# keys level_101..level_124). Checks/regions use these names directly.
+# keys level_101..level_124, title-cased). Locations/regions use these names directly.
 LEVEL_NAMES: list[str] = [
-    "FIRST ENCOUNTER", "ARROW DEFENSE", "ATTRITION", "UNDER FIRE",
-    "HERE THEY COME", "ESCALATION", "PROTECT YOURSELF", "WHAT'S THE POINT?",
-    "PORCUPINE STYLE", "SO IT GOES", "KNIVES OUT", "POKE AND DAGGER",
-    "STEM THE TIDE", "READY OR NOT", "STAND BACK", "BLAST DAMAGE",
-    "GUERILLA WARFARE", "RALLY THE TROOPS", "TRAFFIC JAM", "ACTS OF HEROISM",
-    "BACK TO BASICS", "BARRELING AHEAD", "WAR IS BAD", "THE FINAL BATTLE",
+    "First Encounter", "Arrow Defense", "Attrition", "Under Fire",
+    "Here They Come", "Escalation", "Protect Yourself", "What's the Point?",
+    "Porcupine Style", "So It Goes", "Knives Out", "Poke and Dagger",
+    "Stem the Tide", "Ready or Not", "Stand Back", "Blast Damage",
+    "Guerilla Warfare", "Rally the Troops", "Traffic Jam", "Acts of Heroism",
+    "Back to Basics", "Barreling Ahead", "War Is Bad", "The Final Battle",
 ]
 NUM_LEVELS = len(LEVEL_NAMES)
 
-# Ranked ladder milestones: rank climbs in steps of RANK_STEP and a check fires the
+# Ranked ladder milestones: rank climbs in steps of RANK_STEP and a location fires the
 # first time each milestone is reached. The ladder is independent of the campaign.
 RANK_STEP = 10
 FIRST_RANK = 10
 LAST_RANK = 100
 RANKS: list[int] = list(range(FIRST_RANK, LAST_RANK + 1, RANK_STEP))
 
-# Vanilla goal wiring (scr02_SaveGame / 2_Text.json): Garden = beat the first 12
+# Vanilla goal wiring (scr02_SaveGame / 2_Text.json): Gift = beat the first 12
 # campaign levels, Gold = beat all 24, Cherry = beat the campaign AND reach rank 100.
-GARDEN_LEVEL = 12
+GIFT_LEVEL = 12
 
 
 def level_name(n: int) -> str:
@@ -45,7 +45,7 @@ def rank_region(r: int) -> str:
     return f"Rank {r}"
 
 
-GARDEN_REGION = level_name(GARDEN_LEVEL)
+GIFT_REGION = level_name(GIFT_LEVEL)
 GOLD_REGION = level_name(NUM_LEVELS)
 CHERRY_REGION = rank_region(LAST_RANK)
 
@@ -54,7 +54,7 @@ CHERRY_REGION = rank_region(LAST_RANK)
 #   1..3          items (see items.py)
 #   10, 20, ...   <level name>   (campaign level clear, via game_helpers.level_id(n, 0))
 #   301..310      Rank <r>       (ranked ladder milestone, 300 + r // RANK_STEP)
-#   997/998/999   Garden / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry
 
 
 class LocationInfo(NamedTuple):
@@ -69,7 +69,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     for r in RANKS:
         table[rank_region(r)] = LocationInfo(300 + r // RANK_STEP, rank_region(r))
     # goal locations last so create_locations' Cherry/Gold handling can break out safely
-    table["Garden"] = LocationInfo(997, GARDEN_REGION)
+    table["Gift"] = LocationInfo(997, GIFT_REGION)
     table["Gold"] = LocationInfo(998, GOLD_REGION)
     table["Cherry"] = LocationInfo(999, CHERRY_REGION)
     return table

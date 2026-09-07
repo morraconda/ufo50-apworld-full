@@ -19,7 +19,7 @@ NUM_SIGNS = 10   # cumulative sign reads (the game tracks signCount up to 22)
 #    11..20    Sign <n>    (read your n-th sign, counted across all runs)
 #   101..106   items (see items.py)
 #   200        Shell (filler)
-#   997/998/999   Garden / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry
 
 
 class LocationInfo(NamedTuple):
@@ -33,7 +33,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
         table[f"Chest {n}"] = LocationInfo(n, "Island")
     for n in range(1, NUM_SIGNS + 1):
         table[f"Sign {n}"] = LocationInfo(10 + n, "Island")
-    table["Garden"] = LocationInfo(997, "Island")
+    table["Gift"] = LocationInfo(997, "Island")
     table["Gold"] = LocationInfo(998, "Island")
     table["Cherry"] = LocationInfo(999, "Island")
     return table
@@ -41,7 +41,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every check is reachable from the start
+# every location is reachable from the start
 sphere_1_locs: list[str] = list(location_table.keys())
 
 

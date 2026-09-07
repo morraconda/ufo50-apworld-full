@@ -16,18 +16,21 @@ class Guest(NamedTuple):
     """One of the 43 unlockable guests. ``id`` is the vanilla o36_Game ``CHAR_*``
     type value (11..44 standard, 50..58 prestige); the AP item id/offset is the
     1-based position in ``GUESTS``. ``cost`` is the popularity price to add the
-    guest, ``is_trouble`` its base troublemaker flag, ``is_star`` whether it carries
-    prestige (a "star guest"). ``money_score`` / ``pop_score`` / ``util_score`` rate
-    how much the guest contributes to cash / popularity / utility -- all 0 for now,
-    to be filled in for the scenario_outcome model."""
+    guest. ``money_score`` / ``pop_score`` / ``util_score`` rate how much the guest
+    contributes to cash / popularity / utility (used by ``rules._achieved``). Every
+    field after ``cost`` defaults to its zero value and is only passed on a ``GUESTS``
+    entry when non-zero/``True``: the score ints (may be negative), then the bools
+    ``is_trouble`` (base troublemaker), ``is_star`` (carries prestige -- a "star
+    guest"), ``is_flag`` (raises a flag)."""
     name: str
     id: int
     cost: int
-    is_trouble: bool
-    is_star: bool
-    money_score: int
-    pop_score: int
-    util_score: int
+    money_score: int = 0
+    pop_score: int = 0
+    util_score: int = 0
+    is_trouble: bool = False
+    is_star: bool = False
+    is_flag: bool = False
 
 
 # Rolodex order: the 34 standard characters (CHAR_START..CHAR_END = 11..44) then the 9
@@ -36,49 +39,49 @@ class Guest(NamedTuple):
 # Names are the in-game card names (ext/ENGLISH/36_Text.json), de-abbreviated;
 # cost/is_trouble/is_star are read from scr36_CreateCard.
 GUESTS: list[Guest] = [
-    Guest("Dancer", 11, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Hippy", 12, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Cute Dog", 13, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Security", 14, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Wrestler", 15, cost=9, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Watch Dog", 16, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Spy", 17, cost=8, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Driver", 18, cost=3, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Private I.", 19, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Grillmaster", 20, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Athlete", 21, cost=6, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Mr. Popular", 22, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Celebrity", 23, cost=11, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Comedian", 24, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Photographer", 25, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Caterer", 26, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Ticket Taker", 27, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Auctioneer", 28, cost=9, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Monkey", 29, cost=3, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Rock Star", 30, cost=5, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Gangster", 31, cost=6, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Gambler", 32, cost=7, is_trouble=True, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Werewolf", 33, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Mascot", 34, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Introvert", 35, cost=4, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Counselor", 36, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Stylist", 37, cost=7, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Bartender", 38, cost=11, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Writer", 39, cost=8, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Social Climber", 40, cost=12, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Cupid", 41, cost=8, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Magician", 42, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Greeter", 43, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Cheerleader", 44, cost=5, is_trouble=False, is_star=False, money_score=0, pop_score=0, util_score=0),
-    Guest("Alien", 50, cost=40, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Dinosaur", 51, cost=25, is_trouble=True, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Leprechaun", 52, cost=50, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Genie", 53, cost=55, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Mermaid", 54, cost=35, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Dragon", 55, cost=30, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Ghost", 56, cost=45, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Unicorn", 57, cost=45, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
-    Guest("Superhero", 58, cost=50, is_trouble=False, is_star=True, money_score=0, pop_score=0, util_score=0),
+    Guest("Dancer", 11, cost=7),
+    Guest("Hippy", 12, cost=4, is_flag=True),
+    Guest("Cute Dog", 13, cost=7, pop_score=1, is_flag=True),
+    Guest("Security", 14, cost=4, util_score=1),
+    Guest("Wrestler", 15, cost=9, pop_score=1, util_score=1),
+    Guest("Watch Dog", 16, cost=4, pop_score=1, util_score=1),
+    Guest("Spy", 17, cost=8, money_score=2, util_score=1),
+    Guest("Driver", 18, cost=3, util_score=2),
+    Guest("Private I.", 19, cost=4, util_score=2),
+    Guest("Grillmaster", 20, cost=5, pop_score=1, util_score=1),
+    Guest("Athlete", 21, cost=6, money_score=1, util_score=1),
+    Guest("Mr. Popular", 22, cost=5, pop_score=2, util_score=-1),
+    Guest("Celebrity", 23, cost=11, money_score=3, pop_score=1, util_score=-1),
+    Guest("Comedian", 24, cost=5, pop_score=3),
+    Guest("Photographer", 25, cost=5, money_score=1, pop_score=2),
+    Guest("Caterer", 26, cost=5, pop_score=2),
+    Guest("Ticket Taker", 27, cost=4, money_score=1),
+    Guest("Auctioneer", 28, cost=9, money_score=3),
+    Guest("Monkey", 29, cost=3, pop_score=2, is_trouble=True),
+    Guest("Rock Star", 30, cost=5, money_score=2, pop_score=2, is_trouble=True),
+    Guest("Gangster", 31, cost=6, money_score=4, is_trouble=True),
+    Guest("Gambler", 32, cost=7, money_score=3, pop_score=1, is_trouble=True),
+    Guest("Werewolf", 33, cost=5, pop_score=1),
+    Guest("Mascot", 34, cost=5, pop_score=1),
+    Guest("Introvert", 35, cost=4, pop_score=1),
+    Guest("Counselor", 36, cost=7, is_flag=True),
+    Guest("Stylist", 37, cost=7, pop_score=2),
+    Guest("Bartender", 38, cost=11, money_score=4),
+    Guest("Writer", 39, cost=8, pop_score=3),
+    Guest("Social Climber", 40, cost=12, pop_score=3),
+    Guest("Cupid", 41, cost=8, util_score=3),
+    Guest("Magician", 42, cost=5, util_score=1),
+    Guest("Greeter", 43, cost=5, pop_score=1),
+    Guest("Cheerleader", 44, cost=5, util_score=2),
+    Guest("Alien", 50, cost=40, is_star=True),
+    Guest("Dinosaur", 51, cost=25, is_trouble=True, is_star=True),
+    Guest("Leprechaun", 52, cost=50, money_score=2, is_star=True),
+    Guest("Genie", 53, cost=55, util_score=2, is_star=True),
+    Guest("Mermaid", 54, cost=35, util_score=-1, is_star=True),
+    Guest("Dragon", 55, cost=30, util_score=-2, is_star=True),
+    Guest("Ghost", 56, cost=45, util_score=1, is_star=True),
+    Guest("Unicorn", 57, cost=45, is_star=True, is_flag=True),
+    Guest("Superhero", 58, cost=50, pop_score=1, is_star=True),
 ]
 NUM_GUESTS = len(GUESTS)
 assert NUM_GUESTS == 43
@@ -132,7 +135,7 @@ FILLER_NAMES: tuple[str, ...] = (START_POPULARITY, START_CASH)
 #   48       +1 Day              (x25)
 #   49       +1 Starting Popularity (x10, also filler)
 #   50       +1 Starting Cash    (x10, also filler)
-#   locations: see locations.py; 997/998/999 = Garden / Gold / Cherry
+#   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     **{g.name: ItemInfo(i, IC.progression, 1) for i, g in enumerate(GUESTS, start=1)},
     MAX_TROUBLE: ItemInfo(44, IC.progression, 4),

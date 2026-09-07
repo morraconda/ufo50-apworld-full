@@ -64,7 +64,7 @@ STARTING_TIME_ITEM = f"{LEVEL_NAMES[1]} Time"  # "A Simple Heist Time"
 
 def create_items(world: "UFO50World") -> list[Item]:
     # "A Simple Heist Time" is precollected -- it's the sphere-1 seed (all three of
-    # Level 1's checks are reachable with no other items), replacing the old hardcoded
+    # Level 1's locations are reachable with no other items), replacing the old hardcoded
     # LEVEL_1_START_TIME. Its normal pool copy is kept: it does nothing extra in logic
     # (Level 1 is already fully open) but it keeps the fill's slack where the old
     # design's inert Level 1 Time item used to sit.

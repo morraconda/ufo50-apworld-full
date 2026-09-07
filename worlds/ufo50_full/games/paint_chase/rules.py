@@ -10,5 +10,5 @@ GAME_NAME = "Paint Chase"
 
 
 def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
-    # every check (levels, Garden/Gold/Cherry) is sphere 1 -- no item gating
+    # every location (levels, Gift/Gold/Cherry) is sphere 1 -- no item gating
     regions["Menu"].connect(regions["The Circuit"])

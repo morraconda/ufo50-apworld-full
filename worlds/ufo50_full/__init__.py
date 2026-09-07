@@ -12,7 +12,10 @@ from .general_items import cartridge_items, cartridge_item_group
 
 from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koala, rail_heist, mortol,
                     waldorf, magic_garden, mortol_ii, attactics, kick_club, velgress, campanella_2, warptank,
-                    the_big_bell_race, bug_hunter, paint_chase, onion_delivery)
+                    the_big_bell_race, bug_hunter, paint_chase, onion_delivery,
+                    campanella_3, star_waspir, elfazars_hat, caramel_caramel, seaside_drive,
+                    devilition, fist_hell, avianos, hot_foot, bushido_ball, hyper_contender, pingolf,
+                    campanella, planet_zoldath)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
@@ -33,6 +36,20 @@ from .games.the_big_bell_race import items, locations, regions
 from .games.bug_hunter import items, locations, regions
 from .games.paint_chase import items, locations, regions
 from .games.onion_delivery import items, locations, regions
+from .games.campanella_3 import items, locations, regions
+from .games.star_waspir import items, locations, regions
+from .games.elfazars_hat import items, locations, regions
+from .games.caramel_caramel import items, locations, regions
+from .games.seaside_drive import items, locations, regions
+from .games.devilition import items, locations, regions
+from .games.fist_hell import items, locations, regions
+from .games.avianos import items, locations, regions
+from .games.hot_foot import items, locations, regions
+from .games.bushido_ball import items, locations, regions
+from .games.hyper_contender import items, locations, regions
+from .games.pingolf import items, locations, regions
+from .games.campanella import items, locations, regions
+from .games.planet_zoldath import items, locations, regions
 
 
 _ALL_GAME_NAMES = sorted(name for name in game_ids if name != "Main Menu")
@@ -81,6 +98,20 @@ ufo50_games: dict = {
     "The Big Bell Race": the_big_bell_race,
     "Paint Chase": paint_chase,
     "Onion Delivery": onion_delivery,
+    "Campanella 3": campanella_3,
+    "Star Waspir": star_waspir,
+    "Elfazar's Hat": elfazars_hat,
+    "Caramel Caramel": caramel_caramel,
+    "Seaside Drive": seaside_drive,
+    "Devilition": devilition,
+    "Fist Hell": fist_hell,
+    "Avianos": avianos,
+    "Hot Foot": hot_foot,
+    "Bushido Ball": bushido_ball,
+    "Hyper Contender": hyper_contender,
+    "Pingolf": pingolf,
+    "Campanella": campanella,
+    "Planet Zoldath": planet_zoldath,
 }
 
 
@@ -91,7 +122,7 @@ unimplemented_ufo50_games: list[str] = [name for name in game_ids.keys() if name
 temp_ufo50_location_name_to_id = {k: v for game in ufo50_games.values() for k, v in game.locations.get_locations().items()}
 for game in unimplemented_ufo50_games:
     base_id = get_game_base_id(game)
-    temp_ufo50_location_name_to_id[f"{game} - Garden"] = base_id + 997
+    temp_ufo50_location_name_to_id[f"{game} - Gift"] = base_id + 997
     temp_ufo50_location_name_to_id[f"{game} - Gold"] = base_id + 998
     temp_ufo50_location_name_to_id[f"{game} - Cherry"] = base_id + 999
 
@@ -207,7 +238,7 @@ class UFO50World(World):
 
         for game_name in self.included_unimplemented_games:
             locs = {
-                f"{game_name} - Garden": self.location_name_to_id[f"{game_name} - Garden"],
+                f"{game_name} - Gift": self.location_name_to_id[f"{game_name} - Gift"],
                 f"{game_name} - Gold": self.location_name_to_id[f"{game_name} - Gold"],
                 f"{game_name} - Cherry": self.location_name_to_id[f"{game_name} - Cherry"],
             }
@@ -283,7 +314,10 @@ class UFO50World(World):
 
     # games where the filler is a nothing item, so let's just exclude these where we can
     bad_filler_games: set[str] = {"Night Manor", "Magic Garden", "Attactics", "Warptank",
-                                  "Bug Hunter", "The Big Bell Race", "Paint Chase", "Onion Delivery"}
+                                  "Bug Hunter", "The Big Bell Race", "Paint Chase", "Onion Delivery",
+                                  "Campanella 3", "Star Waspir", "Elfazar's Hat", "Caramel Caramel",
+                                  "Seaside Drive", "Devilition", "Fist Hell", "Avianos", "Hot Foot",
+                                  "Bushido Ball", "Hyper Contender", "Pingolf", "Planet Zoldath"}
 
     def get_filler_item_name(self) -> str:
         if not self.included_games:

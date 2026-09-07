@@ -30,12 +30,12 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     regions["Mid Right"].connect(regions["Top"], rule=lambda state: state.has(gate_mid_right_top, player))
 
 
-    set_rule(world.get_location("Block Koala - Garden"), rule=lambda state: True)
+    set_rule(world.get_location("Block Koala - Gift"), rule=lambda state: True)
 
     # Gold Goal: Access Boss region (Level 50)
     set_rule(world.get_location("Block Koala - Gold"), rule=lambda state: True)
 
-    # Cherry check: complete all 50 levels (access to all regions)
+    # Cherry location: complete all 50 levels (access to all regions)
     all_gates = [
         gate_start_bottom_left,
         gate_bottom_left_mid_left,

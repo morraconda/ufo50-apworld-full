@@ -18,7 +18,7 @@ OPPY = f"{GAME_NAME} - +1 Starting Red Oppy"
 #
 # Tiers:
 #   sphere 1                                : Garden, 15 Oppies Saved
-#   any non-filler check (>=1 potion or     : 30 Oppies Saved, 1000 Score
+#   any non-filler location (>=1 potion or  : 30 Oppies Saved, 1000 Score
 #                         >=1 starting oppy)
 #   >=1 potion AND (>=2 starting oppy OR    : 50 Oppies Saved, 8x Multiplier,
 #                   all 4 potions)            5000 Score

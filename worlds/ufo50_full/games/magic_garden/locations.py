@@ -16,12 +16,12 @@ OPPY_THRESHOLDS = (15, 30, 50, 100, 150)
 SCORE_THRESHOLDS = (1000, 5000, 10000)
 
 # id offset layout inside Magic Garden's 1000-id block (thresholds hit within a
-# single run -- the mod sends the check the moment savedTotal/myScore/multiplier
+# single run -- the mod sends the location the moment savedTotal/myScore/multiplier
 # crosses the value):
 #    1..5   <n> Oppies Saved   (15 / 30 / 50 / 100 / 150 oppies dropped on stars)
 #   11..13  <n> Score          (1000 / 5000 / 10000 points)
 #   21      8x Multiplier      (reach an 8x score multiplier during an eating frenzy)
-#   997/998/999   Garden / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry
 
 
 class LocationInfo(NamedTuple):
@@ -36,7 +36,7 @@ def _build_location_table() -> dict[str, "LocationInfo"]:
         table[f"{n} Score"] = LocationInfo(offset)
     table["8x Multiplier"] = LocationInfo(21)
     # goal locations last so create_locations' Cherry/Gold handling can break out safely
-    table["Garden"] = LocationInfo(997)
+    table["Gift"] = LocationInfo(997)
     table["Gold"] = LocationInfo(998)
     table["Cherry"] = LocationInfo(999)
     return table
@@ -45,7 +45,7 @@ def _build_location_table() -> dict[str, "LocationInfo"]:
 location_table: dict[str, LocationInfo] = _build_location_table()
 
 # reachable from the start with no items
-sphere_1_locs: list[str] = ["Garden", "15 Oppies Saved"]
+sphere_1_locs: list[str] = ["Gift", "15 Oppies Saved"]
 
 
 def get_locations() -> dict[str, int]:

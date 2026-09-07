@@ -122,7 +122,7 @@ location_table: dict[str, LocationInfo] = {
 
     "Basement - Journal Entry 17": LocationInfo(69, "Basement"),  # on floor
 
-    "Garden": LocationInfo(997, "First Floor & Exterior"),
+    "Gift": LocationInfo(997, "First Floor & Exterior"),
     "Gold": LocationInfo(998, "First Floor & Exterior"),
     "Cherry": LocationInfo(999, "Basement")
 }

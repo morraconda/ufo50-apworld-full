@@ -11,27 +11,37 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Warptank"
 
-# Warptank is a warp-tank metroidvania on one big station "hub" (rm16_Warptank) with
-# 27 sectors reached from it via capsule pads. Vanilla gates the hub with `o16_Mecho`
-# walls that open once a cumulative number of sectors has been cleared (1 / 4 / 9 / 14
-# / 22), and the coffee "bridge" across the hub grows one tile per coffee collected.
+# Warptank is a warp-tank metroidvania on one big station hub (rm16_Warptank) with 27
+# sectors reached from it via capsule pads.
 #
-# For AP those two counters become item counts instead of in-game progress:
-#   - Capsule : opens the hub Mecho gates. 25 in the pool; the final gate wants 22.
-#   - Coffee  : extends the hub bridge to the Final Sector. 25 in the pool; the bridge
-#               needs 23 to be crossable.
-CAPSULE = "Capsule"
+# Gates: vanilla carves the hub into tiers with `o16_Mecho` walls that slide open once
+# a cumulative number of sectors has been cleared (trig 1 / 4 / 9 / 14 / 22), plus
+# `o16_MechoE` shortcut walls. Following the Block Koala model, each Mecho wall is now
+# a single named progression item -- you receive the gate to open it, no counting:
+#   Mecho Gate 1  (511)  o16_Mecho trig 1   -- Station Hub -> tier 2
+#   Mecho Gate 2  (512)  o16_Mecho trig 4
+#   Mecho Gate 3  (513)  o16_Mecho trig 9   (also opens the o16_MechoE shortcut walls)
+#   Mecho Gate 4  (514)  o16_Mecho trig 14
+#   Mecho Gate 5  (515)  o16_Mecho trig 22  -- last tier -> Final Sector
+#
+# Coffee is unchanged: the hub "coffee bridge" to the Final Sector still grows one tile
+# per received Coffee item; 25 in the pool, the bridge needs 23 to be crossable.
 COFFEE = "Coffee"
 FILLER = "Encouragement"
 
-# how many of each gating item exists, and the thresholds the logic checks
-CAPSULE_COUNT = 25
+GATES: dict[str, int] = {
+    "Mecho Gate 1": 511,
+    "Mecho Gate 2": 512,
+    "Mecho Gate 3": 513,
+    "Mecho Gate 4": 514,
+    "Mecho Gate 5": 515,
+}
 COFFEE_COUNT = 25
 COFFEE_FOR_FINAL = 23       # bridge is crossable -> also enough for Gold and Cherry
 
 
 item_table: dict[str, ItemInfo] = {
-    CAPSULE: ItemInfo(501, IC.progression, CAPSULE_COUNT),
+    **{name: ItemInfo(offset, IC.progression, 1) for name, offset in GATES.items()},
     COFFEE: ItemInfo(502, IC.progression_skip_balancing, COFFEE_COUNT),
     FILLER: ItemInfo(600, IC.filler, 0),
 }
@@ -42,7 +52,9 @@ def get_items() -> dict[str, int]:
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    return game_item_groups(GAME_NAME, item_table)
+    groups = game_item_groups(GAME_NAME, item_table)
+    groups[f"{GAME_NAME} - Gates"] = {f"{GAME_NAME} - {name}" for name in GATES}
+    return groups
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
@@ -50,7 +62,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # 25 Capsule + 25 Coffee into the pool; the framework pads the rest with Encouragement
+    # 5 gate items + 25 Coffee into the pool; the framework pads the rest with Encouragement
     return _create_items(GAME_NAME, item_table, world)
 
 

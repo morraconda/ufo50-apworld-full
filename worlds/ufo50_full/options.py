@@ -13,8 +13,8 @@ class Games(OptionSet):
 
     The following games have full implementations: Barbuta, Vainger, Night Manor, and Porgy.
     Party House has a more minor implementation, and counts as an implemented game.
-    Any game may be selected. Games without a full implementation only have Garden,
-    Gold, and Cherry checks.
+    Any game may be selected. Games without a full implementation only have Gift,
+    Gold, and Cherry locations.
     """
     internal_name = "games"
     display_name = "Games"
@@ -64,7 +64,7 @@ class StartingGameAmount(Range):
 
 class PorgyFuelDifficulty(Choice):
     """
-    Determine how much fuel you need to get checks.
+    Determine how much fuel you need to get locations.
     Hard means an efficient route with minimal damage.
     Medium means 25% more fuel than Hard.
     Easy means 50% more fuel than Hard.
@@ -114,7 +114,7 @@ class PorgyLanternless(Toggle):
 # Night Manor
 class NMEarlyPin(DefaultOnToggle):
     """
-    If enabled, the Hairpin will be on the floor in the starting room on either the Bowl or Spoon checks.
+    If enabled, the Hairpin will be on the floor in the starting room on either the Bowl or Spoon locations.
     """
     internal_name = "nm_early_pin"
     display_name = "Night Manor - Early Hairpin"

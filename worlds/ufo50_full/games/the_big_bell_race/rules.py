@@ -10,5 +10,5 @@ GAME_NAME = "The Big Bell Race"
 
 
 def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
-    # every check (races, Garden/Gold/Cherry) is sphere 1 -- no item gating
+    # every location (races, Gift/Gold/Cherry) is sphere 1 -- no item gating
     regions["Menu"].connect(regions["Grand Prix"])

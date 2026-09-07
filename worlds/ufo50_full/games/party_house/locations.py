@@ -24,11 +24,11 @@ SCENARIOS: list[str] = [
 ]
 FIXED_SCENARIOS: list[str] = SCENARIOS[:5]
 
-# Per-scenario check thresholds.
+# Per-scenario location thresholds.
 POPULARITY_THRESHOLDS: list[int] = [3, 5, 10, 20, 30, 40, 50, 60, 75]
 HOUSE_SPACE_THRESHOLDS: list[int] = [5, 7, 10, 15, 20, 25, 30]
 STAR_GUEST_THRESHOLDS: list[int] = [1, 2, 3, 4, 5]
-# "Clear" = seat six star guests (one past the highest Star Guests check).
+# "Clear" = seat six star guests (one past the highest Star Guests location).
 CLEAR_STAR_GUESTS: int = 6
 
 # Metric names used by rules.scenario_outcome.
@@ -38,7 +38,7 @@ STAR_GUESTS = "star_guests"
 
 
 # --- per-level id layout ---------------------------------------------------------
-# Party House has 22 checks per scenario, so the standard game_helpers.level_id
+# Party House has 22 locations per scenario, so the standard game_helpers.level_id
 # (level * 10 + slot) is too tight -- use the same idea with 100 ids per level.
 IDS_PER_LEVEL = 100
 
@@ -87,7 +87,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
                 level_id(level, _STAR_GUEST_SLOT0 + i), scenario, STAR_GUESTS, n)
     # goal locations last so create_locations' Cherry/Gold handling can break out.
     # (metric/threshold here are unused -- rules.py special-cases these three.)
-    table["Garden"] = LocationInfo(997, SCENARIOS[0], STAR_GUESTS, CLEAR_STAR_GUESTS)
+    table["Gift"] = LocationInfo(997, SCENARIOS[0], STAR_GUESTS, CLEAR_STAR_GUESTS)
     table["Gold"] = LocationInfo(998, FIXED_SCENARIOS[-1], STAR_GUESTS, CLEAR_STAR_GUESTS)
     table["Cherry"] = LocationInfo(999, SCENARIOS[-1], STAR_GUESTS, CLEAR_STAR_GUESTS)
     return table
@@ -96,7 +96,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
 location_table: dict[str, LocationInfo] = _build_location_table()
 
 # "3 Popularity" and "5 House Space" for each scenario are the intended sphere-1
-# checks (need nothing); every other check is gated by rules.SPHERES (all placeholder
+# locations (need nothing); every other location is gated by rules.SPHERES (all placeholder
 # all-zero spheres for now).
 sphere_1_locs: list[str] = ([f"{s} - 3 Popularity" for s in SCENARIOS]
                             + [f"{s} - 5 House Space" for s in SCENARIOS])
@@ -110,7 +110,7 @@ def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Clears"] = {f"{GAME_NAME} - {s}" for s in SCENARIOS}
     for scenario in SCENARIOS:
-        groups[f"{GAME_NAME} - {scenario} Checks"] = {f"{GAME_NAME} - {name}"
+        groups[f"{GAME_NAME} - {scenario} Locations"] = {f"{GAME_NAME} - {name}"
                                                       for name, data in location_table.items()
                                                       if data.region_name == scenario}
     return groups

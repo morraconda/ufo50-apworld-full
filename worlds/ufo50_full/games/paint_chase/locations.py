@@ -16,9 +16,9 @@ NUM_LEVEL = 26   # o49_Game.level, 1..LAST_LEVEL(26)
 REGION = "The Circuit"
 
 # id offset layout inside Paint Chase's 1000-id block:
-#     1..26   Level <n>   (reached level n)
+#     1..26   Level <n>   (cleared level n)
 #   200      Encouragement (filler, never granted)
-#   997/998/999   Garden / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry
 
 
 class LocationInfo(NamedTuple):
@@ -30,7 +30,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, NUM_LEVEL + 1):
         table[f"{UNIT} {n}"] = LocationInfo(n, REGION)
-    table["Garden"] = LocationInfo(997, REGION)
+    table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
     return table
@@ -38,7 +38,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every check is reachable from the start -- no item gating anywhere in this game
+# every location is reachable from the start -- no item gating anywhere in this game
 sphere_1_locs: list[str] = list(location_table.keys())
 
 

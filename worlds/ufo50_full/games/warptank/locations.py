@@ -18,7 +18,7 @@ GAME_NAME = "Warptank"
 #   400 + k      Tank Colour <A..E>         (swapped to tank colour k at its pit stop)
 #   410 + n      Talk to <npc>              (finished npc n's dialogue, n = o16_Npc.num 1..10)
 #   430          Enter the Cafe             (talked to the barista, npc 4)
-#   997/998/999  Garden / Gold / Cherry
+#   997/998/999  Gift / Gold / Cherry
 
 # (sector index, display name, has a collectible coffee)
 # indices/names/coffee flags are from gml_Object_o16_Mas_Create_0 (lvName / lvHasCoffee).
@@ -40,8 +40,8 @@ NPCS: dict[int, str] = {
     9: "the Little Guy", 10: "the Pig Man",
 }
 
-# which hub region each sector's checks live in. The region entry rules (rules.py) gate
-# these by Capsule count, mirroring the vanilla Mecho gate thresholds.
+# which hub region each sector's locations live in. The region entry rules (rules.py)
+# gate these on the matching "Mecho Gate <n>" item, one per vanilla o16_Mecho wall.
 _SECTOR_REGION: dict[int, str] = {
     **{s: "Station Hub" for s in (0, 1, 2, 3, 4)},
     **{s: "Hub - Gate 1" for s in (5, 6, 7, 8)},
@@ -75,7 +75,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     for n, who in NPCS.items():
         table[f"Talk to {who}"] = LocationInfo(410 + n, _NPC_REGION[n])
     table["Enter the Cafe"] = LocationInfo(430, "Hub - Gate 1")
-    table["Garden"] = LocationInfo(997, "Hub - Gate 9")
+    table["Gift"] = LocationInfo(997, "Hub - Gate 9")
     table["Gold"] = LocationInfo(998, "Final Sector")
     table["Cherry"] = LocationInfo(999, "Final Sector")
     return table
@@ -83,7 +83,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# checks reachable before any Capsule gate opens
+# locations reachable before any Mecho Gate opens
 sphere_1_locs: list[str] = [name for name, data in location_table.items()
                             if data.region_name == "Station Hub"]
 

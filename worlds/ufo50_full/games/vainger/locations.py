@@ -19,7 +19,7 @@ class LocationInfo(NamedTuple):
 
 
 def _is_real_location(_name: str, data: LocationInfo) -> bool:
-    """Vainger's ``id_offset is None`` entries are event locations, not real checks."""
+    """Vainger's ``id_offset is None`` entries are event locations, not real, sendable locations."""
     return data.id_offset is not None
 
 
@@ -86,7 +86,7 @@ location_table: dict[str, LocationInfo] = {
 
     "Control - Hooper Defeated": LocationInfo(None, "Control Genepod"),
 
-    "Garden": LocationInfo(997, "ThetaR7C9 Genepod"),  # for now it's a clone of the heat mod location.
+    "Gift": LocationInfo(997, "ThetaR7C9 Genepod"),  # for now it's a clone of the heat mod location.
     "Gold": LocationInfo(998, "Control Genepod"),
     "Cherry": LocationInfo(999, "Control Genepod")
 }

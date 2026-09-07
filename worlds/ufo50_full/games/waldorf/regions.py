@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Waldorf's Journey"
 
-# Waldorf's Journey is a short game; every check is reachable from the start, so there
+# Waldorf's Journey is a short game; every location is reachable from the start, so there
 # is just the required Menu region plus one region holding everything.
 regions: list[str] = ["Menu", "Island"]
 

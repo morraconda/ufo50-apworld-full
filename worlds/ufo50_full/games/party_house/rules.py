@@ -85,7 +85,7 @@ def available_guests(scenario: str, state: "CollectionState", world: "UFO50World
 # ---------------------------------------------------------------------------
 # Access model
 #
-# Each check has a "sphere" -- a Thresholds tuple it requires. A check is reachable
+# Each location has a "sphere" -- a Thresholds tuple it requires. A location is reachable
 # when, for every one of the nine fields, the value the player can ACHIEVE is >= the
 # value the sphere REQUIRES (a pure AND).
 #
@@ -98,7 +98,7 @@ def available_guests(scenario: str, state: "CollectionState", world: "UFO50World
 #                                         -- straight from party_state (items only).
 #
 # money/pop/util score thresholds are all 0 for now ("3 Popularity" and "5 House Space"
-# are deliberately sphere 1). The star-guest checks 1..6 each get a real star_guests
+# are deliberately sphere 1). The star-guest locations 1..6 each get a real star_guests
 # requirement; every other field is still a placeholder to fill in per (metric, threshold).
 # ---------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ def _sphere(money_score: int = 0, pop_score: int = 0, util_score: int = 0,
                       trouble_threshold, max_popularity, max_cash, days, shop_stock)
 
 
-# (metric, threshold value) -> the sphere that check requires.
+# (metric, threshold value) -> the sphere that location requires.
 SPHERES: dict[tuple[str, int], Thresholds] = {
     # --- sphere 1: reachable with nothing ---
     (POPULARITY, 3): ZERO_SPHERE,
@@ -132,7 +132,7 @@ SPHERES: dict[tuple[str, int], Thresholds] = {
     # --- placeholders (currently all-zero) ---
     **{(POPULARITY, n): _sphere() for n in POPULARITY_THRESHOLDS if n != 3},
     **{(HOUSE_SPACE, n): _sphere() for n in HOUSE_SPACE_THRESHOLDS if n != 5},
-    # star-guest checks 1..5 and Clear (6): a dedicated sphere per value -- star_guests
+    # star-guest locations 1..5 and Clear (6): a dedicated sphere per value -- star_guests
     # set to the target, every other field a placeholder.
     **{(STAR_GUESTS, n): _sphere(star_guests=n) for n in STAR_GUEST_THRESHOLDS},
     (STAR_GUESTS, CLEAR_STAR_GUESTS): _sphere(star_guests=CLEAR_STAR_GUESTS),
@@ -141,7 +141,7 @@ SPHERES: dict[tuple[str, int], Thresholds] = {
 
 # (scenario, guest name) -> extra star-guest copies stocked per "+1 Shop Stock", when
 # it differs from the usual 1. Alien Invitation offers only one star guest (Alien), so
-# it is hardcoded to 2 per check.
+# it is hardcoded to 2 per location.
 _STAR_SUPPLY_PER_CHECK: dict[tuple[str, str], int] = {
     ("Alien Invitation", "Alien"): 2,
 }
@@ -180,7 +180,7 @@ def _achieved(scenario: str, state: "CollectionState", world: "UFO50World") -> T
     )
 
 
-# Random Scenario supplies every held guest (no fixed pool), so its checks demand
+# Random Scenario supplies every held guest (no fixed pool), so its locations demand
 # twice the sphere's money / pop / util score requirement (the other five fields are
 # item-driven and unchanged).
 RANDOM_SCENARIO = SCENARIOS[-1]
@@ -212,21 +212,21 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
         regions["Menu"].connect(regions[scenario])
 
     for loc_name, info in location_table.items():
-        if loc_name in ("Garden", "Gold", "Cherry"):
+        if loc_name in ("Gift", "Gold", "Cherry"):
             continue
         set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
                  lambda state, s=info.region_name, m=info.metric, t=info.threshold:
                  _meets(s, m, t, state, world))
 
-    # Garden (vanilla: beat any one scenario) -- gate on clearing the first.
-    set_rule(world.get_location(f"{GAME_NAME} - Garden"),
+    # Gift (vanilla: beat any one scenario) -- gate on clearing the first.
+    set_rule(world.get_location(f"{GAME_NAME} - Gift"),
              lambda state: _can_clear(SCENARIOS[0], state, world))
 
     # Gold (vanilla: beat all five fixed scenarios).
     set_rule(world.get_location(f"{GAME_NAME} - Gold"),
              lambda state: all(_can_clear(s, state, world) for s in FIXED_SCENARIOS))
 
-    # Cherry check (vanilla: a 5-win streak in Random Scenario) -- logic just needs
+    # Cherry location (vanilla: a 5-win streak in Random Scenario) -- logic just needs
     # Random Scenario clearable.
     set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
              lambda state: _can_clear(SCENARIOS[-1], state, world))

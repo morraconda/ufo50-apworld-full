@@ -38,7 +38,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
 
     # continuous chain: Menu -> 1-1 -> 1-2 -> ... -> 4-10. Crossing into a new block of
     # five sub-levels carries that block's seconds/lives requirement; everything else
-    # (including the score checks parked in each block's opening region) is free.
+    # (including the score locations parked in each block's opening region) is free.
     for n in range(1, NUM_LEVELS + 1):
         source = regions["Menu"] if n == 1 else regions[level_name(n - 1)]
         block = block_of(n)

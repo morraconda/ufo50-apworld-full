@@ -14,7 +14,7 @@ GAME_NAME = "Rail Heist"
 
 # Rail Heist has no in-game progression gating: every level can be selected from the
 # main menu at the start of the game. The only region besides the required Menu is the
-# one that holds all of the level checks.
+# one that holds all of the level locations.
 regions: list[str] = [
     "Menu",
     "Levels",

@@ -42,7 +42,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
             regions[level_name(next_lvl)],
             rule=lambda state, n=next_lvl: total_life_value(state, player) >= LIVES_PER_LEVEL * n)
 
-    # Garden clears at 2-C, Gold at the 4-B boss -- reaching the region (having the lives
+    # Gift clears at 2-C, Gold at the 4-B boss -- reaching the region (having the lives
     # for the linear chain) is enough. Cherry needs 75 lives for the 4-B beat instead of
     # the usual 20, i.e. LIVES_PER_LEVEL * 9 + CHERRY_LIVES total.
     cherry_total = LIVES_PER_LEVEL * (NUM_LEVELS - 1) + CHERRY_LIVES

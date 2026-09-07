@@ -23,8 +23,8 @@ class Hidden(IntEnum):
 class LocationInfo(NamedTuple):
     id_offset: int
     region_name: str
-    fuel_touch: int = 0  # how many tanks it took to get to the check
-    fuel_get: int = 0  # how many tanks it took to get to the check and back to a base
+    fuel_touch: int = 0  # how many tanks it took to get to the location
+    fuel_get: int = 0  # how many tanks it took to get to the location and back to a base
     concealed: int = Hidden.not_hidden
 
 
@@ -134,7 +134,7 @@ location_table: dict[str, LocationInfo] = {
     # 13 fuel, 12 torpedo upgrades, missile module, burst OR 13 fuel and depth charges
     "Dracula": LocationInfo(304, "Abyss"),  # squid-thing
 
-    "Garden": LocationInfo(997, "Menu"),
+    "Gift": LocationInfo(997, "Menu"),
     "Gold": LocationInfo(998, "Abyss"),
     "Cherry": LocationInfo(999, "Abyss")
 }

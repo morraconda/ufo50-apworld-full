@@ -20,7 +20,7 @@ FILLER = "Cloverana's Love"
 #   2  +1 Starting Red Oppy  (x4 -- extra oppies on the field at the start of a run;
 #                             you begin with just one)
 #   3  Cloverana's Love      (filler -- does nothing)
-#   locations: see locations.py; 997/998/999 = Garden / Gold / Cherry
+#   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     POTION: ItemInfo(1, IC.progression, 4),
     OPPY: ItemInfo(2, IC.progression, 4),

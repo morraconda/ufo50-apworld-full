@@ -257,8 +257,8 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # sr("VerdeR7C8 - Shield Upgrade")
 
     # garden: same logic as heat mod
-    # sr("Garden")
-    # gold: check the boss defeat state
+    # sr("Gift")
+    # gold: read the boss defeat state
     sr("Gold", rule=lambda state: state.has("Vainger - Control - Hooper Defeated", player))
     # cherry: beating Hooper requires everything but the security clearance, so checking those two should be enough
     sr("Cherry", rule=lambda state: state.has("Vainger - Control - Hooper Defeated", player)

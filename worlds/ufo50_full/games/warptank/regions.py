@@ -12,10 +12,11 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Warptank"
 
-# The whole game is one station hub carved into tiers by the `o16_Mecho` gates. Each
-# tier is a region; a sector's checks (and the goal locations) live in the tier its
-# capsule pad sits behind, so the Capsule-count entry rules in rules.py gate them.
-# Gate names are the vanilla cumulative-clear thresholds, reused here as Capsule counts.
+# The whole game is one station hub carved into tiers by the `o16_Mecho` gate walls.
+# Each tier is a region; a sector's locations (and the goal locations) live in the tier
+# its capsule pad sits behind, so the entry rules in rules.py gate them on the matching
+# "Mecho Gate <n>" item (Block Koala model). Region names keep the vanilla
+# cumulative-clear thresholds (1/4/9/14) as tier labels.
 regions: list[str] = [
     "Menu",
     "Station Hub",

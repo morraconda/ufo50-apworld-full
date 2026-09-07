@@ -19,7 +19,7 @@ EXTRA_LIFE = "Extra Life"
 #                       which starts at 0; also this game's filler item, so the pool
 #                       ends up with ~50 of them once padding is added)
 #   2  Extra Life      (progression x10 -- each adds 1 life; you start a run with 0)
-#   locations: see locations.py; 997/998/999 = Garden / Gold / Cherry
+#   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     REAL_SECOND: ItemInfo(1, IC.progression, 40),
     EXTRA_LIFE: ItemInfo(2, IC.progression, 10),

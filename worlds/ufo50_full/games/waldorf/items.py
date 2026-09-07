@@ -15,7 +15,7 @@ GAME_NAME = "Waldorf's Journey"
 # BALLOON=3, PROPELLER=4, BINOCULARS=5, CANNED_FISH=6). The mod zeroes the vanilla
 # loadout and reads get_item_count(101..106); these six go in the multiworld pool
 # (one each), so Waldorf builds its toolkit over the seed rather than starting with
-# everything. Nothing in Waldorf's logic needs them (every check is sphere 1), so
+# everything. Nothing in Waldorf's logic needs them (every location is sphere 1), so
 # they are `useful`, not progression.
 STARTING_ITEMS: dict[str, int] = {
     "Beach Ball": 101,

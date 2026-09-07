@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Onion Delivery"
 
-# every check is reachable from the start, so there is just the required Menu region
-# plus one region holding all the day checks
+# every location is reachable from the start, so there is just the required Menu region
+# plus one region holding all the day locations
 regions: list[str] = ["Menu", "The Route"]
 
 

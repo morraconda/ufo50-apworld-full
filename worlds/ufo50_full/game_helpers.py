@@ -37,14 +37,14 @@ IDS_PER_LEVEL = 10
 
 
 def level_id(level: int, slot: int = 0) -> int:
-    """Standard id offset for a game whose checks/items are grouped by level.
+    """Standard id offset for a game whose locations/items are grouped by level.
 
     ``offset = level * 10 + slot``: level 1 owns offsets 10..19, level 2 owns
     20..29, ... level 50 owns 500..509. Offsets 0..9 stay free for game-wide items,
     and 997/998/999 are the goal locations.
 
     ``level`` is 1-indexed (1..50); ``slot`` is 0-indexed (0..9) -- one slot per
-    check type / item type on that level (e.g. Rail Heist: 0 Clear, 1 Angel, 2 Devil;
+    location type / item type on that level (e.g. Rail Heist: 0 Clear, 1 Angel, 2 Devil;
     Mortol: 0 level clear, 1..8 life pickups).
     """
     if not 1 <= level <= MAX_LEVELS:

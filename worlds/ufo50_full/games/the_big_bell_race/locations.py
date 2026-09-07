@@ -14,13 +14,13 @@ GAME_NAME = "The Big Bell Race"
 NUM_RACE = 8   # a championship of 8 races (o28_Mas.currStage 0..7)
 REGION = "Grand Prix"
 
-# The check for race n is sent only when you finish that race in 1st place -- hence
+# The location for race n is sent only when you finish that race in 1st place -- hence
 # the "Win Race <n>" name. It is still sphere 1 (no item gates it), just a skill wall.
 
 # id offset layout inside The Big Bell Race's 1000-id block:
 #     1..8   Win Race <n>   (finished race n of the grand prix in 1st place)
 #   200      Encouragement (filler, never granted)
-#   997/998/999   Garden / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry
 
 
 def race_name(n: int) -> str:
@@ -36,7 +36,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, NUM_RACE + 1):
         table[race_name(n)] = LocationInfo(n, REGION)
-    table["Garden"] = LocationInfo(997, REGION)
+    table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
     return table
@@ -44,7 +44,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every check is reachable from the start -- no item gating anywhere in this game
+# every location is reachable from the start -- no item gating anywhere in this game
 sphere_1_locs: list[str] = list(location_table.keys())
 
 

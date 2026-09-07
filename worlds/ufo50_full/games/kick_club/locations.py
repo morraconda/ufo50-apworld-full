@@ -21,13 +21,13 @@ NUM_LEVELS = WORLDS * SUBLEVELS          # 40 sub-levels, played "1-1" .. "4-10"
 BLOCK_SIZE = 5
 NUM_BLOCKS = NUM_LEVELS // BLOCK_SIZE    # 8
 
-# Score checks: every 10k breakpoint up to the 150k Cherry goal.
+# Score locations: every 10k breakpoint up to the 150k Cherry goal.
 SCORE_STEP = 10_000
 SCORE_MAX = 150_000
 SCORES: list[int] = list(range(SCORE_STEP, SCORE_MAX + 1, SCORE_STEP))   # 15 of them
 
 # Each threshold is gated by the block that `points + SCORE_SHIFT` would sit in, so
-# only the 10k check is sphere 1 (the pairs then run 20k/30k -> block 2, 40k/50k ->
+# only the 10k location is sphere 1 (the pairs then run 20k/30k -> block 2, 40k/50k ->
 # block 3, ... 140k/150k -> block 8).
 SCORE_SHIFT = 10_000
 
@@ -52,15 +52,15 @@ def block_start_level(block: int) -> int:
 
 
 def block_for_score(points: int) -> int:
-    """The block you must be able to play for the `points` check (20k per block,
+    """The block you must be able to play for the `points` location (20k per block,
     shifted up by SCORE_SHIFT so only 10k is sphere 1)."""
     return -(-(points + SCORE_SHIFT) // (BLOCK_SIZE * 4000))   # ceil((points + 10k) / 20000)
 
 
-# Kick Club has no in-game boss/win text for Gold or Garden separately from finishing
-# world 4, and the Runner boss (Garden) is room-placed so its world isn't visible in
-# the decompile -- park Garden on the final region too (safe: it's only ever a check).
-GARDEN_REGION = level_name(NUM_LEVELS)
+# Kick Club has no in-game boss/win text for Gold or Gift separately from finishing
+# world 4, and the Runner boss (Gift) is room-placed so its world isn't visible in
+# the decompile -- park Gift on the final region too (safe: it's only ever a location).
+GIFT_REGION = level_name(NUM_LEVELS)
 GOLD_REGION = level_name(NUM_LEVELS)
 CHERRY_REGION = level_name(NUM_LEVELS)
 
@@ -69,7 +69,7 @@ CHERRY_REGION = level_name(NUM_LEVELS)
 #   1..2          items (see items.py)
 #   10, 20, ...   <world>-<sublevel>   (sub-level clear, via game_helpers.level_id(n, 0))
 #   501..515      <n>k Points          (500 + points // 10000)
-#   997/998/999   Garden / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry
 
 
 class LocationInfo(NamedTuple):
@@ -85,7 +85,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
         region = level_name(block_start_level(block_for_score(points)))
         table[score_name(points)] = LocationInfo(500 + points // SCORE_STEP, region)
     # goal locations last so create_locations' Cherry/Gold handling can break out safely
-    table["Garden"] = LocationInfo(997, GARDEN_REGION)
+    table["Gift"] = LocationInfo(997, GIFT_REGION)
     table["Gold"] = LocationInfo(998, GOLD_REGION)
     table["Cherry"] = LocationInfo(999, CHERRY_REGION)
     return table
@@ -93,7 +93,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# Block 1 (the first five sub-levels) and the 10k score check need no items.
+# Block 1 (the first five sub-levels) and the 10k score location need no items.
 sphere_1_locs: list[str] = ([level_name(n) for n in range(1, BLOCK_SIZE + 1)]
                             + [score_name(SCORE_STEP)])
 

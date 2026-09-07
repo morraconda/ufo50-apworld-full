@@ -22,7 +22,7 @@ FILLER = "Encouragement"
 #                      ranked ladder; see rules.py)
 #   3  Encouragement  (filler -- a "nice try" with no mechanical effect; Attactics is
 #                      a bad filler game)
-#   locations: see locations.py; 997/998/999 = Garden / Gold / Cherry
+#   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     TURN_TIME: ItemInfo(1, IC.progression, 24),
     PROMOTION: ItemInfo(2, IC.progression, 1),

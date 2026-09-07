@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 GAME_NAME = "The Big Bell Race"
 
-# every check is reachable from the start, so there is just the required Menu region
-# plus one region holding all the race checks
+# every location is reachable from the start, so there is just the required Menu region
+# plus one region holding all the race locations
 regions: list[str] = ["Menu", "Grand Prix"]
 
 

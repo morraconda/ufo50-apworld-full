@@ -59,6 +59,20 @@ _PER_GAME: list[tuple[str, list[str], int]] = [
     ("The Big Bell Race", ["Barbuta", "Mortol"],       5),
     ("Paint Chase",       ["Barbuta", "Mortol"],       9),
     ("Onion Delivery",    ["Barbuta", "Mortol"],       7),
+    ("Campanella 3",      ["Barbuta", "Mortol"],       2),
+    ("Star Waspir",       ["Barbuta", "Mortol"],       4),
+    ("Elfazar's Hat",     ["Barbuta", "Mortol"],       6),
+    ("Caramel Caramel",   ["Barbuta", "Mortol"],       1),
+    ("Seaside Drive",     ["Barbuta", "Mortol"],       3),
+    ("Devilition",        ["Barbuta", "Mortol"],       5),
+    ("Fist Hell",         ["Barbuta", "Mortol"],       9),
+    ("Avianos",           ["Barbuta", "Mortol"],       2),
+    ("Hot Foot",          ["Barbuta", "Mortol"],       6),
+    ("Bushido Ball",      ["Barbuta", "Mortol"],       4),
+    ("Hyper Contender",   ["Barbuta", "Mortol"],       8),
+    ("Pingolf",           ["Barbuta", "Mortol"],       4),
+    ("Campanella",        ["Barbuta", "Mortol"],       6),
+    ("Planet Zoldath",    ["Barbuta", "Mortol"],       5),
 ]
 
 

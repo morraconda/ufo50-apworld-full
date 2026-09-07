@@ -32,7 +32,7 @@ COINS = "+50 Coins"
 #   5  Wing Boots            (o38_Game ITEM_WING_BOOTS  = 5)
 #   6  Compass               (o38_Game ITEM_COMPASS     = 14)
 #   7  +50 Coins             (filler; +50 to a run's starting coins)
-#   locations: see locations.py; 997/998/999 = Garden / Gold / Cherry
+#   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     MAX_HP: ItemInfo(1, IC.progression, 11),
     MAX_FUEL: ItemInfo(2, IC.progression, 13),

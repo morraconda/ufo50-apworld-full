@@ -49,12 +49,18 @@ PICKUPS: list[tuple[int, int, int, int]] = [
     (3024, 2432, 3, 9), (1888, 2448, 5, 9), (2512, 2464, 5, 9), (3920, 2464, 10, 9),
 ]
 
+# 1-based PICKUPS indices whose life pickup sits inside a breakable block in the vanilla
+# room (o29_Bricks x4 / o29_GravityBlock x1, exact-cell overlap, mostly fully walled in)
+# -- you can't see or grab them without digging through. Their location names get a
+# " (hidden)" suffix.
+HIDDEN_PICKUPS: frozenset[int] = frozenset({17, 21, 27, 37, 56})
+
 # id offset layout inside Mortol's 1000-id block, grouped by level via
 # game_helpers.level_id -- offset = level * 10 + slot:
 #   <lvl>*10        <stage>                     (level clear, slot 0)
 #   <lvl>*10 + <y>  <stage> - Life Pickup <y>   (slot 1..8, in PICKUPS order)
 #   200..203       items (see items.py)
-#   997/998/999    Garden / Gold / Cherry
+#   997/998/999    Gift / Gold / Cherry
 
 
 class LocationInfo(NamedTuple):
@@ -67,12 +73,14 @@ def _build_location_table() -> dict[str, LocationInfo]:
     for lvl in range(1, NUM_LEVELS + 1):
         table[level_name(lvl)] = LocationInfo(level_id(lvl, 0), level_name(lvl))
     per_level: dict[int, int] = {}
-    for _x, _y, _n, lvl in PICKUPS:
+    for i, (_x, _y, _n, lvl) in enumerate(PICKUPS, start=1):
         per_level[lvl] = per_level.get(lvl, 0) + 1
-        table[f"{level_name(lvl)} - Life Pickup {per_level[lvl]}"] = LocationInfo(
-            level_id(lvl, per_level[lvl]), level_name(lvl))
+        name = f"{level_name(lvl)} - Life Pickup {per_level[lvl]}"
+        if i in HIDDEN_PICKUPS:
+            name += " (hidden)"
+        table[name] = LocationInfo(level_id(lvl, per_level[lvl]), level_name(lvl))
     # goal locations last (Cherry/Gold handling in create_locations breaks out)
-    table["Garden"] = LocationInfo(997, level_name(6))   # vanilla fires GARDEN_WIN on clearing 2-C
+    table["Gift"] = LocationInfo(997, level_name(6))   # vanilla fires GARDEN_WIN on clearing 2-C
     table["Gold"] = LocationInfo(998, level_name(NUM_LEVELS))
     table["Cherry"] = LocationInfo(999, level_name(NUM_LEVELS))
     return table

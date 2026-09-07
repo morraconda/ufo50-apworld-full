@@ -2,29 +2,29 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .items import GAME_NAME, CAPSULE, COFFEE, COFFEE_FOR_FINAL
+from .items import GAME_NAME, COFFEE, COFFEE_FOR_FINAL
 
 if TYPE_CHECKING:
     from ... import UFO50World
 
-capsule = f"{GAME_NAME} - {CAPSULE}"
 coffee = f"{GAME_NAME} - {COFFEE}"
 
-# hub region -> Capsule count needed to enter it. Mirrors the vanilla `o16_Mecho`
-# gates, which open at a cumulative sector-clear count of 1 / 4 / 9 / 14 / 22 (the
-# three `o16_MechoE` shortcut walls, vanilla-keyed to sectors 18/19/20, are folded
-# into the >= 9 tier). The chain is monotonic: reaching a later tier implies every
-# earlier one.
-_CAPSULE_GATE: dict[str, int] = {
-    "Hub - Gate 1": 1,
-    "Hub - Gate 4": 4,
-    "Hub - Gate 9": 9,
-    "Hub - Gate 14": 14,
+
+def _g(name: str) -> str:
+    return f"{GAME_NAME} - {name}"
+
+
+# hub tier region -> the Mecho Gate item that opens the wall into it. Mirrors the
+# vanilla `o16_Mecho` walls (trig 1 / 4 / 9 / 14; the three `o16_MechoE` shortcut
+# walls, vanilla-keyed to sectors 18/19/20, ride Mecho Gate 3). The chain is
+# monotonic: reaching a later tier implies every earlier one.
+_CHAIN_GATE: dict[str, str] = {
+    "Hub - Gate 1": "Mecho Gate 1",
+    "Hub - Gate 4": "Mecho Gate 2",
+    "Hub - Gate 9": "Mecho Gate 3",
+    "Hub - Gate 14": "Mecho Gate 4",
 }
 _HUB_CHAIN: list[str] = ["Station Hub", "Hub - Gate 1", "Hub - Gate 4", "Hub - Gate 9", "Hub - Gate 14"]
-
-# Final Sector: the trig=22 Mecho wall AND a coffee bridge long enough to cross.
-CAPSULE_FOR_FINAL = 22
 
 
 def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
@@ -33,13 +33,13 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     regions["Menu"].connect(regions["Station Hub"])
 
     for prev, nxt in zip(_HUB_CHAIN, _HUB_CHAIN[1:]):
-        need = _CAPSULE_GATE[nxt]
+        gate = _g(_CHAIN_GATE[nxt])
         regions[prev].connect(regions[nxt],
-                              rule=lambda state, n=need: state.has(capsule, player, n))
+                              rule=lambda state, gg=gate: state.has(gg, player))
 
-    # Reaching the Final Sector is all that gates Gold and Cherry -- both goal locations
-    # live in that region, so no extra per-location rule is needed.
+    # Final Sector: the last Mecho wall AND a coffee bridge long enough to cross (23).
+    # Both goal locations (Gold/Cherry) live in that region, so no extra per-location rule.
     regions["Hub - Gate 14"].connect(
         regions["Final Sector"],
-        rule=lambda state: (state.has(capsule, player, CAPSULE_FOR_FINAL)
+        rule=lambda state: (state.has(_g("Mecho Gate 5"), player)
                             and state.has(coffee, player, COFFEE_FOR_FINAL)))

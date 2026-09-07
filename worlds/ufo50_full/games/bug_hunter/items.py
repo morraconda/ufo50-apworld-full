@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Bug Hunter"
 
-# Bug Hunter is an endless job streak; the first six jobs (Garden at 1, Gold at 3, Cherry at 6) are the checks and all are nominally reachable from the start.
+# Bug Hunter is an endless job streak; the first six jobs (Gift at 1, Gold at 3, Cherry at 6) are the locations and all are nominally reachable from the start.
 # Nothing here goes in the multiworld pool from this game -- its only item is the
 # Encouragement filler (a nothing item, hence a "bad filler" game). The framework
 # pads every location with filler from the other games in the seed.
