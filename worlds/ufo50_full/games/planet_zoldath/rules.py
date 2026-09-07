@@ -77,11 +77,5 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
         for p in range(2, PIECES_PER_MAP + 1):
             rule(map_piece_name(mt, p), tier4)
 
-    # NPC trade-reward checks: all need Translator, gated behind the same requirement
-    # as their matching map piece 1 (1 = overworld, 2 = trade, 3 = dungeon).
-    rule("NPC Reward 1", lambda state: state.has(_translator, player) and tier2(state))
-    rule("NPC Reward 2", tier3)  # tier3 already requires Translator
-    rule("NPC Reward 3", lambda state: state.has(_translator, player) and tier4(state))
-
     rule("Gold", goal)
     rule("Cherry", goal)

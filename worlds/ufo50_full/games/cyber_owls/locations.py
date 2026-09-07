@@ -10,20 +10,32 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Planet Zoldath"
-REGION = "The Planet"
+GAME_NAME = "Cyber Owls"
+REGION = "The Ops"
 
-NUM_RANDOM_CHECKS = 15
-MAP_TYPES: tuple[str, ...] = ("Overworld", "Trade", "Dungeon")
-PIECES_PER_MAP = 3   # each map pickup sends 3 checks
+# Cyber Owls's checks are the nine bosses (each is its own enemy object; the location
+# is sent when that object is destroyed at hp <= 0). No level/mission checks.
+#   Hong Kong    Road Toad            (o45_eToad)
+#   Congo Basin  Maniyak / Psycow     (o45_eManiyak / o45_ePsycow -- the dual boss)
+#   Chicago      Pyrat                (o45_ePyrat)
+#   Moscow       Hackoon              (o45_eHackoon)
+#   Antarctica   Dr. Dillo / Missile / Hawk Commander / Tank
+#                (o45_eDoctor / o45_eNuke / o45_eHawk / o45_eFinalTank)
+BOSS_NAMES: tuple[str, ...] = (
+    "Road Toad",
+    "Maniyak",
+    "Psycow",
+    "Pyrat",
+    "Hackoon",
+    "Dr. Dillo",
+    "Missile",
+    "Hawk Commander",
+    "Tank",
+)
 
-# id offset layout inside Planet Zoldath's 1000-id block:
-#     1..15    Random Check <n>   -- every energy cube becomes an AP pickup;
-#              sent cumulatively in pickup order.
-#    21..23    Overworld Map Piece 1..3   (all sent when the overworld map is picked up)
-#    24..26    Trade Map Piece 1..3
-#    27..29    Dungeon Map Piece 1..3
-#   200        +1 Starting Resource (filler)
+# id offset layout inside Cyber Owls's 1000-id block:
+#     1..9   <boss name>   (offset = list position; see the mod's per-boss Destroy hook)
+#   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
 
@@ -32,17 +44,10 @@ class LocationInfo(NamedTuple):
     region_name: str
 
 
-def map_piece_name(map_type: str, piece: int) -> str:
-    return f"{map_type} Map Piece {piece}"
-
-
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for n in range(1, NUM_RANDOM_CHECKS + 1):
-        table[f"Random Check {n}"] = LocationInfo(n, REGION)
-    for i, mt in enumerate(MAP_TYPES):
-        for p in range(1, PIECES_PER_MAP + 1):
-            table[map_piece_name(mt, p)] = LocationInfo(21 + i * PIECES_PER_MAP + (p - 1), REGION)
+    for n, name in enumerate(BOSS_NAMES, start=1):
+        table[name] = LocationInfo(n, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -51,8 +56,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# the first six random checks need nothing (rules.py gates the rest by tier)
-sphere_1_locs: list[str] = [f"Random Check {n}" for n in range(1, 7)]
+# every location is reachable from the start -- no item gating anywhere in this game
+sphere_1_locs: list[str] = list(location_table.keys())
 
 
 def get_locations() -> dict[str, int]:
@@ -61,13 +66,7 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Random Checks"] = {
-        f"{GAME_NAME} - Random Check {n}" for n in range(1, NUM_RANDOM_CHECKS + 1)
-    }
-    groups[f"{GAME_NAME} - Map Pieces"] = {
-        f"{GAME_NAME} - {map_piece_name(mt, p)}"
-        for mt in MAP_TYPES for p in range(1, PIECES_PER_MAP + 1)
-    }
+    groups[f"{GAME_NAME} - Bosses"] = {f"{GAME_NAME} - {name}" for name in BOSS_NAMES}
     return groups
 
 

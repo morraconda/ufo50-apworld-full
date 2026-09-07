@@ -73,6 +73,18 @@ _PER_GAME: list[tuple[str, list[str], int]] = [
     ("Pingolf",           ["Barbuta", "Mortol"],       4),
     ("Campanella",        ["Barbuta", "Mortol"],       6),
     ("Planet Zoldath",    ["Barbuta", "Mortol"],       5),
+    ("Combatants",        ["Barbuta", "Mortol"],       3),
+    ("Lords of Diskonia", ["Barbuta", "Mortol"],       7),
+    ("Cyber Owls",        ["Barbuta", "Mortol"],       2),
+    ("Ninpek",            ["Barbuta", "Mortol"],       9),
+    ("Rakshasa",          ["Barbuta", "Mortol"],       1),
+    ("Valbrace",          ["Barbuta", "Mortol"],       5),
+    ("Rock On! Island",   ["Barbuta", "Mortol"],       6),
+    ("Camouflage",        ["Barbuta", "Mortol"],       8),
+    ("Overbold",          ["Barbuta", "Mortol"],       3),
+    ("Divers",            ["Barbuta", "Mortol"],       4),
+    ("Grimstone",         ["Barbuta", "Mortol"],       5),
+    ("Mooncat",           ["Barbuta", "Mortol"],       6),
 ]
 
 

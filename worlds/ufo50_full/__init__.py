@@ -15,7 +15,9 @@ from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koa
                     the_big_bell_race, bug_hunter, paint_chase, onion_delivery,
                     campanella_3, star_waspir, elfazars_hat, caramel_caramel, seaside_drive,
                     devilition, fist_hell, avianos, hot_foot, bushido_ball, hyper_contender, pingolf,
-                    campanella, planet_zoldath)
+                    campanella, planet_zoldath, combatants, lords_of_diskonia, cyber_owls,
+                    ninpek, rakshasa, valbrace, rock_on_island, camouflage, overbold, divers,
+                    grimstone, mooncat)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
@@ -50,6 +52,18 @@ from .games.hyper_contender import items, locations, regions
 from .games.pingolf import items, locations, regions
 from .games.campanella import items, locations, regions
 from .games.planet_zoldath import items, locations, regions
+from .games.combatants import items, locations, regions
+from .games.lords_of_diskonia import items, locations, regions
+from .games.cyber_owls import items, locations, regions
+from .games.ninpek import items, locations, regions
+from .games.rakshasa import items, locations, regions
+from .games.valbrace import items, locations, regions
+from .games.rock_on_island import items, locations, regions
+from .games.camouflage import items, locations, regions
+from .games.overbold import items, locations, regions
+from .games.divers import items, locations, regions
+from .games.grimstone import items, locations, regions
+from .games.mooncat import items, locations, regions
 
 
 _ALL_GAME_NAMES = sorted(name for name in game_ids if name != "Main Menu")
@@ -112,6 +126,18 @@ ufo50_games: dict = {
     "Pingolf": pingolf,
     "Campanella": campanella,
     "Planet Zoldath": planet_zoldath,
+    "Combatants": combatants,
+    "Lords of Diskonia": lords_of_diskonia,
+    "Cyber Owls": cyber_owls,
+    "Ninpek": ninpek,
+    "Rakshasa": rakshasa,
+    "Valbrace": valbrace,
+    "Rock On! Island": rock_on_island,
+    "Camouflage": camouflage,
+    "Overbold": overbold,
+    "Divers": divers,
+    "Grimstone": grimstone,
+    "Mooncat": mooncat,
 }
 
 
@@ -317,7 +343,10 @@ class UFO50World(World):
                                   "Bug Hunter", "The Big Bell Race", "Paint Chase", "Onion Delivery",
                                   "Campanella 3", "Star Waspir", "Elfazar's Hat", "Caramel Caramel",
                                   "Seaside Drive", "Devilition", "Fist Hell", "Avianos", "Hot Foot",
-                                  "Bushido Ball", "Hyper Contender", "Pingolf", "Planet Zoldath"}
+                                  "Bushido Ball", "Hyper Contender", "Pingolf", "Planet Zoldath",
+                                  "Combatants", "Lords of Diskonia", "Cyber Owls", "Ninpek",
+                                  "Rakshasa", "Valbrace", "Rock On! Island", "Camouflage",
+                                  "Overbold", "Mooncat"}
 
     def get_filler_item_name(self) -> str:
         if not self.included_games:

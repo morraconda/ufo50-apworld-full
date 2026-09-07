@@ -10,20 +10,21 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Planet Zoldath"
-REGION = "The Planet"
+GAME_NAME = "Camouflage"
+REGION = "The Jungle"
 
-NUM_RANDOM_CHECKS = 15
-MAP_TYPES: tuple[str, ...] = ("Overworld", "Trade", "Dungeon")
-PIECES_PER_MAP = 3   # each map pickup sends 3 checks
+# Camouflage has 15 levels (o04_Game.levelPercent[1..15]; > 0 means escaped/cleared).
+# Levels 1..14 each have 3 collectibles -- 1 baby + 2 fruits -- worth BABY_PERCENT (30)
+# and FRUIT_PERCENT (20) on top of ESCAPE_PERCENT (30); 100% == all 3. Level 15 (the
+# finale) has no collectibles.
+LEVEL_COUNT = 15
+COLLECTIBLE_LEVELS = 14
+COLLECTIBLES = ("Baby", "Fruit 1", "Fruit 2")
 
-# id offset layout inside Planet Zoldath's 1000-id block:
-#     1..15    Random Check <n>   -- every energy cube becomes an AP pickup;
-#              sent cumulatively in pickup order.
-#    21..23    Overworld Map Piece 1..3   (all sent when the overworld map is picked up)
-#    24..26    Trade Map Piece 1..3
-#    27..29    Dungeon Map Piece 1..3
-#   200        +1 Starting Resource (filler)
+# id offset layout inside Camouflage's 1000-id block:
+#     1..15    Level <n>                     (level cleared)
+#   100..141   Level <n> - <collectible>     (n 1..14; offset = 100 + (n-1)*3 + k)
+#   200        Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
 
@@ -32,17 +33,13 @@ class LocationInfo(NamedTuple):
     region_name: str
 
 
-def map_piece_name(map_type: str, piece: int) -> str:
-    return f"{map_type} Map Piece {piece}"
-
-
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for n in range(1, NUM_RANDOM_CHECKS + 1):
-        table[f"Random Check {n}"] = LocationInfo(n, REGION)
-    for i, mt in enumerate(MAP_TYPES):
-        for p in range(1, PIECES_PER_MAP + 1):
-            table[map_piece_name(mt, p)] = LocationInfo(21 + i * PIECES_PER_MAP + (p - 1), REGION)
+    for n in range(1, LEVEL_COUNT + 1):
+        table[f"Level {n}"] = LocationInfo(n, REGION)
+    for n in range(1, COLLECTIBLE_LEVELS + 1):
+        for k, name in enumerate(COLLECTIBLES):
+            table[f"Level {n} - {name}"] = LocationInfo(100 + (n - 1) * 3 + k, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -51,8 +48,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# the first six random checks need nothing (rules.py gates the rest by tier)
-sphere_1_locs: list[str] = [f"Random Check {n}" for n in range(1, 7)]
+# every location is reachable from the start -- no item gating anywhere in this game
+sphere_1_locs: list[str] = list(location_table.keys())
 
 
 def get_locations() -> dict[str, int]:
@@ -61,12 +58,10 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Random Checks"] = {
-        f"{GAME_NAME} - Random Check {n}" for n in range(1, NUM_RANDOM_CHECKS + 1)
-    }
-    groups[f"{GAME_NAME} - Map Pieces"] = {
-        f"{GAME_NAME} - {map_piece_name(mt, p)}"
-        for mt in MAP_TYPES for p in range(1, PIECES_PER_MAP + 1)
+    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Level {n}" for n in range(1, LEVEL_COUNT + 1)}
+    groups[f"{GAME_NAME} - Collectibles"] = {
+        f"{GAME_NAME} - Level {n} - {name}"
+        for n in range(1, COLLECTIBLE_LEVELS + 1) for name in COLLECTIBLES
     }
     return groups
 
