@@ -261,6 +261,5 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # gold: check the boss defeat state
     sr("Gold", rule=lambda state: state.has("Vainger - Control - Hooper Defeated", player))
     # cherry: beating Hooper requires everything but the security clearance, so checking those two should be enough
-    if "Vainger" in world.options.cherry_allowed_games:
-        sr("Cherry", rule=lambda state: state.has("Vainger - Control - Hooper Defeated", player)
-            and state.has(security_clearance, player, 3))
+    sr("Cherry", rule=lambda state: state.has("Vainger - Control - Hooper Defeated", player)
+        and state.has(security_clearance, player, 3))

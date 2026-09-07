@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import CollectionState, Region
 from worlds.generic.Rules import set_rule
 
-from ...goal_locations import cherry_enabled
 from .locations import (GAME_NAME, SCENARIOS, FIXED_SCENARIOS, POPULARITY, HOUSE_SPACE,
                         STAR_GUESTS, CLEAR_STAR_GUESTS, POPULARITY_THRESHOLDS,
                         HOUSE_SPACE_THRESHOLDS, STAR_GUEST_THRESHOLDS, location_table)
@@ -227,8 +226,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     set_rule(world.get_location(f"{GAME_NAME} - Gold"),
              lambda state: all(_can_clear(s, state, world) for s in FIXED_SCENARIOS))
 
-    # Cherry (vanilla: a 5-win streak in Random Scenario) -- logic just needs Random
-    # Scenario clearable.
-    if cherry_enabled(world, GAME_NAME):
-        set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
-                 lambda state: _can_clear(SCENARIOS[-1], state, world))
+    # Cherry check (vanilla: a 5-win streak in Random Scenario) -- logic just needs
+    # Random Scenario clearable.
+    set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
+             lambda state: _can_clear(SCENARIOS[-1], state, world))

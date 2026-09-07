@@ -10,15 +10,14 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Waldorf's Journey"
-NUM_CHESTS = 5   # cumulative across runs -- 3 chests spawn per journey (2 procedural + 1 in the castle)
-NUM_SIGNS = 10   # cumulative sign reads (the game tracks signCount up to 22)
+GAME_NAME = "Onion Delivery"
+UNIT = "Day"
+NUM_DAY = 7   # the seven-day week (o32_Mas.dayNumber 0..6)
+REGION = "The Route"
 
-# id offset layout inside Waldorf's Journey's 1000-id block:
-#     1..5     Chest <n>   (opened your n-th chest, counted across all runs)
-#    11..20    Sign <n>    (read your n-th sign, counted across all runs)
-#   101..106   items (see items.py)
-#   200        Shell (filler)
+# id offset layout inside Onion Delivery's 1000-id block:
+#     1..7   Day <n>   (reached day n)
+#   200      Encouragement (filler, never granted)
 #   997/998/999   Garden / Gold / Cherry
 
 
@@ -29,19 +28,17 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for n in range(1, NUM_CHESTS + 1):
-        table[f"Chest {n}"] = LocationInfo(n, "Island")
-    for n in range(1, NUM_SIGNS + 1):
-        table[f"Sign {n}"] = LocationInfo(10 + n, "Island")
-    table["Garden"] = LocationInfo(997, "Island")
-    table["Gold"] = LocationInfo(998, "Island")
-    table["Cherry"] = LocationInfo(999, "Island")
+    for n in range(1, NUM_DAY + 1):
+        table[f"{UNIT} {n}"] = LocationInfo(n, REGION)
+    table["Garden"] = LocationInfo(997, REGION)
+    table["Gold"] = LocationInfo(998, REGION)
+    table["Cherry"] = LocationInfo(999, REGION)
     return table
 
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every check is reachable from the start
+# every check is reachable from the start -- no item gating anywhere in this game
 sphere_1_locs: list[str] = list(location_table.keys())
 
 
@@ -51,8 +48,7 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Chests"] = {f"{GAME_NAME} - Chest {n}" for n in range(1, NUM_CHESTS + 1)}
-    groups[f"{GAME_NAME} - Signs"] = {f"{GAME_NAME} - Sign {n}" for n in range(1, NUM_SIGNS + 1)}
+    groups[f"{GAME_NAME} - {UNIT}s"] = {f"{GAME_NAME} - {UNIT} {n}" for n in range(1, NUM_DAY + 1)}
     return groups
 
 

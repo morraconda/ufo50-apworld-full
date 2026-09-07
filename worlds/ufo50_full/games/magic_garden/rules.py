@@ -62,9 +62,6 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
         set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
                  lambda state: mid_tier(state, player))
 
-    cherry_on = GAME_NAME in world.options.cherry_allowed_games
     for loc_name in _TOP_TIER_LOCS:
-        if loc_name == "Cherry" and not cherry_on:
-            continue
         set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
                  lambda state: has_all_potions(state, player))

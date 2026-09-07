@@ -108,7 +108,5 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
                  lambda state, r=rule: r(state, player))
 
     for goal in ("Gold", "Cherry"):
-        if goal == "Cherry" and GAME_NAME not in world.options.cherry_allowed_games:
-            continue
         set_rule(world.get_location(f"{GAME_NAME} - {goal}"),
                  lambda state: beat_the_game(state, player))

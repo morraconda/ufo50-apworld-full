@@ -90,8 +90,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # garden is sphere 1
     set_rule(world.get_location("Barbuta - Gold"),
              rule=lambda state: state.has_any((blood_sword, bat_orb), player) or has_wand(state))
-    if "Barbuta" in world.options.cherry_allowed_games:
-        set_rule(world.get_location("Barbuta - Cherry"),
-                 rule=lambda state: state.has(bat_orb, player)
-                 and state.has(egg, player, 2)
-                 and (state.has(blood_sword, player) or has_wand(state)))
+    set_rule(world.get_location("Barbuta - Cherry"),
+             rule=lambda state: state.has(bat_orb, player)
+             and state.has(egg, player, 2)
+             and (state.has(blood_sword, player) or has_wand(state)))

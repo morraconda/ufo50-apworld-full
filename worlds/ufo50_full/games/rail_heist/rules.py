@@ -162,14 +162,13 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
              lambda state: all(has_time(LEVEL_STAR_TIME[lvl], lvl, state, world)
                                for lvl in range(1, NUM_LEVELS + 1)))
 
-    # Cherry goal: the vanilla condition -- clear every level (the Gold rule) and be
+    # Cherry check: the vanilla condition -- clear every level (the Gold rule) and be
     # able to obtain at least CHERRY_GOAL of the 60 stars (Clear / Angel / Devil on
     # each of the 20 levels).
-    if GAME_NAME in world.options.cherry_allowed_games:
-        star_rules = [make_check_rule(lvl, check_type, world)
-                      for lvl in range(1, NUM_LEVELS + 1)
-                      for check_type in (CLEAR, ANGEL, DEVIL)]
-        set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
-                 lambda state: all(has_time(LEVEL_STAR_TIME[lvl], lvl, state, world)
-                                   for lvl in range(1, NUM_LEVELS + 1))
-                 and sum(1 for r in star_rules if r(state)) >= CHERRY_GOAL)
+    star_rules = [make_check_rule(lvl, check_type, world)
+                  for lvl in range(1, NUM_LEVELS + 1)
+                  for check_type in (CLEAR, ANGEL, DEVIL)]
+    set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
+             lambda state: all(has_time(LEVEL_STAR_TIME[lvl], lvl, state, world)
+                               for lvl in range(1, NUM_LEVELS + 1))
+             and sum(1 for r in star_rules if r(state)) >= CHERRY_GOAL)

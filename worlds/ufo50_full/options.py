@@ -6,17 +6,18 @@ from Options import (StartInventoryPool, Range, OptionSet, PerGameCommonOptions,
 from .constants import game_ids
 
 
-class AlwaysOnGames(OptionSet):
+class Games(OptionSet):
     """
-    Choose which games you would like to enable.
+    Choose which games you want to play. Every game listed here is enabled and is a
+    goal: to finish, you must get Gold in all of them.
 
     The following games have full implementations: Barbuta, Vainger, Night Manor, and Porgy.
     Party House has a more minor implementation, and counts as an implemented game.
-    Any game may be selected. Games without a full implementation will only have Garden,
-    Gold, and/or Cherry checks.
+    Any game may be selected. Games without a full implementation only have Garden,
+    Gold, and Cherry checks.
     """
-    internal_name = "always_on_games"
-    display_name = "Always On Games"
+    internal_name = "games"
+    display_name = "Games"
     valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
     # default is here so the unit tests don't fail
     default = ["Barbuta"]
@@ -24,8 +25,9 @@ class AlwaysOnGames(OptionSet):
 
 class RandomChoiceGames(OptionSet):
     """
-    Choose which games have a chance of being enabled.
-    The number of games that will be enabled is based on the Random Choice Game Count option.
+    Choose which games have a chance of being enabled alongside your Games.
+    The number that will be enabled is based on the Random Choice Game Count option.
+    Random Choice Games are enabled but are never goals.
     """
     internal_name = "random_choice_games"
     display_name = "Random Choice Games"
@@ -34,7 +36,7 @@ class RandomChoiceGames(OptionSet):
 
 class RandomChoiceGameCount(Range):
     """
-    Choose how many Random Choice Games will be included alongside your Always On Games.
+    Choose how many Random Choice Games will be enabled alongside your Games.
     If your Random Choice Game Count is larger than the number of games in your Random Choice Games list, all of them will be enabled.
     """
     internal_name = "random_choice_game_count"
@@ -58,46 +60,6 @@ class StartingGameAmount(Range):
     range_start = 1
     range_end = 50
     default = 1
-
-
-class GoalGames(OptionSet):
-    """
-    Choose which games you may have to complete to achieve your goal.
-    """
-    internal_name = "goal_games"
-    display_name = "Goal Games"
-    valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
-    default = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
-
-
-class GoalGameAmount(Range):
-    """
-    Choose how many games you need to goal to achieve your goal among your Goal Games.
-    If this number is less than the number of Goal Games you have selected, it will choose some of them at random to be your Goal Games.
-    If this number is greater than or equal to your number of Goal Games, then all of your games will be your Goal Games.
-    """
-    internal_name = "goal_game_amount"
-    display_name = "Goal Game Amount"
-    range_start = 1
-    range_end = 50
-    default = 50
-    # this is super unnecessary to show in the spoiler, so just hide it
-    visibility = Visibility.template | Visibility.simple_ui | Visibility.complex_ui
-
-
-class CherryAllowed(OptionSet):
-    """
-    Choose which games you want to include the Cherry goal in.
-    If the game is set as your Goal Game, then you will need to Cherry that game to complete that goal.
-    If the game is not set as a Goal Game, then Cherrying that game will be a check.
-    If the game is not selected at all, then this option will not affect it.
-    The defaults are ones where we believe the Cherry goal is reasonable in the context of a randomizer.
-    """
-    internal_name = "cherry_allowed_games"
-    display_name = "Cherry-Allowed Games"
-    valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
-    # include the games where it makes sense to be Cherry by default
-    default = {"Barbuta", "Night Manor"}
 
 
 class PorgyFuelDifficulty(Choice):
@@ -178,13 +140,10 @@ class BlockKoalaEarlyStartGate(DefaultOnToggle):
 @dataclass
 class UFO50Options(PerGameCommonOptions):
     start_inventory_from_pool: StartInventoryPool
-    always_on_games: AlwaysOnGames
+    games: Games
     random_choice_games: RandomChoiceGames
     random_choice_game_count: RandomChoiceGameCount
     starting_game_amount: StartingGameAmount
-    goal_games: GoalGames
-    goal_game_amount: GoalGameAmount
-    cherry_allowed_games: CherryAllowed
 
     porgy_fuel_difficulty: PorgyFuelDifficulty
     porgy_check_on_touch: PorgyCheckOnTouch
@@ -199,13 +158,10 @@ class UFO50Options(PerGameCommonOptions):
 
 ufo50_option_groups = [
     OptionGroup("General Options", [
-        AlwaysOnGames,
+        Games,
         RandomChoiceGames,
         RandomChoiceGameCount,
         StartingGameAmount,
-        GoalGames,
-        GoalGameAmount,
-        CherryAllowed,
     ]),
     OptionGroup("Block Koala Options", [
         BlockKoalaLevelRandomizer,

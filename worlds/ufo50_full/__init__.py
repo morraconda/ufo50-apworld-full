@@ -11,7 +11,8 @@ from . import options
 from .general_items import cartridge_items, cartridge_item_group
 
 from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koala, rail_heist, mortol,
-                    waldorf, magic_garden, mortol_ii, attactics, kick_club, velgress, campanella_2)
+                    waldorf, magic_garden, mortol_ii, attactics, kick_club, velgress, campanella_2, warptank,
+                    the_big_bell_race, bug_hunter, paint_chase, onion_delivery)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
@@ -27,6 +28,14 @@ from .games.attactics import items, locations, regions
 from .games.kick_club import items, locations, regions
 from .games.velgress import items, locations, regions
 from .games.campanella_2 import items, locations, regions
+from .games.warptank import items, locations, regions
+from .games.the_big_bell_race import items, locations, regions
+from .games.bug_hunter import items, locations, regions
+from .games.paint_chase import items, locations, regions
+from .games.onion_delivery import items, locations, regions
+
+
+_ALL_GAME_NAMES = sorted(name for name in game_ids if name != "Main Menu")
 
 
 class UFO50Web(WebWorld):
@@ -34,7 +43,7 @@ class UFO50Web(WebWorld):
     bug_report_page = "https://github.com/UFO-50-Archipelago/Archipelago/issues"
     setup_en = Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up UFO 50 for Archipelago multiworld.",
+        "A guide to setting up UFO 50 Full for Archipelago multiworld.",
         "English",
         "setup_en.md",
         "setup/en",
@@ -42,6 +51,10 @@ class UFO50Web(WebWorld):
     )
     tutorials = [setup_en]
     option_groups = options.ufo50_option_groups
+    options_presets = {
+        # every game enabled (and thus a goal)
+        "All Games": {"games": _ALL_GAME_NAMES},
+    }
 
 
 # games with an actual implementation
@@ -63,6 +76,11 @@ ufo50_games: dict = {
     "Party House": party_house,
     "Velgress": velgress,
     "Campanella 2": campanella_2,
+    "Warptank": warptank,
+    "Bug Hunter": bug_hunter,
+    "The Big Bell Race": the_big_bell_race,
+    "Paint Chase": paint_chase,
+    "Onion Delivery": onion_delivery,
 }
 
 
@@ -119,28 +137,29 @@ class UFO50World(World):
         if not self.player_name.isascii():
             raise OptionError(f"{self.player_name}'s name must be only ASCII.")
 
+        # every game listed in `games` is enabled AND a goal; random_choice games are
+        # enabled but never goals. This is overridden below for universal tracker.
+        ut_goal_game_ids: set[int] | None = None
+
         # for universal tracker support
         if hasattr(self.multiworld, "re_gen_passthrough"):
-            if "UFO 50" in self.multiworld.re_gen_passthrough:
-                self.ut_passthrough = self.multiworld.re_gen_passthrough["UFO 50"]
-                # sets the games that ended up on as the always_on_games, turns off random_choice_games
+            if GAME_NAME in self.multiworld.re_gen_passthrough:
+                self.ut_passthrough = self.multiworld.re_gen_passthrough[GAME_NAME]
+                # sets the games that ended up on as `games`, turns off random_choice_games
                 id_to_game = {v: k for k, v in game_ids.items()}
-                self.options.always_on_games.value = {id_to_game[game_id] for game_id in self.ut_passthrough["included_games"]}
+                self.options.games.value = {id_to_game[game_id] for game_id in self.ut_passthrough["included_games"]}
                 self.options.random_choice_games.value.clear()
                 self.options.random_choice_game_count.value = 0
-                self.options.goal_games.value = {id_to_game[game_id] for game_id in self.ut_passthrough["goal_games"]}
-                self.options.goal_game_amount.value = 50
-                # UT doesn't show locations that aren't actually in your slot, so this is fine
-                self.options.cherry_allowed_games.value = {game_name for game_name in game_ids.keys()}
+                ut_goal_game_ids = set(self.ut_passthrough["goal_games"])
 
                 self.options.porgy_fuel_difficulty.value = self.ut_passthrough[options.PorgyFuelDifficulty.internal_name]
                 self.options.porgy_check_on_touch.value = self.ut_passthrough[options.PorgyCheckOnTouch.internal_name]
                 self.options.porgy_radar.value = self.ut_passthrough[options.PorgyRadar.internal_name]
                 self.options.porgy_lanternless.value = self.ut_passthrough[options.PorgyLanternless.internal_name]
 
-        included_game_names = sorted(self.options.always_on_games.value)
-        # exclude always on games from random choice games
-        maybe_games = sorted(self.options.random_choice_games.value - self.options.always_on_games.value)
+        included_game_names = sorted(self.options.games.value)
+        # exclude your `games` from the random choice pool
+        maybe_games = sorted(self.options.random_choice_games.value - self.options.games.value)
         # if the number of games you want is higher than the number of games you chose, enable all chosen
         if self.options.random_choice_game_count >= len(maybe_games):
             included_game_names += maybe_games
@@ -148,7 +167,7 @@ class UFO50World(World):
             included_game_names += self.random.sample(maybe_games, self.options.random_choice_game_count.value)
 
         if not included_game_names:
-            raise OptionError(f"UFO 50: {self.player_name} has not selected any games.")
+            raise OptionError(f"{GAME_NAME}: {self.player_name} has not selected any games.")
 
         self.included_games = []
         self.included_unimplemented_games = []
@@ -158,12 +177,10 @@ class UFO50World(World):
             else:
                 self.included_unimplemented_games.append(game_name)
 
-        self.options.goal_games.value = [game_name for game_name in self.options.goal_games if game_name in included_game_names]
-        potential_goal_games = [game_name for game_name in included_game_names if game_name in self.options.goal_games]
-        if self.options.goal_game_amount >= len(potential_goal_games):
-            self.goal_games = potential_goal_games
+        if ut_goal_game_ids is not None:
+            self.goal_games = [name for name in included_game_names if game_ids[name] in ut_goal_game_ids]
         else:
-            self.goal_games = self.random.choices(potential_goal_games, k=self.options.goal_game_amount.value)
+            self.goal_games = [name for name in included_game_names if name in self.options.games.value]
 
     def create_regions(self) -> None:
         menu = Region("Menu", self.player, self.multiworld)
@@ -174,11 +191,9 @@ class UFO50World(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
         menu.locations.append(victory_location)
 
+        # every goal game is beaten by reaching its Gold condition
         for game_name in self.goal_games:
-            string_end = " - Gold"
-            if game_name in self.options.cherry_allowed_games:
-                string_end = " - Cherry"
-            add_rule(victory_location, lambda state, loc=game_name + string_end:
+            add_rule(victory_location, lambda state, loc=f"{game_name} - Gold":
                      state.can_reach_location(loc, self.player))
 
         for game_name in self.included_games:
@@ -194,9 +209,8 @@ class UFO50World(World):
             locs = {
                 f"{game_name} - Garden": self.location_name_to_id[f"{game_name} - Garden"],
                 f"{game_name} - Gold": self.location_name_to_id[f"{game_name} - Gold"],
+                f"{game_name} - Cherry": self.location_name_to_id[f"{game_name} - Cherry"],
             }
-            if game_name in self.options.cherry_allowed_games:
-                locs[f"{game_name} - Cherry"] = self.location_name_to_id[f"{game_name} - Cherry"]
             region = Region(f"{game_name} Region", self.player, self.multiworld)
             region.add_locations(locs)
             menu.connect(region, f"Boot {game_name}",
@@ -268,7 +282,8 @@ class UFO50World(World):
         self.multiworld.itempool += created_items
 
     # games where the filler is a nothing item, so let's just exclude these where we can
-    bad_filler_games: set[str] = {"Night Manor", "Magic Garden", "Attactics"}
+    bad_filler_games: set[str] = {"Night Manor", "Magic Garden", "Attactics", "Warptank",
+                                  "Bug Hunter", "The Big Bell Race", "Paint Chase", "Onion Delivery"}
 
     def get_filler_item_name(self) -> str:
         if not self.included_games:
@@ -282,12 +297,11 @@ class UFO50World(World):
         included_games = [game_ids[game_name] for game_name in self.included_games]
         included_games += [game_ids[game_name] for game_name in self.included_unimplemented_games]
         goal_games = [game_ids[game_name] for game_name in self.goal_games]
-        cherry_games = [game_ids[game_name] for game_name in self.goal_games
-                        if game_name in self.options.cherry_allowed_games]
         slot_data = {
             "included_games": included_games,
+            # every goal game is beaten by reaching its Gold condition (there is no
+            # Cherry goal); the client accepts a Cherry as satisfying it too
             "goal_games": goal_games,
-            "cherry_games": cherry_games,
             options.PorgyFuelDifficulty.internal_name: self.options.porgy_fuel_difficulty.value,
             options.PorgyCheckOnTouch.internal_name: self.options.porgy_check_on_touch.value,
             options.PorgyRadar.internal_name: self.options.porgy_radar.value,

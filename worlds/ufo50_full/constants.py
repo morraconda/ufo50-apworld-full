@@ -1,6 +1,6 @@
 from typing import Dict
 
-GAME_NAME: str = "UFO 50"
+GAME_NAME: str = "UFO 50 Full"
 BASE_ID: int = 21061550_00_000  # UFO50, 2 digits for the game number, 3 digits for its items/locations
 
 

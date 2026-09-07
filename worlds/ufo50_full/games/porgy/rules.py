@@ -715,8 +715,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
 
     add_rule(get_porgy_location("Gold", world),
              rule=lambda state: can_combat(26, state, player) and has_fuel(16, state, world))
-    if "Porgy" in world.options.cherry_allowed_games:
-        add_rule(get_porgy_location("Cherry", world),
-                 rule=lambda state: can_combat(26, state, player) and has_fuel(16, state, world)
-                 and state.has_all((depth_charge, drill), player)
-                 and has_light(state, world))
+    add_rule(get_porgy_location("Cherry", world),
+             rule=lambda state: can_combat(26, state, player) and has_fuel(16, state, world)
+             and state.has_all((depth_charge, drill), player)
+             and has_light(state, world))

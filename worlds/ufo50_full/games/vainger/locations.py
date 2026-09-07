@@ -3,8 +3,7 @@ from BaseClasses import Region, ItemClassification, Item, Location
 
 from ...constants import get_game_base_id
 from ...game_helpers import get_locations as _get_locations, game_location_groups
-from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
-                               place_completion_event)
+from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
     from ... import UFO50World
@@ -104,11 +103,9 @@ def get_location_groups() -> dict[str, set[str]]:
 def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
     for loc_name, loc_data in location_table.items():
         region = regions[f"{GAME_NAME} - {loc_data.region_name}"]
-        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
-            break
         if is_completion_event_location(world, GAME_NAME, loc_name):
             place_completion_event(world, GAME_NAME, loc_name, region)
-            break
+            continue
 
         loc = Location(world.player, f"{GAME_NAME} - {loc_name}",
                        loc_data.id_offset + get_game_base_id(GAME_NAME) if loc_data.id_offset is not None else None, region)

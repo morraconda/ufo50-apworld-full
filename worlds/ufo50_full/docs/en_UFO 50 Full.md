@@ -1,4 +1,4 @@
-# UFO 50
+# UFO 50 Full
 
 ## What does randomization do in this game?
 On the whole, the mod limits which games in the UFO 50 collection the player can play, making it so for each specific game an item must be found to unlock it.
@@ -16,7 +16,7 @@ This will bring you to your `templates` folder, where you can find a UFO 50 temp
 Barbuta, Night Manor, Porgy, and Vainger.
 
 ## Can I pick and choose which games I play?
-Yes. You can also choose which games you need to beat to reach your goal and which games you need to cherry.
+Yes. Every game you list in the **Games** option is enabled and is a goal -- to finish you must get Gold in all of them. **Random Choice Games** are enabled too but are never goals. Getting Cherry in a game is always just a check, never a goal.
 
 ## Can I play unimplemented games?
 Yes, any game can be selected with no extra setup. For unimplemented games, the only checks are the Garden item, Gold, and Cherry.

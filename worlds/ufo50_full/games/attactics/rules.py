@@ -4,7 +4,6 @@ from BaseClasses import CollectionState, Region
 from worlds.generic.Rules import set_rule
 
 from .locations import GAME_NAME, LEVEL_NAMES, NUM_LEVELS, RANKS, level_name, rank_region
-from ...goal_locations import cherry_enabled
 
 if TYPE_CHECKING:
     from ... import UFO50World
@@ -61,9 +60,8 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
             regions[rank_region(r)],
             rule=lambda state, promo=needs_promo: not promo or _promoted(state, player))
 
-    # Cherry (vanilla scrWin(2)) additionally needs the whole campaign beaten, not just
-    # rank 100.
-    if cherry_enabled(world, GAME_NAME):
-        set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
-                 lambda state: (_turn_time(state, player) >= NUM_LEVELS and _promoted(state, player))
-                 or _anything(state, player))
+    # Cherry check (vanilla scrWin(2)) additionally needs the whole campaign beaten, not
+    # just rank 100.
+    set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
+             lambda state: (_turn_time(state, player) >= NUM_LEVELS and _promoted(state, player))
+             or _anything(state, player))

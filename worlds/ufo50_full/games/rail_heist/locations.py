@@ -4,8 +4,7 @@ from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
 from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
-from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
-                               place_completion_event)
+from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
     from ... import UFO50World
@@ -57,6 +56,14 @@ LEVEL_NAMES: dict[int, str] = {
 }
 
 
+def check_location_name(level: int, check_type: str) -> str:
+    """Location name for one of a level's checks. The Clear check is just the level
+    name -- a bare level name implies its clear -- while Angel / Devil Star are suffixed."""
+    if check_type == CLEAR:
+        return LEVEL_NAMES[level]
+    return f"{LEVEL_NAMES[level]} - {check_type}"
+
+
 class LocationInfo(NamedTuple):
     id_offset: int
     region_name: str
@@ -68,7 +75,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for check_type in CHECK_TYPES:
         for level in range(1, NUM_LEVELS + 1):
-            table[f"{LEVEL_NAMES[level]} - {check_type}"] = LocationInfo(
+            table[check_location_name(level, check_type)] = LocationInfo(
                 level_id(level, CHECK_TYPE_SLOT[check_type]), "Levels", level, check_type)
     # goal locations always come last so create_locations' Cherry/Gold handling can break out safely
     table["Garden"] = LocationInfo(997, "Levels", 0, "")
@@ -82,7 +89,7 @@ location_table: dict[str, LocationInfo] = _build_location_table()
 # "A Simple Heist Time" is precollected (see items.create_items), so all three of Level
 # 1's checks are always reachable and seed the fill. The Garden prize (Level 10) is NOT
 # sphere 1.
-sphere_1_locs: list[str] = [f"{LEVEL_NAMES[1]} - {check_type}" for check_type in CHECK_TYPES]
+sphere_1_locs: list[str] = [check_location_name(1, check_type) for check_type in CHECK_TYPES]
 
 
 def get_locations() -> dict[str, int]:
@@ -93,7 +100,7 @@ def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     for check_type in CHECK_TYPES:
         groups[f"{GAME_NAME} - {check_type}"] = {
-            f"{GAME_NAME} - {LEVEL_NAMES[level]} - {check_type}" for level in range(1, NUM_LEVELS + 1)
+            f"{GAME_NAME} - {check_location_name(level, check_type)}" for level in range(1, NUM_LEVELS + 1)
         }
     return groups
 
@@ -102,11 +109,9 @@ def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
     base_id = get_game_base_id(GAME_NAME)
     for loc_name, loc_data in location_table.items():
         region = regions[loc_data.region_name]
-        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
-            break
         if is_completion_event_location(world, GAME_NAME, loc_name):
             place_completion_event(world, GAME_NAME, loc_name, region)
-            break
+            continue
 
         loc = Location(world.player, f"{GAME_NAME} - {loc_name}", base_id + loc_data.id_offset, region)
         region.locations.append(loc)

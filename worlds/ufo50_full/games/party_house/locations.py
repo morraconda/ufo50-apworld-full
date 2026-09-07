@@ -4,8 +4,7 @@ from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
 from ...game_helpers import get_locations as _get_locations, game_location_groups
-from ...goal_locations import (skip_cherry_location_if_disabled, is_completion_event_location,
-                               place_completion_event)
+from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
     from ... import UFO50World
@@ -55,7 +54,7 @@ def level_id(level: int, slot: int = 0) -> int:
 
 
 # slot layout inside a scenario's 100-id block:
-#    0        Clear
+#    0        <scenario>          (won the scenario)
 #    1..9     <n> Popularity      (POPULARITY_THRESHOLDS in order)
 #   10..16    <n> House Space     (HOUSE_SPACE_THRESHOLDS in order)
 #   17..21    <n> Star Guests     (STAR_GUEST_THRESHOLDS in order)
@@ -75,7 +74,7 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for level, scenario in enumerate(SCENARIOS, start=1):
-        table[f"{scenario} - Clear"] = LocationInfo(
+        table[scenario] = LocationInfo(
             level_id(level, _CLEAR_SLOT), scenario, STAR_GUESTS, CLEAR_STAR_GUESTS)
         for i, n in enumerate(POPULARITY_THRESHOLDS):
             table[f"{scenario} - {n} Popularity"] = LocationInfo(
@@ -109,11 +108,11 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Clears"] = {f"{GAME_NAME} - {s} - Clear" for s in SCENARIOS}
+    groups[f"{GAME_NAME} - Clears"] = {f"{GAME_NAME} - {s}" for s in SCENARIOS}
     for scenario in SCENARIOS:
-        groups[f"{GAME_NAME} - {scenario}"] = {f"{GAME_NAME} - {name}"
-                                               for name, data in location_table.items()
-                                               if data.region_name == scenario}
+        groups[f"{GAME_NAME} - {scenario} Checks"] = {f"{GAME_NAME} - {name}"
+                                                      for name, data in location_table.items()
+                                                      if data.region_name == scenario}
     return groups
 
 
@@ -121,11 +120,9 @@ def create_locations(world: "UFO50World", regions: dict[str, Region]) -> None:
     base_id = get_game_base_id(GAME_NAME)
     for loc_name, loc_data in location_table.items():
         region = regions[loc_data.region_name]
-        if skip_cherry_location_if_disabled(world, GAME_NAME, loc_name):
-            break
         if is_completion_event_location(world, GAME_NAME, loc_name):
             place_completion_event(world, GAME_NAME, loc_name, region)
-            break
+            continue
 
         loc = Location(world.player, f"{GAME_NAME} - {loc_name}", base_id + loc_data.id_offset, region)
         region.locations.append(loc)
