@@ -14,9 +14,10 @@ GAME_NAME = "Grimstone"
 # Grimstone (o12_*) is a party JRPG. The AP items are quality-of-life only:
 #   +20% XP Multiplier (useful) -- each copy adds 20% to a battle's XP (ADDITIVE:
 #       20 copies -> x5.0).
-#   500 Teeth (filler) -- each copy received adds 500 to o12__Game.teeth (cap 999999).
+#   200 Teeth (filler) -- each copy received adds 200 to o12__Game.teeth (cap 999999),
+#       cumulative and persisted (ap_g12_teeth_granted in scr12_SaveGame).
 XP_MULT = "+20% XP Multiplier"
-FILLER = "500 Teeth"
+FILLER = "200 Teeth"
 
 
 item_table: dict[str, ItemInfo] = {

@@ -12,13 +12,17 @@ if TYPE_CHECKING:
 GAME_NAME = "Pingolf"
 
 # Pingolf is an 18-hole pinball-golf game (o23_Mas / o23_Ball).
-# Nothing from this game enters the multiworld pool -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
+# One real item, "Dunking" (id 500): needed for every location EXCEPT the Par
+# checks on the first eight holes (see locations.py / rules.py -- holes 9..18 and
+# Gift/Gold/Cherry live behind it). Without it the mod re-labels the DUNK button
+# "DUNK'NT". Everything else this game contributes is the Encouragement filler
+# (a nothing item -- Pingolf is a "bad filler" game).
+DUNKING = "Dunking"
 FILLER = "Encouragement"
 
 
 item_table: dict[str, ItemInfo] = {
+    DUNKING: ItemInfo(500, IC.progression, 1),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -36,7 +40,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
+    # one "Dunking" into the pool; the framework fills the rest with filler
     return _create_items(GAME_NAME, item_table, world)
 
 

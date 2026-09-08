@@ -12,9 +12,10 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Pingolf"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the per-hole par locations
-regions: list[str] = ["Menu", "The Course"]
+# holes 1-8's Par checks are reachable from the start ("The Course"); everything else
+# -- holes 9-18's Par checks and Gift/Gold/Cherry -- needs the "Dunking" item
+# ("Dunk Zone", gated in rules.py).
+regions: list[str] = ["Menu", "The Course", "Dunk Zone"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

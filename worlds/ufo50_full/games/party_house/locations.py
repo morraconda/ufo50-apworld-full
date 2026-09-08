@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -24,9 +24,18 @@ SCENARIOS: list[str] = [
 ]
 FIXED_SCENARIOS: list[str] = SCENARIOS[:5]
 
-# Per-scenario location thresholds.
-POPULARITY_THRESHOLDS: list[int] = [3, 5, 10, 20, 30, 40, 50, 60, 75]
-HOUSE_SPACE_THRESHOLDS: list[int] = [5, 7, 10, 15, 20, 25, 30]
+# Popularity + House Space checks are GLOBAL -- one set for the whole game, reachable
+# in any scenario, awarded once. Popularity: every value 1..20, then every 2 up to 80.
+# House Space: every value 5..33, plus the max (34) as its own check named "UFO".
+POPULARITY_VALUES: list[int] = list(range(1, 21)) + list(range(22, 81, 2))
+HOUSE_SPACE_VALUES: list[int] = list(range(5, 34))
+HOUSE_SPACE_MAX: int = 34
+HOUSE_SPACE_MAX_NAME: str = "UFO"
+POP_OFFSET_BASE: int = 700       # "<n> Popularity"  -> POP_OFFSET_BASE + n  (701..780)
+SPACE_OFFSET_BASE: int = 800     # "<n> House Space" -> SPACE_OFFSET_BASE + n (805..834; 834 = "UFO")
+GLOBAL_REGION = "The Party"
+
+# Star Guests + Clear are per-scenario.
 STAR_GUEST_THRESHOLDS: list[int] = [1, 2, 3, 4, 5]
 # "Clear" = seat six star guests (one past the highest Star Guests location).
 CLEAR_STAR_GUESTS: int = 6
@@ -37,31 +46,12 @@ HOUSE_SPACE = "house_space"
 STAR_GUESTS = "star_guests"
 
 
-# --- per-level id layout ---------------------------------------------------------
-# Party House has 22 locations per scenario, so the standard game_helpers.level_id
-# (level * 10 + slot) is too tight -- use the same idea with 100 ids per level.
-IDS_PER_LEVEL = 100
-
-
-def level_id(level: int, slot: int = 0) -> int:
-    """``level * 100 + slot``. ``level`` is 1..6, ``slot`` is 0..99. Offsets 1..99
-    stay free for the game-wide items; 997/998/999 are the goal locations."""
-    if not 1 <= level <= len(SCENARIOS):
-        raise ValueError(f"level {level} out of range 1..{len(SCENARIOS)}")
-    if not 0 <= slot < IDS_PER_LEVEL:
-        raise ValueError(f"slot {slot} out of range 0..{IDS_PER_LEVEL - 1}")
-    return level * IDS_PER_LEVEL + slot
-
-
-# slot layout inside a scenario's 100-id block:
-#    0        <scenario>          (won the scenario)
-#    1..9     <n> Popularity      (POPULARITY_THRESHOLDS in order)
-#   10..16    <n> House Space     (HOUSE_SPACE_THRESHOLDS in order)
-#   17..21    <n> Star Guests     (STAR_GUEST_THRESHOLDS in order)
+# Per-scenario id layout (Clear + 5 Star Guests = 6 slots), via the standard
+# game_helpers.level_id (level * 10 + slot; scenario = level 1..6).
+#   slot 0     <scenario>          (won the scenario)
+#   slots 1..5 <n> Star Guests     (STAR_GUEST_THRESHOLDS in order)
 _CLEAR_SLOT = 0
-_POPULARITY_SLOT0 = 1
-_HOUSE_SPACE_SLOT0 = 10
-_STAR_GUEST_SLOT0 = 17
+_STAR_GUEST_SLOT0 = 1
 
 
 class LocationInfo(NamedTuple):
@@ -73,15 +63,20 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
+    # Global popularity / house-space checks -- one set, any scenario counts.
+    for n in POPULARITY_VALUES:
+        table[f"{n} Popularity"] = LocationInfo(
+            POP_OFFSET_BASE + n, GLOBAL_REGION, POPULARITY, n)
+    for n in HOUSE_SPACE_VALUES:
+        table[f"{n} House Space"] = LocationInfo(
+            SPACE_OFFSET_BASE + n, GLOBAL_REGION, HOUSE_SPACE, n)
+    # Max house space (34) is its own check, named "UFO".
+    table[HOUSE_SPACE_MAX_NAME] = LocationInfo(
+        SPACE_OFFSET_BASE + HOUSE_SPACE_MAX, GLOBAL_REGION, HOUSE_SPACE, HOUSE_SPACE_MAX)
+    # Per-scenario Clear + Star Guests.
     for level, scenario in enumerate(SCENARIOS, start=1):
         table[scenario] = LocationInfo(
             level_id(level, _CLEAR_SLOT), scenario, STAR_GUESTS, CLEAR_STAR_GUESTS)
-        for i, n in enumerate(POPULARITY_THRESHOLDS):
-            table[f"{scenario} - {n} Popularity"] = LocationInfo(
-                level_id(level, _POPULARITY_SLOT0 + i), scenario, POPULARITY, n)
-        for i, n in enumerate(HOUSE_SPACE_THRESHOLDS):
-            table[f"{scenario} - {n} House Space"] = LocationInfo(
-                level_id(level, _HOUSE_SPACE_SLOT0 + i), scenario, HOUSE_SPACE, n)
         for i, n in enumerate(STAR_GUEST_THRESHOLDS):
             table[f"{scenario} - {n} Star Guests"] = LocationInfo(
                 level_id(level, _STAR_GUEST_SLOT0 + i), scenario, STAR_GUESTS, n)
@@ -95,11 +90,11 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# "3 Popularity" and "5 House Space" for each scenario are the intended sphere-1
-# locations (need nothing); every other location is gated by rules.SPHERES (all placeholder
-# all-zero spheres for now).
-sphere_1_locs: list[str] = ([f"{s} - 3 Popularity" for s in SCENARIOS]
-                            + [f"{s} - 5 House Space" for s in SCENARIOS])
+# Every popularity / house-space check (global and per-scenario) is a plain progress
+# marker with no rule; only the Star Guests / Clear locations are gated by rules.py.
+sphere_1_locs: list[str] = ([f"{n} Popularity" for n in POPULARITY_VALUES]
+                            + [f"{n} House Space" for n in HOUSE_SPACE_VALUES]
+                            + [HOUSE_SPACE_MAX_NAME])
 
 
 def get_locations() -> dict[str, int]:
@@ -109,6 +104,10 @@ def get_locations() -> dict[str, int]:
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Clears"] = {f"{GAME_NAME} - {s}" for s in SCENARIOS}
+    groups[f"{GAME_NAME} - Popularity"] = {f"{GAME_NAME} - {n} Popularity" for n in POPULARITY_VALUES}
+    groups[f"{GAME_NAME} - House Space"] = (
+        {f"{GAME_NAME} - {n} House Space" for n in HOUSE_SPACE_VALUES}
+        | {f"{GAME_NAME} - {HOUSE_SPACE_MAX_NAME}"})
     for scenario in SCENARIOS:
         groups[f"{GAME_NAME} - {scenario} Locations"] = {f"{GAME_NAME} - {name}"
                                                       for name, data in location_table.items()

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from Options import (StartInventoryPool, Range, OptionSet, PerGameCommonOptions, OptionGroup, Choice, Toggle,
-                     DefaultOnToggle, Visibility)
+                     DefaultOnToggle)
 
 from .constants import game_ids
 
@@ -23,29 +23,29 @@ class Games(OptionSet):
     default = ["Barbuta"]
 
 
-class RandomChoiceGames(OptionSet):
+class CherryDisabledGames(OptionSet):
     """
-    Choose which games have a chance of being enabled alongside your Games.
-    The number that will be enabled is based on the Random Choice Game Count option.
-    Random Choice Games are enabled but are never goals.
+    Games listed here have their Cherry location removed -- it will not be a check.
+    Listing a game you are not playing does nothing. The Gift and Gold locations are
+    unaffected.
     """
-    internal_name = "random_choice_games"
-    display_name = "Random Choice Games"
+    internal_name = "cherry_disabled_games"
+    display_name = "Cherry Disabled Games"
     valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
 
 
-class RandomChoiceGameCount(Range):
+class DeferSphere1Games(DefaultOnToggle):
     """
-    Choose how many Random Choice Games will be enabled alongside your Games.
-    If your Random Choice Game Count is larger than the number of games in your Random Choice Games list, all of them will be enabled.
+    If enabled, any included game whose every check is reachable the moment you boot
+    it ("sphere 1 only" games) is locked until you have beaten (reached the Gold
+    condition of) at least half -- rounded down -- of your included games. This keeps
+    those games from being a pile of free early checks. A game you start with is
+    exempt, and the lock is skipped entirely if too few other games could satisfy it.
+
+    Disable this for the old behaviour, where those games are playable from the start.
     """
-    internal_name = "random_choice_game_count"
-    display_name = "Random Choice Game Count"
-    range_start = 0
-    range_end = 50
-    default = 0
-    # this is super unnecessary to show in the spoiler, so just hide it
-    visibility = Visibility.template | Visibility.simple_ui | Visibility.complex_ui
+    internal_name = "defer_sphere_1_games"
+    display_name = "Defer Sphere 1 Games"
 
 
 class StartingGameAmount(Range):
@@ -137,13 +137,25 @@ class BlockKoalaEarlyStartGate(DefaultOnToggle):
     display_name = "Block Koala - Early Start Gate"
 
 
+# Warptank
+class WarptankLevelRandomizer(Toggle):
+    """
+    Randomize which sector each capsule pad warps to, seeded by the multiworld seed.
+    Clearing a pad still sends that pad's own sector check. The final sector is never
+    randomized, and the Orb / Garl / Kraft arena sectors only shuffle among each other.
+    Does not affect logic.
+    """
+    internal_name = "warptank_level_randomizer"
+    display_name = "Warptank - Level Randomizer"
+
+
 @dataclass
 class UFO50Options(PerGameCommonOptions):
     start_inventory_from_pool: StartInventoryPool
     games: Games
-    random_choice_games: RandomChoiceGames
-    random_choice_game_count: RandomChoiceGameCount
     starting_game_amount: StartingGameAmount
+    defer_sphere_1_games: DeferSphere1Games
+    cherry_disabled_games: CherryDisabledGames
 
     porgy_fuel_difficulty: PorgyFuelDifficulty
     porgy_check_on_touch: PorgyCheckOnTouch
@@ -155,17 +167,22 @@ class UFO50Options(PerGameCommonOptions):
     block_koala_level_randomizer: BlockKoalaLevelRandomizer
     block_koala_early_start_gate: BlockKoalaEarlyStartGate
 
+    warptank_level_randomizer: WarptankLevelRandomizer
+
 
 ufo50_option_groups = [
     OptionGroup("General Options", [
         Games,
-        RandomChoiceGames,
-        RandomChoiceGameCount,
         StartingGameAmount,
+        DeferSphere1Games,
+        CherryDisabledGames,
     ]),
     OptionGroup("Block Koala Options", [
         BlockKoalaLevelRandomizer,
         BlockKoalaEarlyStartGate,
+    ]),
+    OptionGroup("Warptank Options", [
+        WarptankLevelRandomizer,
     ]),
     OptionGroup("Porgy Options", [
         PorgyFuelDifficulty,

@@ -28,8 +28,13 @@ LEVEL_NAMES: tuple[str, ...] = (
 )
 NUM_LEVEL = len(LEVEL_NAMES)
 
+# Two named bosses, defeated (their enemy object's Destroy at life < 1):
+#   Cookie -> o46_eBella ; Toad -> o46_eToadead
+BOSS_NAMES: tuple[str, ...] = ("Cookie", "Toad")
+
 # id offset layout inside Caramel Caramel's 1000-id block:
 #     1..6   <level name>   (reached level n; offset = normalizedLevel)
+#     7..8   Cookie / Toad  (boss defeated)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -43,6 +48,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(LEVEL_NAMES, start=1):
         table[name] = LocationInfo(n, REGION)
+    for i, name in enumerate(BOSS_NAMES):
+        table[name] = LocationInfo(7 + i, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -62,6 +69,7 @@ def get_locations() -> dict[str, int]:
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - {UNIT}s"] = {f"{GAME_NAME} - {name}" for name in LEVEL_NAMES}
+    groups[f"{GAME_NAME} - Bosses"] = {f"{GAME_NAME} - {name}" for name in BOSS_NAMES}
     return groups
 
 

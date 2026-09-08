@@ -15,8 +15,8 @@ GAME_NAME = "Waldorf's Journey"
 # BALLOON=3, PROPELLER=4, BINOCULARS=5, CANNED_FISH=6). The mod zeroes the vanilla
 # loadout and reads get_item_count(101..106); these six go in the multiworld pool
 # (one each), so Waldorf builds its toolkit over the seed rather than starting with
-# everything. Nothing in Waldorf's logic needs them (every location is sphere 1), so
-# they are `useful`, not progression.
+# everything. Every real check is sphere 1, but Cherry needs any 2 of these six
+# (see rules.py), so they are progression -- still flagged useful, they widen your kit.
 STARTING_ITEMS: dict[str, int] = {
     "Beach Ball": 101,
     "Harpoon": 102,
@@ -29,7 +29,7 @@ FILLER = "Shell"
 
 
 item_table: dict[str, ItemInfo] = {
-    **{name: ItemInfo(offset, IC.useful, 1) for name, offset in STARTING_ITEMS.items()},
+    **{name: ItemInfo(offset, IC.progression | IC.useful, 1) for name, offset in STARTING_ITEMS.items()},
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 

@@ -4,8 +4,7 @@ from BaseClasses import CollectionState, Region
 from worlds.generic.Rules import set_rule
 
 from .locations import (GAME_NAME, SCENARIOS, FIXED_SCENARIOS, POPULARITY, HOUSE_SPACE,
-                        STAR_GUESTS, CLEAR_STAR_GUESTS, POPULARITY_THRESHOLDS,
-                        HOUSE_SPACE_THRESHOLDS, STAR_GUEST_THRESHOLDS, location_table)
+                        STAR_GUESTS, CLEAR_STAR_GUESTS, STAR_GUEST_THRESHOLDS, location_table)
 from .items import (MAX_TROUBLE, SHOP_STOCK, MAX_POPULARITY, MAX_CASH, DAY,
                     START_POPULARITY, START_CASH, GUESTS, SCENARIO_GUESTS)
 
@@ -124,16 +123,11 @@ def _sphere(money_score: int = 0, pop_score: int = 0, util_score: int = 0,
                       trouble_threshold, max_popularity, max_cash, days, shop_stock)
 
 
-# (metric, threshold value) -> the sphere that location requires.
+# (metric, threshold value) -> the sphere that location requires. Popularity / House
+# Space checks are now global sphere-1 progress markers with no rule, so only the
+# per-scenario Star Guests locations 1..5 and Clear (6) appear here: a dedicated sphere
+# per value, star_guests set to the target and every other field a placeholder.
 SPHERES: dict[tuple[str, int], Thresholds] = {
-    # --- sphere 1: reachable with nothing ---
-    (POPULARITY, 3): ZERO_SPHERE,
-    (HOUSE_SPACE, 5): ZERO_SPHERE,
-    # --- placeholders (currently all-zero) ---
-    **{(POPULARITY, n): _sphere() for n in POPULARITY_THRESHOLDS if n != 3},
-    **{(HOUSE_SPACE, n): _sphere() for n in HOUSE_SPACE_THRESHOLDS if n != 5},
-    # star-guest locations 1..5 and Clear (6): a dedicated sphere per value -- star_guests
-    # set to the target, every other field a placeholder.
     **{(STAR_GUESTS, n): _sphere(star_guests=n) for n in STAR_GUEST_THRESHOLDS},
     (STAR_GUESTS, CLEAR_STAR_GUESTS): _sphere(star_guests=CLEAR_STAR_GUESTS),
 }
@@ -207,12 +201,16 @@ def _can_clear(scenario: str, state: "CollectionState", world: "UFO50World") -> 
 
 
 def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
-    # Every scenario is open from the start.
+    # Every scenario is open from the start, and so is the global metric region.
+    regions["Menu"].connect(regions["The Party"])
     for scenario in SCENARIOS:
         regions["Menu"].connect(regions[scenario])
 
     for loc_name, info in location_table.items():
         if loc_name in ("Gift", "Gold", "Cherry"):
+            continue
+        # Global popularity / house-space checks are plain sphere-1 progress markers.
+        if info.metric != STAR_GUESTS:
             continue
         set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
                  lambda state, s=info.region_name, m=info.metric, t=info.threshold:

@@ -1,9 +1,9 @@
 from typing import Any
 
-from BaseClasses import Tutorial, Region, Item, ItemClassification, Location
+from BaseClasses import Tutorial, Region, Item, ItemClassification, Location, Entrance
 from Options import OptionError
 from worlds.AutoWorld import World, WebWorld
-from worlds.generic.Rules import add_rule
+from worlds.generic.Rules import add_rule, set_rule
 
 from .constants import *
 from . import options
@@ -153,6 +153,22 @@ for game in unimplemented_ufo50_games:
     temp_ufo50_location_name_to_id[f"{game} - Cherry"] = base_id + 999
 
 
+def _game_is_sphere1_only(game_regions: dict[str, Region]) -> bool:
+    """True if none of the game's own entrances or locations carry an access rule,
+    i.e. every check is reachable the moment you boot the game. An ungated spot
+    still holds the shared default rule object, exactly the sentinel ``add_rule``
+    itself tests against. Any rule anywhere -- goal locations included -- means the
+    game has its own logic and is left out of the blanket sphere-1 lock."""
+    for region in game_regions.values():
+        for exit_ in region.exits:
+            if exit_.access_rule is not Entrance.access_rule:
+                return False
+        for loc in region.locations:
+            if loc.access_rule is not Location.access_rule:
+                return False
+    return True
+
+
 class UFO50World(World):
     """ 
     UFO 50 is a collection of 50 single and multiplayer games from the creators of Spelunky, Downwell, Air Land & Sea,
@@ -187,6 +203,7 @@ class UFO50World(World):
 
     starting_games: list[str]  # the games you start with unlocked
     goal_games: list[str]  # the games that are your goals
+    sphere1_only_games: list[str]  # included games with no internal logic (all checks reachable at boot)
 
     porgy_lantern_and_radar_slots_req: dict[str, int]
 
@@ -194,34 +211,29 @@ class UFO50World(World):
         if not self.player_name.isascii():
             raise OptionError(f"{self.player_name}'s name must be only ASCII.")
 
-        # every game listed in `games` is enabled AND a goal; random_choice games are
-        # enabled but never goals. This is overridden below for universal tracker.
+        # every game listed in `games` is enabled AND a goal. This is overridden below
+        # for universal tracker.
         ut_goal_game_ids: set[int] | None = None
 
         # for universal tracker support
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if GAME_NAME in self.multiworld.re_gen_passthrough:
                 self.ut_passthrough = self.multiworld.re_gen_passthrough[GAME_NAME]
-                # sets the games that ended up on as `games`, turns off random_choice_games
+                # sets the games that ended up on as `games`
                 id_to_game = {v: k for k, v in game_ids.items()}
                 self.options.games.value = {id_to_game[game_id] for game_id in self.ut_passthrough["included_games"]}
-                self.options.random_choice_games.value.clear()
-                self.options.random_choice_game_count.value = 0
                 ut_goal_game_ids = set(self.ut_passthrough["goal_games"])
 
                 self.options.porgy_fuel_difficulty.value = self.ut_passthrough[options.PorgyFuelDifficulty.internal_name]
                 self.options.porgy_check_on_touch.value = self.ut_passthrough[options.PorgyCheckOnTouch.internal_name]
                 self.options.porgy_radar.value = self.ut_passthrough[options.PorgyRadar.internal_name]
                 self.options.porgy_lanternless.value = self.ut_passthrough[options.PorgyLanternless.internal_name]
+                self.options.defer_sphere_1_games.value = \
+                    self.ut_passthrough[options.DeferSphere1Games.internal_name]
+                self.options.cherry_disabled_games.value = \
+                    set(self.ut_passthrough[options.CherryDisabledGames.internal_name])
 
         included_game_names = sorted(self.options.games.value)
-        # exclude your `games` from the random choice pool
-        maybe_games = sorted(self.options.random_choice_games.value - self.options.games.value)
-        # if the number of games you want is higher than the number of games you chose, enable all chosen
-        if self.options.random_choice_game_count >= len(maybe_games):
-            included_game_names += maybe_games
-        elif self.options.random_choice_game_count and maybe_games:
-            included_game_names += self.random.sample(maybe_games, self.options.random_choice_game_count.value)
 
         if not included_game_names:
             raise OptionError(f"{GAME_NAME}: {self.player_name} has not selected any games.")
@@ -237,7 +249,8 @@ class UFO50World(World):
         if ut_goal_game_ids is not None:
             self.goal_games = [name for name in included_game_names if game_ids[name] in ut_goal_game_ids]
         else:
-            self.goal_games = [name for name in included_game_names if name in self.options.games.value]
+            # every included game is a goal
+            self.goal_games = list(included_game_names)
 
     def create_regions(self) -> None:
         menu = Region("Menu", self.player, self.multiworld)
@@ -253,25 +266,101 @@ class UFO50World(World):
             add_rule(victory_location, lambda state, loc=f"{game_name} - Gold":
                      state.can_reach_location(loc, self.player))
 
+        self.sphere1_only_games = []
+
+        cherry_disabled = self.options.cherry_disabled_games.value
+
         for game_name in self.included_games:
             game = ufo50_games[game_name]
             game_regions = game.regions.create_regions_and_rules(self)
+            if game_name in cherry_disabled:
+                self._remove_location(game_regions, f"{game_name} - Cherry")
             for region in game_regions.values():
                 self.multiworld.regions.append(region)
             game_menu = self.get_region(f"{game.game_name} - Menu")
             menu.connect(game_menu, f"Boot {game.game_name}",
                          rule=lambda state, name=game.game_name: state.has(f"{name} Cartridge", self.player))
+            if _game_is_sphere1_only(game_regions):
+                self.sphere1_only_games.append(game_name)
 
         for game_name in self.included_unimplemented_games:
             locs = {
                 f"{game_name} - Gift": self.location_name_to_id[f"{game_name} - Gift"],
                 f"{game_name} - Gold": self.location_name_to_id[f"{game_name} - Gold"],
-                f"{game_name} - Cherry": self.location_name_to_id[f"{game_name} - Cherry"],
             }
+            if game_name not in cherry_disabled:
+                locs[f"{game_name} - Cherry"] = self.location_name_to_id[f"{game_name} - Cherry"]
             region = Region(f"{game_name} Region", self.player, self.multiworld)
             region.add_locations(locs)
             menu.connect(region, f"Boot {game_name}",
                          rule=lambda state, name=game_name: state.has(f"{name} Cartridge", self.player))
+
+    def _remove_location(self, game_regions: dict[str, Region], loc_name: str) -> None:
+        """Drop a just-built location (and its region-cache entry) so it isn't a check."""
+        for region in game_regions.values():
+            for loc in list(region.locations):
+                if loc.name == loc_name:
+                    region.locations.remove(loc)
+                    return
+
+    def set_rules(self) -> None:
+        # run after create_items so self.starting_games is known
+        self._lock_sphere1_only_games()
+
+    def _lock_sphere1_only_games(self) -> None:
+        """Artificially gate every sphere-1-only game (one whose every check is
+        reachable the moment you boot it) behind reaching the Gold / goal location
+        of at least half -- rounded down -- of the included games. This pushes all
+        of their checks out of the early game: nothing on the critical path can be
+        placed there, since none of it is reachable until that many other games are
+        already beaten. A game you start with is left alone (you'd have nowhere to
+        progress from otherwise), and the whole thing is skipped when fewer games
+        than the threshold could ever act as the gate's anchors -- then it isn't
+        possible, so those games stay plain sphere 1. Controlled by the
+        ``defer_sphere_1_games`` option (on by default)."""
+        if not self.options.defer_sphere_1_games:
+            return
+        locked = [g for g in self.sphere1_only_games if g not in self.starting_games]
+        if not locked:
+            return
+        total_games = len(self.included_games) + len(self.included_unimplemented_games)
+        threshold = total_games // 2
+        if threshold < 1:
+            return
+
+        locked_set = set(locked)
+        anchor_games = [g for g in (self.included_games + self.included_unimplemented_games)
+                        if g not in locked_set]
+        if len(anchor_games) < threshold:
+            return
+
+        anchor_golds = tuple(f"{g} - Gold" for g in anchor_games)
+
+        # Evaluate the "have half the games been beaten" sweep ONCE per pass, on a
+        # single hidden event in Menu, rather than re-running it on every locked
+        # game's boot entrance (that was ~20x the anchor Gold reachability checks
+        # per sweep and dominated generation time). The boot entrances then just
+        # test for the event item, a plain dict lookup.
+        def gate(state, _golds=anchor_golds, _need=threshold) -> bool:
+            reached = 0
+            for loc in _golds:
+                if state.can_reach_location(loc, self.player):
+                    reached += 1
+                    if reached >= _need:
+                        return True
+            return False
+
+        menu = self.get_region("Menu")
+        gate_event = Location(self.player, "Beat Half The Games", None, menu)
+        gate_event.place_locked_item(Item("Half The Games Beaten", ItemClassification.progression,
+                                          None, self.player))
+        gate_event.show_in_spoiler = False
+        set_rule(gate_event, gate)
+        menu.locations.append(gate_event)
+
+        for game_name in locked:
+            add_rule(self.get_entrance(f"Boot {game_name}"),
+                     lambda state: state.has("Half The Games Beaten", self.player))
 
     def create_item(self, name: str, item_class: ItemClassification = None) -> Item:
         # figure out which game it's from and call its create_item
@@ -304,9 +393,14 @@ class UFO50World(World):
             self.starting_games = included_game_names
         else:
             addtl_games_to_start_with = max(self.options.starting_game_amount.value - len(self.starting_games), 0)
-            self.starting_games += self.random.choices(
-                [game for game in included_game_names if game not in self.starting_games],
-                k=addtl_games_to_start_with)
+            candidates = [game for game in included_game_names if game not in self.starting_games]
+            # when deferring, prefer starting on a game with real internal progression:
+            # sphere-1-only games get gated behind beating other games, poor footholds
+            preferred = candidates
+            if self.options.defer_sphere_1_games:
+                preferred = [game for game in candidates if game not in self.sphere1_only_games]
+            pool = preferred if len(preferred) >= addtl_games_to_start_with else candidates
+            self.starting_games += self.random.choices(pool, k=addtl_games_to_start_with)
             for game_name in self.starting_games:
                 if game_name in ufo50_games.keys():
                     break
@@ -370,6 +464,9 @@ class UFO50World(World):
             options.PorgyRadar.internal_name: self.options.porgy_radar.value,
             options.PorgyLanternless.internal_name: self.options.porgy_lanternless.value,
             options.BlockKoalaLevelRandomizer.internal_name: self.options.block_koala_level_randomizer.value,
+            options.WarptankLevelRandomizer.internal_name: self.options.warptank_level_randomizer.value,
+            options.DeferSphere1Games.internal_name: self.options.defer_sphere_1_games.value,
+            options.CherryDisabledGames.internal_name: sorted(self.options.cherry_disabled_games.value),
         }
         return slot_data
 

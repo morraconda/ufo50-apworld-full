@@ -18,11 +18,11 @@ GAME_NAME = "Warptank"
 # a cumulative number of sectors has been cleared (trig 1 / 4 / 9 / 14 / 22), plus
 # `o16_MechoE` shortcut walls. Following the Block Koala model, each Mecho wall is now
 # a single named progression item -- you receive the gate to open it, no counting:
-#   Mecho Gate 1  (511)  o16_Mecho trig 1   -- Station Hub -> tier 2
-#   Mecho Gate 2  (512)  o16_Mecho trig 4
-#   Mecho Gate 3  (513)  o16_Mecho trig 9   (also opens the o16_MechoE shortcut walls)
-#   Mecho Gate 4  (514)  o16_Mecho trig 14
-#   Mecho Gate 5  (515)  o16_Mecho trig 22  -- last tier -> Final Sector
+#   Capsule Gate 1  (511)  o16_Mecho trig 1   -- Station Hub -> tier 2
+#   Capsule Gate 2  (512)  o16_Mecho trig 4
+#   Capsule Gate 3  (513)  o16_Mecho trig 9   (also opens the o16_MechoE shortcut walls)
+#   Capsule Gate 4  (514)  o16_Mecho trig 14
+#   Capsule Gate 5  (515)  o16_Mecho trig 22  -- last tier -> Final Sector
 #
 # Coffee is unchanged: the hub "coffee bridge" to the Final Sector still grows one tile
 # per received Coffee item; 25 in the pool, the bridge needs 23 to be crossable.
@@ -30,11 +30,11 @@ COFFEE = "Coffee"
 FILLER = "Encouragement"
 
 GATES: dict[str, int] = {
-    "Mecho Gate 1": 511,
-    "Mecho Gate 2": 512,
-    "Mecho Gate 3": 513,
-    "Mecho Gate 4": 514,
-    "Mecho Gate 5": 515,
+    "Capsule Gate 1": 511,
+    "Capsule Gate 2": 512,
+    "Capsule Gate 3": 513,
+    "Capsule Gate 4": 514,
+    "Capsule Gate 5": 515,
 }
 COFFEE_COUNT = 25
 COFFEE_FOR_FINAL = 23       # bridge is crossable -> also enough for Gold and Cherry

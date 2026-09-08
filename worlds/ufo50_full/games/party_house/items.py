@@ -131,20 +131,20 @@ FILLER_NAMES: tuple[str, ...] = (START_POPULARITY, START_CASH)
 #   44       +1 Max Trouble      (x4)
 #   45       +1 Shop Stock       (x4)
 #   46       +5 Max Popularity   (x18)
-#   47       +2 Max Cash         (x14)
+#   47       +2 Max Cash         (x19)
 #   48       +1 Day              (x25)
-#   49       +1 Starting Popularity (x10, also filler)
-#   50       +1 Starting Cash    (x10, also filler)
+#   49       +1 Starting Popularity (filler only -- quantity 0, created only as padding)
+#   50       +1 Starting Cash    (filler only -- quantity 0, created only as padding)
 #   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     **{g.name: ItemInfo(i, IC.progression, 1) for i, g in enumerate(GUESTS, start=1)},
     MAX_TROUBLE: ItemInfo(44, IC.progression, 4),
     SHOP_STOCK: ItemInfo(45, IC.progression, 4),
     MAX_POPULARITY: ItemInfo(46, IC.progression, 18),
-    MAX_CASH: ItemInfo(47, IC.progression, 14),
+    MAX_CASH: ItemInfo(47, IC.progression, 19),
     DAY: ItemInfo(48, IC.progression, 25),
-    START_POPULARITY: ItemInfo(49, IC.progression, 10),
-    START_CASH: ItemInfo(50, IC.progression, 10),
+    START_POPULARITY: ItemInfo(49, IC.progression, 0),
+    START_CASH: ItemInfo(50, IC.progression, 0),
 }
 
 
@@ -163,8 +163,8 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # 43 guests + the capacity/head-start items (128 total); the framework pads the
-    # rest with filler, which is "+1 Starting Popularity" or "+1 Starting Cash".
+    # 43 guests + the capacity items (113 total); the framework pads the rest with
+    # filler, which is "+1 Starting Popularity" or "+1 Starting Cash" (both quantity 0).
     return _create_items(GAME_NAME, item_table, world)
 
 

@@ -6,23 +6,17 @@ the seed fills without deadlock and is beatable. Nothing here pins item counts, 
 or sphere-1 contents.
 
 Every game listed in the ``games`` option is enabled and is a goal (you must get Gold
-in all of them). ``random_choice_games`` are enabled but never goals -- the tests use
-that when they want an enabled-but-not-goal game.
+in all of them). That is the only way to enable a game.
 
 Three groups:
   * ``AllGamesGenerationTest`` -- every implemented game switched on at once.
-  * ``PerGameGenerationTest``  -- each game on its own: solo goal, solo non-goal, and
-    a small mixed multiworld. Methods are generated from ``_PER_GAME``.
+  * ``PerGameGenerationTest``  -- each game on its own, and in a small mixed
+    multiworld. Methods are generated from ``_PER_GAME``.
   * ``OptionMatrixTest``       -- assorted yaml-option combinations that touch code
     paths the above miss (small multiworlds, per-game ``create_items`` branches).
 """
 
 from . import ALL_GAMES, UFO50GenTestBase, generate
-
-
-def _others(*keep: str) -> list[str]:
-    """Every implemented game except the given ones -- handy for random_choice_games."""
-    return [g for g in ALL_GAMES if g not in keep]
 
 
 class AllGamesGenerationTest(UFO50GenTestBase):
@@ -34,11 +28,8 @@ class AllGamesGenerationTest(UFO50GenTestBase):
     def test_all_goals(self) -> None:
         self._check({"games": ALL_GAMES, "starting_game_amount": 1})
 
-    def test_single_goal_many_enabled(self) -> None:
-        self._check({
-            "games": ["Barbuta"], "starting_game_amount": 1,
-            "random_choice_games": _others("Barbuta"), "random_choice_game_count": 50,
-        })
+    def test_all_games_all_starting(self) -> None:
+        self._check({"games": ALL_GAMES, "starting_game_amount": 50})
 
 
 # --- per game -----------------------------------------------------------------
@@ -99,10 +90,6 @@ def _bind_per_game_tests() -> None:
             "solo_goal": {
                 "games": [game], "starting_game_amount": 1,
             },
-            "solo_non_goal": {
-                "games": ["Barbuta"], "starting_game_amount": 1,
-                "random_choice_games": [game], "random_choice_game_count": 1,
-            },
             "mixed_multiworld": {
                 "games": [game] + partners, "starting_game_amount": 1,
             },
@@ -133,25 +120,16 @@ class OptionMatrixTest(UFO50GenTestBase):
         self.assert_all_reachable(multiworld)
         self.assert_beatable_after_fill(multiworld)
 
-    def test_rail_heist_enabled_not_goal(self) -> None:
-        multiworld = generate({
-            "games": ["Barbuta"], "starting_game_amount": 1,
-            "random_choice_games": ["Rail Heist"], "random_choice_game_count": 1,
-        }, seed=2)
-        self.assert_beatable_after_fill(multiworld)
-
     def test_multi_game_multi_goal(self) -> None:
         multiworld = generate({
-            "games": ["Rail Heist", "Barbuta"], "starting_game_amount": 1,
-            "random_choice_games": ["Porgy"], "random_choice_game_count": 1,
+            "games": ["Rail Heist", "Barbuta", "Porgy"], "starting_game_amount": 1,
         }, seed=2)
         self.assert_all_reachable(multiworld)
         self.assert_beatable_after_fill(multiworld)
 
     def test_porgy_radar_always_on_and_early_pins_off(self) -> None:
         multiworld = generate({
-            "games": ["Porgy"], "starting_game_amount": 1,
-            "random_choice_games": ["Night Manor", "Block Koala"], "random_choice_game_count": 2,
+            "games": ["Porgy", "Night Manor", "Block Koala"], "starting_game_amount": 1,
             "porgy_radar": 0, "nm_early_pin": 0, "block_koala_early_start_gate": 0,
         }, seed=13)
         self.assert_all_reachable(multiworld)
@@ -159,9 +137,37 @@ class OptionMatrixTest(UFO50GenTestBase):
 
     def test_early_pins_on(self) -> None:
         multiworld = generate({
-            "games": ["Night Manor"], "starting_game_amount": 1,
-            "random_choice_games": ["Block Koala"], "random_choice_game_count": 1,
+            "games": ["Night Manor", "Block Koala"], "starting_game_amount": 1,
             "nm_early_pin": 1, "block_koala_early_start_gate": 1,
         }, seed=13)
         self.assert_all_reachable(multiworld)
         self.assert_beatable_after_fill(multiworld)
+
+    def test_defer_sphere_1_games_off(self) -> None:
+        multiworld = generate({
+            "games": ["Barbuta", "Combatants", "Valbrace", "Waldorf's Journey"],
+            "starting_game_amount": 1, "defer_sphere_1_games": False,
+        }, seed=4)
+        self.assert_all_reachable(multiworld)
+        self.assert_beatable_after_fill(multiworld)
+
+    def test_defer_sphere_1_games_on_mixed(self) -> None:
+        multiworld = generate({
+            "games": ["Barbuta", "Porgy", "Combatants", "Valbrace", "Ninpek", "Divers"],
+            "starting_game_amount": 1, "defer_sphere_1_games": True,
+        }, seed=4)
+        self.assert_all_reachable(multiworld)
+        self.assert_beatable_after_fill(multiworld)
+
+    def test_cherry_disabled_games(self) -> None:
+        multiworld = generate({
+            "games": ["Barbuta", "Combatants", "Hot Foot", "Waldorf's Journey"],
+            "starting_game_amount": 1,
+            "cherry_disabled_games": ["Combatants", "Hot Foot", "Waldorf's Journey", "Pilot Quest"],
+        }, seed=4)
+        self.assert_all_reachable(multiworld)
+        self.assert_beatable_after_fill(multiworld)
+        loc_names = {loc.name for loc in multiworld.get_locations(1)}
+        for g in ("Combatants", "Hot Foot", "Waldorf's Journey"):
+            self.assertNotIn(f"{g} - Cherry", loc_names)
+        self.assertIn("Barbuta - Cherry", loc_names)

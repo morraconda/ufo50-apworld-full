@@ -11,7 +11,9 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Pingolf"
-REGION = "The Course"
+REGION = "The Course"          # holes 1-8's Par checks -- sphere 1
+DUNK_REGION = "Dunk Zone"      # holes 9-18's Par checks + Gift/Gold/Cherry -- need "Dunking"
+FREE_HOLES = 8                 # the first 8 holes (play order) don't need the item
 
 # The 18 holes in PLAY order -- the order Pingolf presents them (scr23_Constants
 # `stageSequence` = [0,1,6,2,12,7,13,3,8,9,4,14,15,10,5,11,16,17] indexing o23_Mas
@@ -55,17 +57,17 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(HOLE_NAMES, start=1):
-        table[f"{name} - Par"] = LocationInfo(n, REGION)
-    table["Gift"] = LocationInfo(997, REGION)
-    table["Gold"] = LocationInfo(998, REGION)
-    table["Cherry"] = LocationInfo(999, REGION)
+        table[f"{name} - Par"] = LocationInfo(n, REGION if n <= FREE_HOLES else DUNK_REGION)
+    table["Gift"] = LocationInfo(997, DUNK_REGION)
+    table["Gold"] = LocationInfo(998, DUNK_REGION)
+    table["Cherry"] = LocationInfo(999, DUNK_REGION)
     return table
 
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# reachable from the start: the first 8 holes' Par checks (the rest need "Dunking")
+sphere_1_locs: list[str] = [f"{name} - Par" for name in HOLE_NAMES[:FREE_HOLES]]
 
 
 def get_locations() -> dict[str, int]:

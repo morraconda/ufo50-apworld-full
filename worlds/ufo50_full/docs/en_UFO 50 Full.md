@@ -16,7 +16,7 @@ This will bring you to your `templates` folder, where you can find a UFO 50 temp
 Barbuta, Night Manor, Porgy, and Vainger.
 
 ## Can I pick and choose which games I play?
-Yes. Every game you list in the **Games** option is enabled and is a goal -- to finish you must get Gold in all of them. **Random Choice Games** are enabled too but are never goals. Getting Cherry in a game is always just a location, never a goal.
+Yes. Every game you list in the **Games** option is enabled and is a goal -- to finish you must get Gold in all of them. Getting Cherry in a game is always just a location, never a goal.
 
 ## Can I play unimplemented games?
 Yes, any game can be selected with no extra setup. For unimplemented games, the only locations are the Gift, Gold, and Cherry.
