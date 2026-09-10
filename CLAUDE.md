@@ -78,14 +78,16 @@ each game keeps thin wrappers with these exact signatures and delegates mechanic
   gated on `can_reach_location` of every goal game's Gold.
 - **Sphere-1 deferral** (`defer_sphere_1_games`, on by default; option display name
   "Defer No Logic Games"): games whose every check is reachable at boot
-  (`_game_is_sphere1_only`) and that you did **not** start with get their `Boot <Game>`
-  entrance gated behind holding all three `Artificial Logic Gate 1/2/3` items
-  (`general_items.logic_gate_items`, subgame-51 ids). Those three progression items are
-  added to the pool in `create_items` and fill scatters them, so none of a deferred
-  game's checks can sit at the start of the critical path. Cartridges are awarded
-  normally (no special starting-game preference). `create_items` raises `OptionError`
-  if deferral is on but there is nowhere reachable to place the gates (`_lock_sphere1_only_games`
-  in `set_rules` just applies the boot rule from `self.deferred_sphere1_games`).
+  (`_game_is_sphere1_only`): fill gates their `Boot <Game>` entrance behind holding
+  all three `Artificial Logic Gate 1/2/3` items (`general_items.logic_gate_items`,
+  subgame-51 ids), so critical-path items can't land on a game that's fully open at
+  boot. **Generator-only** — the gates are never sent to the mod and lock nothing
+  in-game (you boot any game whose Cartridge you hold). The gate items are added to
+  the pool in `create_items` and fill scatters them. Cartridges are awarded normally
+  (no special starting-game preference). `create_items` raises `OptionError` if
+  deferral is on but there is nowhere reachable to place the gates — i.e. every
+  reachable starting game is itself a no-logic game (`_lock_sphere1_only_games` in
+  `set_rules` just applies the boot rule from `self.deferred_sphere1_games`).
 - `starting_game_amount` cartridges are precollected. `cherry_enabled_games` is a strict
   allowlist of games that keep their `<Game> - Cherry` location; an **explicit empty list
   = no game has a Cherry**. Its default (`options._CHERRY_OFF_BY_DEFAULT`) enables Cherry
@@ -257,14 +259,22 @@ after touching any `Archipelago_*.yaml`.
   that calls `collect_location(n)` for anything satisfied, guarded by
   `!is_location_collected(n)` — so save-loaded progress reports too. Boss/one-shot
   events use `findprepend`/`findappend` at the win point.
-- **Award only the check that was actually earned — never a cumulative `for i in
-  1..current: collect_location(i)` fill.** Reaching milestone N sends *only* N's check,
-  not 1..N (a value like a score / rank / floor / party level can jump, and a
-  non-linear game like Lords of Diskonia can reach N without 1..N-1). For a
-  monotonic-milestone sweep, collect only `f(min(current, MAX))`. Per-element flag
-  sweeps (`if (levelCleared[i]) collect(i)`, one independent condition per location)
-  are fine and stay. **Overbold is the sole exception** — its `$N Wave` checks are
-  deliberately cumulative (`for i: if (prize >= i*100) collect(i)`).
+- **Monotonic value ladders back-fill every lower rung.** When a set of checks is a
+  ladder on one number that only ratchets up over a run — a score, rank, currency,
+  running count — the per-frame sweep walks the **whole threshold list** and
+  `collect_location(i)` for *every* rung the current value meets, deduped by
+  `!is_location_collected`: `for i: if (current >= thresh[i]) collect(i)`. Reaching N
+  awards 1..N, because a higher score/rank/count means the lower rungs were passed
+  (even if the value jumped straight past them or the player never paused there).
+  This applies to: **Attactics** rank, **Party House** popularity / cash / house
+  space / star guests, **Mini & Max** shinies, **Kick Club** / **Campanella** /
+  **Ninpek** points, **Magic Garden** score, **Overbold** `$N Wave`, and any similar
+  score/rank/count ladder.
+- **Do NOT back-fill level completions or one-off collectibles.** Stage / mission /
+  level clears and individually-placed pickups stay one independent condition per
+  location (`if (levelCleared[i]) collect(i)`, `if (gotItem[i]) collect(i)`) — reaching
+  a later one does not imply the earlier ones. A non-linear game (Lords of Diskonia)
+  can reach node N without 1..N-1, so its per-node checks are not a ladder.
 - **Fire on the action, not the animation**: hook the frame the triggering thing
   actually happens (the killing blow lands / the goal is touched / the clear flag is
   set), never a post-hoc win screen, results tally, death cutscene, screen wipe, or

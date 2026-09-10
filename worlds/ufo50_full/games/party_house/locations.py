@@ -18,21 +18,23 @@ SCENARIOS: list[str] = [
     "Alien Invitation",
     "High or Low",
     "Best Wishes",
-    "A Magical Night",
-    "Money Management",
+    "Money Management",   # in-game scenario[3] (menu "4 MONEY MANAGEMENT")
+    "A Magical Night",    # in-game scenario[4] (menu "5 A MAGICAL NIGHT")
     "Random Scenario",
 ]
 FIXED_SCENARIOS: list[str] = SCENARIOS[:5]
 
 # Popularity + House Space checks are GLOBAL -- one set for the whole game, reachable
 # in any scenario, awarded once. Popularity: every value 1..20, then every 2 up to 80.
-# House Space: every value 5..33, plus the max (34) as its own check named "UFO".
+# House Space: every value 6..33, plus the max (34) as its own check named "UFO"; the
+# former "5 House Space" slot (id 805) is now the "1 Cash" check.
 POPULARITY_VALUES: list[int] = list(range(1, 21)) + list(range(22, 81, 2))
-HOUSE_SPACE_VALUES: list[int] = list(range(5, 34))
+HOUSE_SPACE_VALUES: list[int] = list(range(6, 34))
 HOUSE_SPACE_MAX: int = 34
 HOUSE_SPACE_MAX_NAME: str = "UFO"
+CASH_OFFSET: int = 805           # "1 Cash" (reuses the old "5 House Space" id)
 POP_OFFSET_BASE: int = 700       # "<n> Popularity"  -> POP_OFFSET_BASE + n  (701..780)
-SPACE_OFFSET_BASE: int = 800     # "<n> House Space" -> SPACE_OFFSET_BASE + n (805..834; 834 = "UFO")
+SPACE_OFFSET_BASE: int = 800     # "<n> House Space" -> SPACE_OFFSET_BASE + n (806..833; 834 = "UFO")
 GLOBAL_REGION = "The Party"
 
 # Star Guests + Clear are per-scenario.
@@ -44,6 +46,7 @@ CLEAR_STAR_GUESTS: int = 6
 POPULARITY = "popularity"
 HOUSE_SPACE = "house_space"
 STAR_GUESTS = "star_guests"
+CASH = "cash"
 
 
 # Per-scenario id layout (Clear + 5 Star Guests = 6 slots), via the standard
@@ -67,6 +70,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     for n in POPULARITY_VALUES:
         table[f"{n} Popularity"] = LocationInfo(
             POP_OFFSET_BASE + n, GLOBAL_REGION, POPULARITY, n)
+    table["1 Cash"] = LocationInfo(CASH_OFFSET, GLOBAL_REGION, CASH, 1)
     for n in HOUSE_SPACE_VALUES:
         table[f"{n} House Space"] = LocationInfo(
             SPACE_OFFSET_BASE + n, GLOBAL_REGION, HOUSE_SPACE, n)
@@ -90,11 +94,12 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# Every house-space check is a plain progress marker with no rule. Popularity checks
-# now carry a rule (rules._popularity_reachable), and the Star Guests / Clear
-# locations are gated by rules.py too.
-sphere_1_locs: list[str] = ([f"{n} House Space" for n in HOUSE_SPACE_VALUES]
-                            + [HOUSE_SPACE_MAX_NAME])
+# Popularity / Cash / house-space checks now carry rules (rules._popularity_reachable,
+# rules.cash, rules._max_house_space), as do the Star Guests / Clear locations. A fresh
+# run (flat base pop 3, base cash 2, max_cash 2, days 5 -> days+1 clamp of 6) reaches
+# 6 house space, so only these are sphere 1.
+sphere_1_locs: list[str] = ([f"{n} Popularity" for n in POPULARITY_VALUES[:3]]
+                            + ["1 Cash", f"{HOUSE_SPACE_VALUES[0]} House Space"])
 
 
 def get_locations() -> dict[str, int]:

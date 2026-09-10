@@ -91,11 +91,17 @@ def _bind_per_game_tests() -> None:
     for game, partners, seed in _PER_GAME:
         slug = game.lower().replace(" ", "_").replace("'", "")
         cases = {
+            # a lone game has nowhere to host the Logic Gates, so deferral must be
+            # off for a solo no-logic game to generate (defer path: OptionMatrixTest)
             "solo_goal": {
                 "games": [game], "starting_game_amount": 1,
+                "defer_sphere_1_games": False,
             },
+            # start every game so the logic-bearing partners can always host the
+            # gates, even when `game` itself is deferred
             "mixed_multiworld": {
-                "games": [game] + partners, "starting_game_amount": 1,
+                "games": [game] + partners,
+                "starting_game_amount": len(partners) + 1,
             },
         }
         for case_name, options in cases.items():
@@ -163,12 +169,12 @@ class OptionMatrixTest(UFO50GenTestBase):
         }, seed=4)
         self.assert_all_reachable(multiworld)
         world = multiworld.worlds[1]
-        # the no-logic games not started with are deferred behind all 3 gates
+        # the sphere-1-only games in the seed are deferred
         self.assertTrue(world.deferred_sphere1_games)
         gate_names = {f"Artificial Logic Gate {n}" for n in (1, 2, 3)}
         pool_names = {item.name for item in multiworld.itempool}
         self.assertTrue(gate_names <= pool_names, "Artificial Logic Gate items missing from the pool")
-        # a deferred game's boot entrance now needs every gate
+        # a deferred game's boot entrance needs every gate (fill-time rule)
         deferred = world.deferred_sphere1_games[0]
         state = multiworld.get_all_state(False)
         entrance = multiworld.get_entrance(f"Boot {deferred}", 1)
@@ -181,13 +187,24 @@ class OptionMatrixTest(UFO50GenTestBase):
         self.assert_beatable_after_fill(multiworld)
 
     def test_defer_sphere_1_games_mostly_no_logic(self) -> None:
-        # only Barbuta has internal logic; the other five are deferred behind the gates
+        # Divers/Avianos/Mooncat are deferred; the logic games (Barbuta, Ninpek,
+        # Bushido Ball) host the gates. All games start so a host is guaranteed.
         multiworld = generate({
             "games": ["Barbuta", "Ninpek", "Divers", "Avianos", "Mooncat", "Bushido Ball"],
-            "starting_game_amount": 1, "defer_sphere_1_games": True,
+            "starting_game_amount": 6, "defer_sphere_1_games": True,
         }, seed=7)
         self.assert_all_reachable(multiworld)
         self.assert_beatable_after_fill(multiworld)
+
+    def test_defer_sphere_1_games_no_logic_host_fails(self) -> None:
+        # every game is a no-logic game, so there is nowhere to place the gates
+        # -> generation fails
+        from Options import OptionError
+        with self.assertRaises(OptionError):
+            generate({
+                "games": ["Valbrace", "Divers", "Mooncat"],
+                "starting_game_amount": 1, "defer_sphere_1_games": True,
+            }, seed=4)
 
     def test_cherry_enabled_games(self) -> None:
         # only Barbuta keeps its Cherry; the other played games lose theirs. Pilot

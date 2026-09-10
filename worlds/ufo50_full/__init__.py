@@ -217,7 +217,7 @@ class UFO50World(World):
     starting_games: list[str]  # the games you start with unlocked
     goal_games: list[str]  # the games that are your goals
     sphere1_only_games: list[str]  # included games with no internal logic (all checks reachable at boot)
-    deferred_sphere1_games: list[str]  # sphere-1-only games whose boot is gated behind the Artificial Logic Gates
+    deferred_sphere1_games: list[str]  # sphere-1-only games; fill gates their Boot entrance behind the Artificial Logic Gates (generator-only)
 
     porgy_lantern_and_radar_slots_req: dict[str, int]
 
@@ -325,17 +325,12 @@ class UFO50World(World):
         self._lock_sphere1_only_games()
 
     def _lock_sphere1_only_games(self) -> None:
-        """Artificially gate every sphere-1-only game (one whose every check is
-        reachable the moment you boot it) behind holding *all* of the Artificial
-        Logic Gate items. Those three progression items go into the multiworld pool
-        (added in ``create_items``) and can land anywhere reachable, so none of a
-        deferred game's checks can sit on the start of the critical path -- you have
-        to find all three gates first.
-
-        A game you start with is left alone (its cartridge is precollected, so it is
-        a foothold and also a legal home for the gate items). Controlled by the
-        ``defer_sphere_1_games`` option (on by default); ``create_items`` raises if
-        deferral is wanted but there is nowhere reachable to place the gates."""
+        """Make fill treat each sphere-1-only game's ``Boot <Game>`` entrance as
+        gated behind holding all three Artificial Logic Gate items, so critical-path
+        items can't be placed on a game whose every check is open the moment you
+        boot it. Generator-only: the gates are never sent to the mod and lock
+        nothing in-game. The gate items are added to the pool in ``create_items``,
+        which raises ``OptionError`` if there is nowhere reachable to place them."""
         for game_name in self.deferred_sphere1_games:
             add_rule(self.get_entrance(f"Boot {game_name}"),
                      lambda state: all(state.has(gate, self.player) for gate in logic_gate_items))
@@ -396,14 +391,14 @@ class UFO50World(World):
             else:
                 created_items.append(cartridge)
 
-        # "Defer No Logic Games": every no-internal-logic game you did NOT start with
-        # has its boot gated behind holding all of the Artificial Logic Gate items
-        # (rule applied in _lock_sphere1_only_games); the gate items go into the pool
-        # here so fill can scatter them anywhere reachable.
+        # "Defer No Logic Games": fill gates every sphere-1-only game's Boot
+        # entrance behind all the Artificial Logic Gate items (rule in
+        # _lock_sphere1_only_games) so critical-path items can't land on a game
+        # that's fully open at boot. Generator-only, not sent to the mod. The gate
+        # items go into the pool here so fill can place them anywhere reachable.
         self.deferred_sphere1_games = []
         if self.options.defer_sphere_1_games:
-            self.deferred_sphere1_games = [g for g in self.sphere1_only_games
-                                           if g not in self.starting_games]
+            self.deferred_sphere1_games = list(self.sphere1_only_games)
             if self.deferred_sphere1_games:
                 home_games = {g for g in self.starting_games if g not in self.deferred_sphere1_games}
                 open_home_locs = sum(

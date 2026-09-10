@@ -16,8 +16,8 @@ class Guest(NamedTuple):
     """One of the 43 unlockable guests. ``id`` is the vanilla o36_Game ``CHAR_*``
     type value (11..44 standard, 50..58 prestige); the AP item id/offset is the
     1-based position in ``GUESTS``. ``cost`` is the popularity price to add the
-    guest. ``money_score`` / ``pop_score`` / ``util_score`` rate how much the guest
-    contributes to cash / popularity / utility (used by ``rules._achieved``). Every
+    guest. ``cash_score`` / ``pop_score`` / ``util_score`` rate how much the guest
+    contributes to cash / popularity / utility (used by ``rules.adjusted_scores``). Every
     field after ``cost`` defaults to its zero value and is only passed on a ``GUESTS``
     entry when non-zero/``True``: the score ints (may be negative), then the bools
     ``is_trouble`` (base troublemaker), ``is_star`` (carries prestige -- a "star
@@ -25,7 +25,7 @@ class Guest(NamedTuple):
     name: str
     id: int
     cost: int
-    money_score: int = 0
+    cash_score: int = 0
     pop_score: int = 0
     util_score: int = 0
     is_trouble: bool = False
@@ -45,29 +45,29 @@ GUESTS: list[Guest] = [
     Guest("Security", 14, cost=4, util_score=1),
     Guest("Wrestler", 15, cost=9, pop_score=1, util_score=1),
     Guest("Watch Dog", 16, cost=4, pop_score=1, util_score=1),
-    Guest("Spy", 17, cost=8, money_score=2, util_score=1),
+    Guest("Spy", 17, cost=8, cash_score=2, util_score=1),
     Guest("Driver", 18, cost=3, util_score=2),
     Guest("Private I.", 19, cost=4, util_score=2),
     Guest("Grillmaster", 20, cost=5, pop_score=1, util_score=1),
-    Guest("Athlete", 21, cost=6, money_score=1, util_score=1),
+    Guest("Athlete", 21, cost=6, cash_score=1, util_score=1),
     Guest("Mr. Popular", 22, cost=5, pop_score=2, util_score=-1),
-    Guest("Celebrity", 23, cost=11, money_score=3, pop_score=1, util_score=-1),
-    Guest("Comedian", 24, cost=5, pop_score=3),
-    Guest("Photographer", 25, cost=5, money_score=1, pop_score=2),
+    Guest("Celebrity", 23, cost=11, cash_score=3, pop_score=1, util_score=-1),
+    Guest("Comedian", 24, cost=5, pop_score=3),      # pop overridden per-tt in rules._TT_SCALED_SCORE
+    Guest("Photographer", 25, cost=5, cash_score=1, pop_score=2),
     Guest("Caterer", 26, cost=5, pop_score=2),
-    Guest("Ticket Taker", 27, cost=4, money_score=1),
-    Guest("Auctioneer", 28, cost=9, money_score=3),
+    Guest("Ticket Taker", 27, cost=4, cash_score=1),
+    Guest("Auctioneer", 28, cost=9, cash_score=3),
     Guest("Monkey", 29, cost=3, pop_score=2, is_trouble=True),
-    Guest("Rock Star", 30, cost=5, money_score=2, pop_score=2, is_trouble=True),
-    Guest("Gangster", 31, cost=6, money_score=4, is_trouble=True),
-    Guest("Gambler", 32, cost=7, money_score=3, pop_score=1, is_trouble=True),
+    Guest("Rock Star", 30, cost=5, cash_score=2, pop_score=2, is_trouble=True),
+    Guest("Gangster", 31, cost=6, cash_score=4, is_trouble=True),
+    Guest("Gambler", 32, cost=7, cash_score=3, pop_score=1, is_trouble=True),
     Guest("Werewolf", 33, cost=5, pop_score=1),
     Guest("Mascot", 34, cost=5, pop_score=1),
     Guest("Introvert", 35, cost=4, pop_score=1),
     Guest("Counselor", 36, cost=7, is_flag=True),
     Guest("Stylist", 37, cost=7, pop_score=2),
-    Guest("Bartender", 38, cost=11, money_score=4),
-    Guest("Writer", 39, cost=8, pop_score=3),
+    Guest("Bartender", 38, cost=11, cash_score=4),   # cash overridden per-tt in rules._TT_SCALED_SCORE
+    Guest("Writer", 39, cost=8, pop_score=3),         # pop overridden per-tt in rules._TT_SCALED_SCORE
     Guest("Social Climber", 40, cost=12, pop_score=3),
     Guest("Cupid", 41, cost=8, util_score=3),
     Guest("Magician", 42, cost=5, util_score=1),
@@ -75,8 +75,8 @@ GUESTS: list[Guest] = [
     Guest("Cheerleader", 44, cost=5, util_score=2),
     Guest("Alien", 50, cost=40, is_star=True),
     Guest("Dinosaur", 51, cost=25, is_trouble=True, is_star=True),
-    Guest("Leprechaun", 52, cost=50, money_score=2, is_star=True),
-    Guest("Genie", 53, cost=55, util_score=2, is_star=True),
+    Guest("Leprechaun", 52, cost=50, cash_score=1, is_star=True),
+    Guest("Genie", 53, cost=55, util_score=1, is_star=True),
     Guest("Mermaid", 54, cost=35, util_score=-1, is_star=True),
     Guest("Dragon", 55, cost=30, util_score=-2, is_star=True),
     Guest("Ghost", 56, cost=45, util_score=1, is_star=True),
@@ -101,11 +101,11 @@ SCENARIO_GUESTS: dict[str, list[str]] = {
         "Photographer", "Stylist", "Hippy", "Celebrity", "Counselor", "Bartender",
         "Athlete", "Cheerleader", "Wrestler", "Monkey", "Rock Star", "Dinosaur", "Genie",
     ],
-    "A Magical Night": [
+    "Money Management": [   # in-game scenario[3]
         "Spy", "Private I.", "Photographer", "Comedian", "Ticket Taker", "Caterer",
         "Gangster", "Security", "Athlete", "Stylist", "Cute Dog", "Dragon", "Leprechaun",
     ],
-    "Money Management": [
+    "A Magical Night": [    # in-game scenario[4]
         "Gambler", "Werewolf", "Celebrity", "Cupid", "Introvert", "Auctioneer",
         "Social Climber", "Dancer", "Watch Dog", "Greeter", "Magician", "Unicorn", "Ghost",
     ],
