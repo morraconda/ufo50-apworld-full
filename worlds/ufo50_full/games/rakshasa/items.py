@@ -15,7 +15,10 @@ GAME_NAME = "Rakshasa"
 # mid-boss. The three collectible weapon types are AP items -- without the unlock, the
 # in-world weapon pickup gives 500 points instead (the mod). Filler is "500 Points"
 # (a weak reward -> "bad filler" game).
-WEAPONS: tuple[str, ...] = ("Weapon 1", "Weapon 2", "Weapon 3")   # o24_Item WEAPON num 0/1/2
+# o24_Item WEAPON num 0/1/2 -> weaponCurr 0/1/2 in o24_Player_Other_10's switch:
+# 0 = o24_Fireball + soundShotFire* (Fire), 1 = o24_Spreadshot x5 arc (Spreadshot),
+# 2 = o24_Homeshot + soundShotHoming* (Homing). Order here maps i -> id 511/512/513.
+WEAPONS: tuple[str, ...] = ("Fire Weapon", "Spreadshot", "Homing Shot")
 FILLER = "500 Points"
 
 

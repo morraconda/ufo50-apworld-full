@@ -90,10 +90,10 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# Every popularity / house-space check (global and per-scenario) is a plain progress
-# marker with no rule; only the Star Guests / Clear locations are gated by rules.py.
-sphere_1_locs: list[str] = ([f"{n} Popularity" for n in POPULARITY_VALUES]
-                            + [f"{n} House Space" for n in HOUSE_SPACE_VALUES]
+# Every house-space check is a plain progress marker with no rule. Popularity checks
+# now carry a rule (rules._popularity_reachable), and the Star Guests / Clear
+# locations are gated by rules.py too.
+sphere_1_locs: list[str] = ([f"{n} House Space" for n in HOUSE_SPACE_VALUES]
                             + [HOUSE_SPACE_MAX_NAME])
 
 

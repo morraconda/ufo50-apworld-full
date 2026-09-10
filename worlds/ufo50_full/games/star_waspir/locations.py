@@ -16,7 +16,8 @@ NUM_WAVE = 5   # o17__Game.wave 1..5
 REGION = "Sortie"
 
 # id offset layout inside Star Waspir's 1000-id block:
-#     1..5   Wave <n>   (reached wave n)
+#     1..5   Wave <n>   (cleared wave n)
+#   101      Shooting item (see items.py)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -38,8 +39,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# only Wave 1 is reachable with no items (rules.py gates the rest on "Shooting")
+sphere_1_locs: list[str] = ["Wave 1"]
 
 
 def get_locations() -> dict[str, int]:

@@ -23,7 +23,7 @@ GAME_NAME = "Rakshasa"
 #     1..3   Level <n>            (stage n cleared)
 #     4..6   Level <n> Miniboss   (stage n mid-boss defeated; offset = 3 + n)
 #   200      500 Points (filler)
-#   511..513 Weapon 1..3
+#   511/512/513 Fire Weapon / Spreadshot / Homing Shot
 #   997/998/999   Gift / Gold / Cherry
 
 REGIONS: tuple[str, ...] = ("Stage 1", "Stage 2", "Stage 3")

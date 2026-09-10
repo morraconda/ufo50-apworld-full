@@ -4,7 +4,8 @@ from BaseClasses import CollectionState, Region
 from worlds.generic.Rules import set_rule
 
 from .locations import (GAME_NAME, SCENARIOS, FIXED_SCENARIOS, POPULARITY, HOUSE_SPACE,
-                        STAR_GUESTS, CLEAR_STAR_GUESTS, STAR_GUEST_THRESHOLDS, location_table)
+                        HOUSE_SPACE_MAX, STAR_GUESTS, CLEAR_STAR_GUESTS,
+                        STAR_GUEST_THRESHOLDS, location_table)
 from .items import (MAX_TROUBLE, SHOP_STOCK, MAX_POPULARITY, MAX_CASH, DAY,
                     START_POPULARITY, START_CASH, GUESTS, SCENARIO_GUESTS)
 
@@ -30,7 +31,7 @@ class PartyState(NamedTuple):
 BASE_STATE = PartyState(
     max_popularity=10,
     max_cash=2,
-    house_space=3,
+    house_space=5,
     trouble_threshold=1,
     days=5,
     shop_stock=1,
@@ -158,6 +159,31 @@ def _seatable_star_guests(scenario: str, ps: PartyState,
                if g.is_star and g.cost <= ps.max_popularity)
 
 
+def max_star_guests(scenario: str, state: "CollectionState",
+                    world: "UFO50World") -> int:
+    """The most star guests ``scenario`` can seat: for each held star guest it
+    supplies whose cost is within ``max_popularity``, the copies you can buy
+    (``_star_supply``). A star guest that is also a troublemaker is capped at
+    ``trouble_threshold + flags - 2`` copies, where ``flags`` is the held flag
+    guests the scenario supplies. Random Scenario's total is divided by 5 (it
+    supplies every held guest, so its raw count is far larger)."""
+    ps = party_state(state, world)
+    available = available_guests(scenario, state, world)
+    flags = sum(1 for g in available if g.is_flag)
+    trouble_cap = ps.trouble_threshold + flags - 2
+    total = 0
+    for g in available:
+        if not g.is_star or g.cost > ps.max_popularity:
+            continue
+        copies = _star_supply(scenario, g, ps)
+        if g.is_trouble:
+            copies = max(0, min(copies, trouble_cap))
+        total += copies
+    if scenario == RANDOM_SCENARIO:
+        total //= _RANDOM_SCORE_DIVISOR
+    return total
+
+
 def _achieved(scenario: str, state: "CollectionState", world: "UFO50World") -> Thresholds:
     ps = party_state(state, world)
     guests = available_guests(scenario, state, world)
@@ -200,6 +226,89 @@ def _can_clear(scenario: str, state: "CollectionState", world: "UFO50World") -> 
     return _meets(scenario, STAR_GUESTS, CLEAR_STAR_GUESTS, state, world)
 
 
+def _base_pop(ps: PartyState) -> int:
+    """The popularity a run can grind out with no unlocked guests"""
+    return 2 * (ps.trouble_threshold - 1) * ps.days
+
+
+def _base_cash(ps: PartyState) -> int:
+    """The cash a run can grind out with no unlocked guests."""
+    return (ps.trouble_threshold - 1) * ps.days
+
+
+# Buying house space: you start at 5, raising it to ``n`` costs ``min(n - 4, 12)``
+# (so 6 costs $2, 7 costs $3, ... flat $12 from 16 on), and 34 is the ceiling.
+_HOUSE_SPACE_STEP_CAP = 12
+
+def _house_space(cash: int) -> int:
+    """The house space ``cash`` can buy, from the base 5 up to ``HOUSE_SPACE_MAX``."""
+    space = BASE_STATE.house_space
+    while space < HOUSE_SPACE_MAX:
+        step = min((space + 1) - 4, _HOUSE_SPACE_STEP_CAP)
+        if cash < step:
+            break
+        cash -= step
+        space += 1
+    return space
+
+
+_SCORE_CATEGORIES = ("money_score", "pop_score", "util_score")
+_SCORE_SLOTS = 8
+# Random Scenario can turn up any held guest, so it averages a much wider pool: the
+# best 40 slots per category, then the totals divided by 5 back to the /8 scale.
+_RANDOM_SCORE_SLOTS = 40
+_RANDOM_SCORE_DIVISOR = 5
+
+
+def adjusted_scores(scenario: str, state: "CollectionState",
+                    world: "UFO50World") -> tuple[int, int, int]:
+    """``(money, pop, util)`` for ``scenario``. Star guests and troublemakers aside,
+    rank the held guests the scenario supplies by each category; every guest fills
+    ``shop_stock`` slots, and the best 8 slots per category go into one pool (so with
+    3 shop stock that's 3 of the top guest, 3 of the second, 2 of the third; short
+    lists just leave slots empty -- worth 0). Each pooled slot contributes the
+    guest's *entire* score, so a guest taken for its popularity still drags in its
+    negative utility. A guest already pooled for an earlier category is skipped, so
+    no guest is counted twice. Random Scenario instead pools the best 40 slots per
+    category and divides the totals by 5."""
+    ps = party_state(state, world)
+    guests = [g for g in available_guests(scenario, state, world)
+              if not g.is_star and not g.is_trouble]
+    random = scenario == RANDOM_SCENARIO
+    slots = _RANDOM_SCORE_SLOTS if random else _SCORE_SLOTS
+    divisor = _RANDOM_SCORE_DIVISOR if random else 1
+    pool: list = []
+    seen: set = set()
+    for cat in _SCORE_CATEGORIES:
+        ranked = sorted(guests, key=lambda g, c=cat: getattr(g, c), reverse=True)
+        taken = 0
+        for g in ranked:
+            if taken >= slots:
+                break
+            if g in seen:
+                continue
+            seen.add(g)
+            reps = min(ps.shop_stock, slots - taken)
+            pool += [g] * reps
+            taken += reps
+    return tuple(sum(getattr(g, cat) for g in pool) // divisor
+                 for cat in _SCORE_CATEGORIES)
+
+
+def _popularity_reachable(threshold: int, state: "CollectionState",
+                          world: "UFO50World") -> bool:
+    """A global ``<n> Popularity`` check. Reachable when both hold:
+
+    * ``_base_pop + 3 + starting_popularity >= n`` -- the ceiling a run can push
+      popularity to, including the head start from ``+1 Starting Popularity``.
+    * ``max_popularity >= n`` -- the popularity cap has been raised to at least ``n``.
+    """
+    ps = party_state(state, world)
+    if ps.max_popularity < threshold:
+        return False
+    return _base_pop(ps) + 3 + ps.starting_popularity >= threshold
+
+
 def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # Every scenario is open from the start, and so is the global metric region.
     regions["Menu"].connect(regions["The Party"])
@@ -209,7 +318,11 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     for loc_name, info in location_table.items():
         if loc_name in ("Gift", "Gold", "Cherry"):
             continue
-        # Global popularity / house-space checks are plain sphere-1 progress markers.
+        if info.metric == POPULARITY:
+            set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
+                     lambda state, t=info.threshold: _popularity_reachable(t, state, world))
+            continue
+        # Global house-space checks are still plain sphere-1 progress markers.
         if info.metric != STAR_GUESTS:
             continue
         set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),

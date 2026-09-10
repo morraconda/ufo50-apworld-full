@@ -11,14 +11,19 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Caramel Caramel"
 
-# Caramel Caramel has six photo-shoot levels (o46_Mas normalizedLevel 1..6).
-# Nothing from this game enters the multiworld pool -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
+# Caramel Caramel has six photo-shoot levels (o46_Mas normalizedLevel 1..6). One real
+# item, "Shooting" (100) -- the fire1 weapon (o46_pFire1 / o46_pFire2). Without it the
+# mod destroys every player shot, so you can still fly + take photos (letters, wrenches)
+# but can't kill enemies / clear a level. Filler is the do-nothing Encouragement
+# (Caramel Caramel is in `bad_filler_games`).
+SHOOTING = "Shooting"
 FILLER = "Encouragement"
+
+# id offset layout: 100 Shooting; 200 Encouragement (filler); locations use level_id.
 
 
 item_table: dict[str, ItemInfo] = {
+    SHOOTING: ItemInfo(100, IC.progression, 1),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -36,7 +41,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
+    # Shooting enters the pool; the framework fills the rest of the locations with filler
     return _create_items(GAME_NAME, item_table, world)
 
 

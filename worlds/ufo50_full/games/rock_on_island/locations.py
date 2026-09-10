@@ -13,14 +13,14 @@ if TYPE_CHECKING:
 GAME_NAME = "Rock On! Island"
 
 # Rock On! Island's 10 tower-defense levels (o44__Game.level[1..10]; value 1 = cleared,
-# 2 = perfect/no-damage clear) + the 2 village map nodes (currLevel 0 / 11).
-# Levels 1-5 have known names; 6-10 are generic.
+# 2 = perfect/no-damage clear) + the 2 village map nodes (currLevel 0 / 11). Names are
+# the in-game level_name_* strings for game 44 (ext/<lang>/44_Text.json).
 LEVEL_NAMES: tuple[str, ...] = (
-    "Initial Encounter", "Spiral", "Underbrush", "Wasteland", "Crossroads",
-    "Level 6", "Level 7", "Level 8", "Level 9", "Level 10",
+    "Initial Encounter", "The Spiral", "Underbrush", "Crossroads", "Jungle Rush",
+    "Wasteland", "The Oasis", "Terror Overhead", "Maze of Death", "The Four Emperors",
 )
-VILLAGE_PEACE = "Village of Peace"
-VILLAGE_TWO = "Second Village"
+VILLAGE_PEACE = "Village of Peace"   # currLevel 0  (level_name_0)
+VILLAGE_TWO = "Dinosaur Camp"        # currLevel 11 (level_name_11)
 
 # regions (rules.py chains them): The Island (free) -> Fireside (Progressive Fire >= 1)
 #   -> Spearpoint (Progressive Spear >= 2) -> Mastery (every progression item)
@@ -29,17 +29,17 @@ R_FIRE = "Fireside"
 R_SPEAR = "Spearpoint"
 R_MASTERY = "Mastery"
 
-# 1-Fire tier: Initial Encounter (+ perfect), Spiral (+ perfect), Underbrush, Wasteland,
-# Crossroads (clears only). Everything else's clear + the Second Village -> Spearpoint.
-# The remaining 8 perfects -> Mastery.
-_FIRE_CLEARS = {"Initial Encounter", "Spiral", "Underbrush", "Wasteland", "Crossroads"}
-_FIRE_PERFECTS = {"Initial Encounter", "Spiral"}
+# 1-Fire tier: Initial Encounter (+ perfect), The Spiral (+ perfect), Underbrush,
+# Crossroads, Jungle Rush (clears only). Everything else's clear + Dinosaur Camp ->
+# Spearpoint. The remaining 8 perfects -> Mastery.
+_FIRE_CLEARS = {"Initial Encounter", "The Spiral", "Underbrush", "Crossroads", "Jungle Rush"}
+_FIRE_PERFECTS = {"Initial Encounter", "The Spiral"}
 
 # id offset layout inside Rock On! Island's 1000-id block:
 #     1..10   <level name>            (level cleared)
 #    11..20   <level name> Perfect    (level cleared with no damage; offset = 10 + n)
-#    21       Village of Peace        (entered node currLevel 0)
-#    22       Second Village          (entered node currLevel 11)
+#    21       Village of Peace        (village beaten -- currLevel 0, substate YOU_WIN)
+#    22       Dinosaur Camp           (village beaten -- currLevel 11, substate YOU_WIN)
 #   997/998/999   Gift / Gold / Cherry
 
 

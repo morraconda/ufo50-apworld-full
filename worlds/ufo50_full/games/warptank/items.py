@@ -17,26 +17,27 @@ GAME_NAME = "Warptank"
 # Gates: vanilla carves the hub into tiers with `o16_Mecho` walls that slide open once
 # a cumulative number of sectors has been cleared (trig 1 / 4 / 9 / 14 / 22), plus
 # `o16_MechoE` shortcut walls. Following the Block Koala model, each Mecho wall is now
-# a single named progression item -- you receive the gate to open it, no counting:
-#   Capsule Gate 1  (511)  o16_Mecho trig 1   -- Station Hub -> tier 2
-#   Capsule Gate 2  (512)  o16_Mecho trig 4
-#   Capsule Gate 3  (513)  o16_Mecho trig 9   (also opens the o16_MechoE shortcut walls)
-#   Capsule Gate 4  (514)  o16_Mecho trig 14
-#   Capsule Gate 5  (515)  o16_Mecho trig 22  -- last tier -> Final Sector
+# a single named progression item (named for its trig threshold) -- you receive the
+# gate to open it, no counting:
+#   "1 Capsule Gate"   (511)  o16_Mecho trig 1   -- Hub -> tier 2
+#   "4 Capsule Gate"   (512)  o16_Mecho trig 4
+#   "9 Capsule Gate"   (513)  o16_Mecho trig 9   (also opens the o16_MechoE shortcut walls)
+#   "14 Capsule Gate"  (514)  o16_Mecho trig 14
+#   "22 Capsule Gate"  (515)  o16_Mecho trig 22  -- last tier -> Final Sector
 #
 # Coffee is unchanged: the hub "coffee bridge" to the Final Sector still grows one tile
-# per received Coffee item; 25 in the pool, the bridge needs 23 to be crossable.
+# per received Coffee item; COFFEE_COUNT in the pool, the bridge needs 23 to be crossable.
 COFFEE = "Coffee"
 FILLER = "Encouragement"
 
 GATES: dict[str, int] = {
-    "Capsule Gate 1": 511,
-    "Capsule Gate 2": 512,
-    "Capsule Gate 3": 513,
-    "Capsule Gate 4": 514,
-    "Capsule Gate 5": 515,
+    "1 Capsule Gate": 511,
+    "4 Capsule Gate": 512,
+    "9 Capsule Gate": 513,
+    "14 Capsule Gate": 514,
+    "22 Capsule Gate": 515,
 }
-COFFEE_COUNT = 25
+COFFEE_COUNT = 30
 COFFEE_FOR_FINAL = 23       # bridge is crossable -> also enough for Gold and Cherry
 
 

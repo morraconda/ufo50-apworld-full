@@ -11,37 +11,32 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Hot Foot"
 
-# The 12 draftable athletes, in vanilla roster order (o43_Game `chars[1..12]`, from
-# JON..JULIE). Item id offset = 100 + roster index. Names are the in-game display
-# names (ext/ENGLISH/43_Text.json char keys). Every game is winnable with any team,
-# so nothing in logic requires a specific athlete -- the items just widen your draft.
-CHARACTERS: tuple[str, ...] = (
-    "Jerry",    # 1  japes
-    "Amy",      # 2  amy
-    "Chandar",  # 3  chandar
-    "Benjy",    # 4  derk
-    "Rizzik",   # 5  rizzik
-    "Bea",      # 6  bea
-    "Yoka",     # 7  yoka
-    "Suze",     # 8  suze
-    "Marc",     # 9  marc
-    "Edgar",    # 10 gregor
-    "Mascot",   # 11 mascot
-    "July",     # 12 july
-)
-NUM_START_CHARS = 3
-# The tournament is winnable with any team, so Hot Foot contributes no real filler --
-# its filler is the do-nothing Encouragement (Hot Foot is in `bad_filler_games`).
+# Hot Foot is a 6-game bean-bag tournament (o43_Game, `game` 1..6). The draftable
+# athletes are no longer AP items -- instead shuffled abilities gate the run:
+#   Jumping (101) -- the mod blocks the player's jump without it; needed for every
+#                    tournament game except the first two (and for Gift/Gold/Cherry).
+#   Stars   (102) -- the mod blocks the player's special-meter moves without it;
+#                    needed for games 5 & 6 and for Gold/Cherry.
+#   Team Builder (103) -- unlocks the title-menu "BUILD TEAM" mode (custom roster);
+#                    useful only, nothing in logic needs it.
+# Filler is the do-nothing Encouragement (Hot Foot is in `bad_filler_games`).
+JUMPING = "Jumping"
+STARS = "Stars"
+TEAM_BUILDER = "Team Builder"
 FILLER = "Encouragement"
 
 # id offset layout inside Hot Foot's 1000-id block:
-#   101..112   the 12 athletes (CHARACTERS order = roster index 1..12)
-#   200        Encouragement (filler)
+#   101   Jumping
+#   102   Stars
+#   103   Team Builder
+#   200   Encouragement (filler)
 #   997/998/999   Gift / Gold / Cherry
 
 
 item_table: dict[str, ItemInfo] = {
-    **{name: ItemInfo(100 + i, IC.progression, 1) for i, name in enumerate(CHARACTERS, start=1)},
+    JUMPING: ItemInfo(101, IC.progression, 1),
+    STARS: ItemInfo(102, IC.progression, 1),
+    TEAM_BUILDER: ItemInfo(103, IC.useful, 1),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -51,9 +46,7 @@ def get_items() -> dict[str, int]:
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    groups = game_item_groups(GAME_NAME, item_table)
-    groups[f"{GAME_NAME} - Athletes"] = {f"{GAME_NAME} - {name}" for name in CHARACTERS}
-    return groups
+    return game_item_groups(GAME_NAME, item_table)
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
@@ -61,16 +54,8 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # You start with 3 random athletes unlocked; the other 9 are shuffled into the
-    # multiworld. When Hot Foot is a goal game its Gold location holds a locked item,
-    # so it has one fewer fillable slot -- start with a 4th athlete to keep the counts
-    # balanced (pool 8 == 6 Games + Gift + Cherry).
-    n_start = NUM_START_CHARS + (1 if GAME_NAME in world.goal_games else 0)
-    starters = world.random.sample(CHARACTERS, n_start)
-    for name in starters:
-        world.multiworld.push_precollected(create_item(name, world))
-    return _create_items(GAME_NAME, item_table, world,
-                         quantity_overrides={name: 0 for name in starters})
+    # Jumping and Stars enter the pool; the framework pads the rest with filler
+    return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

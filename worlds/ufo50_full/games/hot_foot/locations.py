@@ -14,15 +14,16 @@ GAME_NAME = "Hot Foot"
 REGION = "The Tournament"
 
 # Hot Foot is a 6-game bean-bag tournament (o43_Game, `game` 1..6, game 6 = "FINAL
-# GAME"). Each location is a tournament game you win; the check fires the moment you
-# advance past it (o43_Game STATE_NEXT_GAME). Any team can win any game, so all six
-# are sphere 1.
+# GAME"). Each "Game n" check fires the moment you advance past it (o43_Game
+# STATE_NEXT_GAME). "10 Points" fires the first time your team (pointScore[1]) reaches
+# 10 in any match -- reachable in game 1 with no items.
 GAME_NAMES: tuple[str, ...] = (
     "Game 1", "Game 2", "Game 3", "Game 4", "Game 5", "Final Game",
 )
 
 # id offset layout inside Hot Foot's 1000-id block:
 #     1..6   <game name>   (won tournament game n)
+#     10     10 Points      (pointScore[1] >= 10 in a match)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -36,6 +37,7 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(GAME_NAMES, start=1):
         table[name] = LocationInfo(n, REGION)
+    table["10 Points"] = LocationInfo(10, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -44,8 +46,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# reachable with no items: Game 1, Game 2 and 10 Points (rules.py leaves them unruled)
+sphere_1_locs: list[str] = ["Game 1", "Game 2", "10 Points"]
 
 
 def get_locations() -> dict[str, int]:

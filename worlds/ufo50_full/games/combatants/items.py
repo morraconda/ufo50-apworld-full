@@ -12,13 +12,35 @@ if TYPE_CHECKING:
 GAME_NAME = "Combatants"
 
 # Combatants is a real-time ant-war campaign of 12 missions on a branching map
-# (o25__Game, `mapComplete[0..11]`). Nothing from this game enters the multiworld
-# pool -- its only item is the Encouragement filler (a nothing item, hence a "bad
-# filler" game). The framework pads every location with filler from the other games.
-FILLER = "Encouragement"
+# (o25__Game, `mapComplete[0..11]`). Every mission starts unlocked, but the nine
+# command-menu abilities are AP items -- the mod greys out and refuses to fire any
+# ability the player has not received. Seven are advancement (mission gates); the two
+# extras (Soldier Instinct, Surrender) are useful-only. Filler is "+20% Movement Speed"
+# (additive: the player ant's walkSpeed becomes 0.4 * (1 + 0.2 * count)), so Combatants
+# is a "good filler" game.
+#
+# Item offset == the in-game MENU_* radial-menu id it unlocks:
+#   101 Follow / 102 Hold / 103 Instinct / 104 Soldier Follow / 105 Soldier Hold /
+#   106 Soldier Instinct / 107 Produce Workers / 108 Produce Soldiers / 109 Surrender
+PROGRESSION_ABILITIES: tuple[str, ...] = (
+    "Follow", "Hold", "Instinct", "Soldier Follow", "Soldier Hold",
+    "Produce Workers", "Produce Soldiers",
+)
+USEFUL_ABILITIES: tuple[str, ...] = ("Soldier Instinct", "Surrender")
+ABILITIES: tuple[str, ...] = (*PROGRESSION_ABILITIES, *USEFUL_ABILITIES)
+
+FILLER = "+20% Movement Speed"
+
+_ABILITY_ID: dict[str, int] = {
+    "Follow": 101, "Hold": 102, "Instinct": 103, "Soldier Follow": 104,
+    "Soldier Hold": 105, "Soldier Instinct": 106, "Produce Workers": 107,
+    "Produce Soldiers": 108, "Surrender": 109,
+}
 
 
 item_table: dict[str, ItemInfo] = {
+    **{name: ItemInfo(_ABILITY_ID[name], IC.progression, 1) for name in PROGRESSION_ABILITIES},
+    **{name: ItemInfo(_ABILITY_ID[name], IC.useful, 1) for name in USEFUL_ABILITIES},
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -28,7 +50,9 @@ def get_items() -> dict[str, int]:
 
 
 def get_item_groups() -> dict[str, set[str]]:
-    return game_item_groups(GAME_NAME, item_table)
+    groups = game_item_groups(GAME_NAME, item_table)
+    groups[f"{GAME_NAME} - Abilities"] = {f"{GAME_NAME} - {name}" for name in ABILITIES}
+    return groups
 
 
 def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> Item:
@@ -36,7 +60,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
+    # the nine abilities enter the pool; the framework pads the rest with filler
     return _create_items(GAME_NAME, item_table, world)
 
 

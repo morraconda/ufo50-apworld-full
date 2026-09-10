@@ -12,11 +12,14 @@ if TYPE_CHECKING:
 GAME_NAME = "Planet Zoldath"
 
 # Planet Zoldath (o48_*) is a procedurally-generated survival-adventure. In-game energy
-# cubes and (1-in-10) rare resource pickups become AP location pickups; the eight
-# equipment items, extra health and carry slots become AP items.
-MAX_HEALTH = "+1 Max Health"      # start hp/hpMax 3 -> up to 10
+# cubes become AP location pickups; the eight equipment items, extra health and carry
+# slots become AP items.
+ENERGY_CUBE = "Energy Cube"       # +1 max health each: start hp/hpMax 3 -> up to 10
 ITEM_SLOT = "Item Slot"           # start with 0 carry slots -> up to 3
-START_RESOURCE = "+1 Starting Resource"   # filler
+# filler, but a functional one -- the mod adds each copy to the run's common resource
+# stock (o48_Game.resources[0], the cheap-trade / common-ammo currency), so Planet
+# Zoldath counts as a "good filler game" (not in __init__.bad_filler_games).
+START_RESOURCE = "+1 Starting Resource"
 
 # The eight equipment items (o48 ITEM_* / 48_Text.json item_name_0..7). Without the
 # unlock, the pickup in the world is replaced by a friendly NPC who stole it.
@@ -33,17 +36,17 @@ ZOLDATH_ITEMS: tuple[str, ...] = (
 
 # id offset layout inside Planet Zoldath's 1000-id block:
 #     1..20    Random Check <n>
-#     21/22/23 Overworld / Trade / Dungeon Map Piece
+#     21..29   Overworld / Trade / Dungeon Map Piece 1..3
 #   200        +1 Starting Resource (filler)
-#   501        +1 Max Health (x7)      502  Item Slot (x3)
+#   501        Energy Cube (x7, +1 max health each)   502  Item Slot (x3)
 #   511..518   the eight equipment items
 #   997/998/999   Gift / Gold / Cherry
-MAX_HEALTH_COUNT = 7
+ENERGY_CUBE_COUNT = 7
 ITEM_SLOT_COUNT = 3
 
 
 item_table: dict[str, ItemInfo] = {
-    MAX_HEALTH: ItemInfo(501, IC.progression, MAX_HEALTH_COUNT),
+    ENERGY_CUBE: ItemInfo(501, IC.progression, ENERGY_CUBE_COUNT),
     ITEM_SLOT: ItemInfo(502, IC.progression, ITEM_SLOT_COUNT),
     **{name: ItemInfo(511 + i, IC.progression, 1) for i, name in enumerate(ZOLDATH_ITEMS)},
     START_RESOURCE: ItemInfo(200, IC.filler, 0),
@@ -65,7 +68,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # 7 +1 Max Health + 3 Item Slot + 8 equipment; framework pads with resources
+    # 7 Energy Cube + 3 Item Slot + 8 equipment; framework pads with resources
     return _create_items(GAME_NAME, item_table, world)
 
 

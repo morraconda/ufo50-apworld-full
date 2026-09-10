@@ -18,7 +18,7 @@ SHOP_ITEMS_PER_LEVEL = 3     # selItem = sel + (level - 1) * 3, sel 0..2
 #    N0        Level <N>                  (cleared area N -- reached its shop)
 #    N1..N3    Level <N> Shop - Item <k>  (bought the k-th of that shop's three slots)
 #   101..106   upgrade items (see items.py)
-#   200        Coin (filler)
+#   200        +5 Coins (filler)
 #   997/998/999   Gift / Gold / Cherry
 #
 # Floor N's clear + shop live in region "Tower N". You start on a single jump; a

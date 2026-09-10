@@ -9,13 +9,14 @@ if TYPE_CHECKING:
     from ... import UFO50World
 
 
-REAL_SECOND = f"{GAME_NAME} - +1 Real Second"
+REAL_SECOND = f"{GAME_NAME} - +5 Seconds"
 EXTRA_LIFE = f"{GAME_NAME} - Extra Life"
 
 # The run is continuous (no level select) -- these are logic assumptions, not a hard
 # in-game lock: to be expected to survive block K (sub-levels 5*(K-1)+1 .. 5*K) you
-# need SECONDS_PER_BLOCK more real seconds on the timer and LIVES_PER_BLOCK more lives
-# than the block before. Block 1 is free.
+# need SECONDS_PER_BLOCK more "+5 Seconds" items and LIVES_PER_BLOCK more lives than the
+# block before. Block 1 is free. (Item counts unchanged from the "+1 Real Second" era;
+# the "+5 Seconds" rename only affects how much time each one puts on the timer.)
 SECONDS_PER_BLOCK = 5
 LIVES_PER_BLOCK = 1
 

@@ -12,9 +12,11 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Combatants"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the mission locations
-regions: list[str] = ["Menu", "The Campaign"]
+# All 13 missions (12 + hidden "Nemuru's Way") start unlocked and live in "The
+# Campaign" (each one carries its own ability requirement as a per-location rule). The
+# three goal locations sit in gated regions: Spider Hunt (Gift), Final Assault
+# (Gold = beat "This Is It"), Total Victory (Cherry = clear all 12).
+regions: list[str] = ["Menu", "The Campaign", "Spider Hunt", "Final Assault", "Total Victory"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

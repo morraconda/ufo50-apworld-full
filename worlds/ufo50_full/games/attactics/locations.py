@@ -51,7 +51,7 @@ CHERRY_REGION = rank_region(LAST_RANK)
 
 
 # id offset layout inside Attactics' 1000-id block:
-#   1..3          items (see items.py)
+#   1..5          items (see items.py)
 #   10, 20, ...   <level name>   (campaign level clear, via game_helpers.level_id(n, 0))
 #   301..310      Rank <r>       (ranked ladder milestone, 300 + r // RANK_STEP)
 #   997/998/999   Gift / Gold / Cherry

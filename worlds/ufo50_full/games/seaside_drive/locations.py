@@ -16,7 +16,8 @@ NUM_STAGE = 4   # o47_Control.level 0..3 -- "BEAT ALL 4 STAGES" (bonus stage not
 REGION = "The Drive"
 
 # id offset layout inside Seaside Drive's 1000-id block:
-#     1..4   Stage <n>   (reached stage n; Stage 4 == "FINAL STAGE")
+#     1..4   Stage <n>   (cleared stage n; Stage 4 == "FINAL STAGE")
+#   101      Progressive Max Charge (item, see items.py)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -38,8 +39,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# Stage 1 / Stage 2 / Gift need no charge; Stage 3 needs 2 Progressive Max Charge,
+# Stage 4 + Gold need 3, Cherry needs all 4 (rules.py).
+sphere_1_locs: list[str] = ["Stage 1", "Stage 2", "Gift"]
 
 
 def get_locations() -> dict[str, int]:

@@ -33,8 +33,20 @@ BOSS_NAMES: tuple[str, ...] = (
     "Tank",
 )
 
+# Dim sums: each o45_eWDimSum a truck drops and Engle eats. They are keyed by which
+# rescue mission (o45__Game.currWorld) is active -- currWorld 1 = Chicago (Pyrat),
+# 2 = Congo Basin (Maniyak/Psycow), 3 = Moscow (Hackoon), 4 = Hong Kong (Road Toad).
+# region -> (currWorld, how many dim sums appear there)
+DIM_SUMS: dict[str, tuple[int, int]] = {
+    "Chicago": (1, 2),
+    "Congo Basin": (2, 2),
+    "Moscow": (3, 2),
+    "Hong Kong": (4, 1),
+}
+
 # id offset layout inside Cyber Owls's 1000-id block:
 #     1..9   <boss name>   (offset = list position; see the mod's per-boss Destroy hook)
+#    10..40  <region> - Dim Sum <k>   (offset = currWorld * 10 + (k - 1))
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -48,6 +60,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(BOSS_NAMES, start=1):
         table[name] = LocationInfo(n, REGION)
+    for region, (curr_world, count) in DIM_SUMS.items():
+        for k in range(1, count + 1):
+            table[f"{region} - Dim Sum {k}"] = LocationInfo(curr_world * 10 + (k - 1), REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -67,6 +82,9 @@ def get_locations() -> dict[str, int]:
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Bosses"] = {f"{GAME_NAME} - {name}" for name in BOSS_NAMES}
+    groups[f"{GAME_NAME} - Dim Sums"] = {f"{GAME_NAME} - {region} - Dim Sum {k}"
+                                        for region, (_cw, count) in DIM_SUMS.items()
+                                        for k in range(1, count + 1)}
     return groups
 
 

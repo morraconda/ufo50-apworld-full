@@ -16,11 +16,15 @@ REGION = "The War"
 # Lords of Diskonia's story mode is a linear 10-level campaign (o33_Game, `lvl` 1..10;
 # `highestLevel` = 1 + levels cleared, persisted). Each location is sent once that
 # level is beaten; the mod sweeps highestLevel every frame so save-loaded progress
-# reports too.
+# reports too. Streak mode (normally unlocked by beating the campaign; the mod unlocks
+# it from the start) gives 3 more checks -- Streak 1/2/3 = your best win streak reaching
+# 1/2/3 (bestStreak, persisted; a streak of 3 is also the vanilla Cherry).
 LEVEL_COUNT = 10
+STREAK_COUNT = 3
 
 # id offset layout inside Lords of Diskonia's 1000-id block:
 #     1..10   Level <n>
+#    11..13   Streak <n>   (bestStreak >= n)
 #   200       Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -34,6 +38,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, LEVEL_COUNT + 1):
         table[f"Level {n}"] = LocationInfo(n, REGION)
+    for n in range(1, STREAK_COUNT + 1):
+        table[f"Streak {n}"] = LocationInfo(10 + n, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -53,6 +59,7 @@ def get_locations() -> dict[str, int]:
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Level {n}" for n in range(1, LEVEL_COUNT + 1)}
+    groups[f"{GAME_NAME} - Streak"] = {f"{GAME_NAME} - Streak {n}" for n in range(1, STREAK_COUNT + 1)}
     return groups
 
 

@@ -76,6 +76,10 @@ _PER_GAME: list[tuple[str, list[str], int]] = [
     ("Divers",            ["Barbuta", "Mortol"],       4),
     ("Grimstone",         ["Barbuta", "Mortol"],       5),
     ("Mooncat",           ["Barbuta", "Mortol"],       6),
+    ("Mini & Max",        ["Barbuta", "Mortol"],       4),
+    ("Golfaria",          ["Barbuta", "Mortol"],       5),
+    ("Pilot Quest",       ["Barbuta", "Mortol"],       6),
+    ("Quibble Race",      ["Barbuta", "Mortol"],       7),
 ]
 
 
@@ -109,7 +113,8 @@ _bind_per_game_tests()
 
 # --- assorted yaml-option combinations ---------------------------------------
 class OptionMatrixTest(UFO50GenTestBase):
-    def test_default_barbuta_only(self) -> None:
+    def test_default_options(self) -> None:
+        # no options at all -> the Games default (every game) generates and is beatable
         multiworld = generate({}, seed=2)
         self.assert_beatable_after_fill(multiworld)
 
@@ -157,13 +162,40 @@ class OptionMatrixTest(UFO50GenTestBase):
             "starting_game_amount": 1, "defer_sphere_1_games": True,
         }, seed=4)
         self.assert_all_reachable(multiworld)
+        world = multiworld.worlds[1]
+        # the no-logic games not started with are deferred behind all 3 gates
+        self.assertTrue(world.deferred_sphere1_games)
+        gate_names = {f"Artificial Logic Gate {n}" for n in (1, 2, 3)}
+        pool_names = {item.name for item in multiworld.itempool}
+        self.assertTrue(gate_names <= pool_names, "Artificial Logic Gate items missing from the pool")
+        # a deferred game's boot entrance now needs every gate
+        deferred = world.deferred_sphere1_games[0]
+        state = multiworld.get_all_state(False)
+        entrance = multiworld.get_entrance(f"Boot {deferred}", 1)
+        self.assertTrue(entrance.can_reach(state))
+        for gate in gate_names:
+            reduced = multiworld.get_all_state(False)
+            reduced.remove(world.create_item(gate))
+            self.assertFalse(entrance.can_reach(reduced),
+                             f"Boot {deferred} should be blocked without {gate}")
         self.assert_beatable_after_fill(multiworld)
 
-    def test_cherry_disabled_games(self) -> None:
+    def test_defer_sphere_1_games_mostly_no_logic(self) -> None:
+        # only Barbuta has internal logic; the other five are deferred behind the gates
+        multiworld = generate({
+            "games": ["Barbuta", "Ninpek", "Divers", "Avianos", "Mooncat", "Bushido Ball"],
+            "starting_game_amount": 1, "defer_sphere_1_games": True,
+        }, seed=7)
+        self.assert_all_reachable(multiworld)
+        self.assert_beatable_after_fill(multiworld)
+
+    def test_cherry_enabled_games(self) -> None:
+        # only Barbuta keeps its Cherry; the other played games lose theirs. Pilot
+        # Quest is listed but not played, so it just has no effect.
         multiworld = generate({
             "games": ["Barbuta", "Combatants", "Hot Foot", "Waldorf's Journey"],
             "starting_game_amount": 1,
-            "cherry_disabled_games": ["Combatants", "Hot Foot", "Waldorf's Journey", "Pilot Quest"],
+            "cherry_enabled_games": ["Barbuta", "Pilot Quest"],
         }, seed=4)
         self.assert_all_reachable(multiworld)
         self.assert_beatable_after_fill(multiworld)
@@ -171,3 +203,59 @@ class OptionMatrixTest(UFO50GenTestBase):
         for g in ("Combatants", "Hot Foot", "Waldorf's Journey"):
             self.assertNotIn(f"{g} - Cherry", loc_names)
         self.assertIn("Barbuta - Cherry", loc_names)
+
+    def test_cherry_enabled_games_explicit_empty(self) -> None:
+        # an explicit empty list overrides the default -> no game has a Cherry location
+        multiworld = generate({
+            "games": ["Barbuta", "Combatants", "Hot Foot", "Waldorf's Journey", "Night Manor"],
+            "starting_game_amount": 1, "cherry_enabled_games": [],
+        }, seed=4)
+        self.assert_all_reachable(multiworld)
+        self.assert_beatable_after_fill(multiworld)
+        loc_names = {loc.name for loc in multiworld.get_locations(1)}
+        self.assertEqual([n for n in loc_names if n.endswith(" - Cherry")], [])
+
+    def test_cherry_enabled_games_default(self) -> None:
+        # the default set gives most games a Cherry but leaves the deep-gate ones out
+        multiworld = generate({
+            "games": ["Barbuta", "Porgy", "Hot Foot", "Waldorf's Journey", "Night Manor"],
+            "starting_game_amount": 2,
+        }, seed=4)
+        self.assert_all_reachable(multiworld)
+        self.assert_beatable_after_fill(multiworld)
+        loc_names = {loc.name for loc in multiworld.get_locations(1)}
+        for g in ("Hot Foot", "Waldorf's Journey", "Night Manor"):
+            self.assertIn(f"{g} - Cherry", loc_names)
+        for g in ("Barbuta", "Porgy"):
+            self.assertNotIn(f"{g} - Cherry", loc_names)
+
+    def test_deathlink_games_slot_data(self) -> None:
+        from .. import game_ids
+        from ..death_link import DEATH_LINK_RULES
+        games = ["Barbuta", "Ninpek", "Combatants"]
+        # default -> every game's number (the mod only acts on the ones actually played)
+        mw = generate({"games": games, "starting_game_amount": 1}, seed=1)
+        self.assertEqual(mw.worlds[1].fill_slot_data()["deathlink_games"],
+                         sorted(game_ids[g] for g in DEATH_LINK_RULES))
+        # explicit empty -> empty (no game has DeathLink)
+        mw = generate({"games": games, "starting_game_amount": 1, "deathlink_games": []}, seed=1)
+        self.assertEqual(mw.worlds[1].fill_slot_data()["deathlink_games"], [])
+        # explicit subset -> just those
+        mw = generate({"games": games, "starting_game_amount": 1,
+                       "deathlink_games": ["Barbuta", "Combatants"]}, seed=1)
+        self.assertEqual(mw.worlds[1].fill_slot_data()["deathlink_games"],
+                         sorted(game_ids[g] for g in ("Barbuta", "Combatants")))
+
+    def test_velgress_mortol_ii_pool_shrinks_without_cherry(self) -> None:
+        # Velgress / Mortol II drop one item (Progressive Gun x3->x2, +10 Lives x7->x6)
+        # when they have no Cherry, so the tight pool still fits the location count.
+        for name, dup_item, full, cut in (("Velgress", "Progressive Gun", 3, 2),
+                                          ("Mortol II", "+10 Lives", 7, 6)):
+            with_cherry = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
+                                    "cherry_enabled_games": [name]}, seed=3)
+            without = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
+                                "cherry_enabled_games": []}, seed=3)
+            n_with = sum(i.name == f"{name} - {dup_item}" for i in with_cherry.itempool)
+            n_without = sum(i.name == f"{name} - {dup_item}" for i in without.itempool)
+            self.assertEqual(n_with, full, name)
+            self.assertEqual(n_without, cut, name)

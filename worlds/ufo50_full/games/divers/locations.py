@@ -21,7 +21,7 @@ CHEST_NUMS: tuple[int, ...] = (10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 40, 4
 LEVEL_CHECKS: tuple[int, ...] = tuple(range(2, 11))
 
 # id offset layout inside Divers's 1000-id block:
-#     1..9    Reach Level <2..10>   (offset = level - 1)
+#     1..9    Level <2..10>   (player reached that level; offset = level - 1)
 #    10..70   Chest <num>           (offset = the chest's num index)
 #   200       +200 Gold (filler)
 #   511       +20% XP Multiplier
@@ -36,7 +36,7 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for lvl in LEVEL_CHECKS:
-        table[f"Reach Level {lvl}"] = LocationInfo(lvl - 1, REGION)
+        table[f"Level {lvl}"] = LocationInfo(lvl - 1, REGION)
     for num in CHEST_NUMS:
         table[f"Chest {num}"] = LocationInfo(num, REGION)
     table["Gift"] = LocationInfo(997, REGION)
@@ -58,7 +58,7 @@ def get_locations() -> dict[str, int]:
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Chests"] = {f"{GAME_NAME} - Chest {num}" for num in CHEST_NUMS}
-    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Reach Level {lvl}" for lvl in LEVEL_CHECKS}
+    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Level {lvl}" for lvl in LEVEL_CHECKS}
     return groups
 
 

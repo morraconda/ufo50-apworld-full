@@ -15,47 +15,77 @@ GAME_NAME = "Warptank"
 # id offset layout inside Warptank's 1000-id block:
 #   100 + s      <Sector> Sector            (cleared sector s, s = o16_Mas.lv* index 0..30)
 #   140 + s      <Sector> Sector - Coffee   (banked that sector's coffee on the way out)
-#   400 + k      Tank Colour <A..E>         (swapped to tank colour k at its pit stop)
-#   410 + n      Talk to <npc>              (finished npc n's dialogue, n = o16_Npc.num 1..10)
-#   430          Enter the Cafe             (talked to the barista, npc 4)
+#   400 + k      Pink/Orange/Red Tank       (swapped to that colour at pit stop k = 0/2/3)
+#   410 + n      <npc> NPC                  (finished npc n's dialogue, n = o16_Npc.num; 1..6 used)
 #   997/998/999  Gift / Gold / Cherry
 
-# (sector index, display name, has a collectible coffee)
-# indices/names/coffee flags are from gml_Object_o16_Mas_Create_0 (lvName / lvHasCoffee).
-SECTORS: list[tuple[int, str, bool]] = [
-    (0, "Crust", True), (1, "Yard", True), (2, "Piston", True), (3, "Jr", True), (4, "Bomb", True),
-    (5, "Meal", True), (6, "Stare", True), (7, "Healing", True), (8, "Tower", True), (9, "Mazurka", True),
-    (10, "Nest", True), (11, "Orb", False), (12, "Form", True), (13, "Sore", True), (15, "Deep", True),
-    (16, "Nugget", True), (17, "Garl", False), (18, "Axon", True), (19, "Sacrum", True), (20, "Dyad", True),
-    (23, "Port", True), (24, "Shock", True), (25, "Soft", True), (26, "Kraft", False), (27, "Guide", True),
-    (28, "Riot", True), (30, "Final", False),
+class Sector(NamedTuple):
+    index: int         # o16_Mas.lv* index (also the vanilla sector number)
+    name: str          # display name (from lvName in gml_Object_o16_Mas_Create_0)
+    has_coffee: bool   # lvHasCoffee -- whether this sector has a collectible coffee
+    region: str        # hub tier its locations live behind
+
+
+class Npc(NamedTuple):
+    num: int           # o16_Npc.num
+    name: str
+    region: str        # hub tier its location lives behind
+
+
+class TankColour(NamedTuple):
+    num: int           # o16_Pitstop.num / o16_Tank.mySprite value
+    name: str
+    region: str
+
+
+SECTORS: list[Sector] = [
+    Sector(0,  "Crust",   True,  "Hub"),
+    Sector(1,  "Yard",    True,  "Hub"),
+    Sector(2,  "Piston",  True,  "Hub"),
+    Sector(3,  "Jr",      True,  "Gate 1"),
+    Sector(4,  "Bomb",    True,  "Gate 1"),
+    Sector(5,  "Meal",    True,  "Gate 1"),
+    Sector(6,  "Stare",   True,  "Gate 4"),
+    Sector(7,  "Healing", True,  "Gate 4"),
+    Sector(8,  "Tower",   True,  "Gate 4"),
+    Sector(9,  "Mazurka", True,  "Gate 4"),
+    Sector(10, "Nest",    True,  "Gate 4"),
+    Sector(11, "Orb",     False, "Gate 4"),
+    Sector(12, "Form",    True,  "Gate 9"),
+    Sector(13, "Sore",    True,  "Gate 9"),
+    Sector(15, "Deep",    True,  "Gate 9"),
+    Sector(16, "Nugget",  True,  "Gate 9"),
+    Sector(17, "Garl",    False, "Gate 14"),
+    Sector(18, "Axon",    True,  "Gate 14"),
+    Sector(19, "Sacrum",  True,  "Gate 14"),
+    Sector(20, "Dyad",    True,  "Gate 14"),
+    Sector(23, "Port",    True,  "Gate 14"),
+    Sector(24, "Shock",   True,  "Gate 14"),
+    Sector(25, "Soft",    True,  "Gate 14"),
+    Sector(26, "Kraft",   False, "Gate 14"),
+    Sector(27, "Guide",   True,  "Gate 14"),
+    Sector(28, "Riot",    True,  "Gate 14"),
+    Sector(30, "Final",   False, "Gate 4"),   # in Gate 4; rules.py adds the coffee-bridge rule
 ]
 
-TANK_COLOURS: list[str] = ["A", "B", "C", "D", "E"]  # o16_Tank.mySprite 0..4
+# 4 of the 5 pit stops are checks -- the pit stop's num turns the tank that colour.
+TANK_COLOURS: list[TankColour] = [
+    TankColour(1, "Pink Tank",   "Gate 4"),
+    TankColour(2, "Gray Tank",   "Gate 9"),
+    TankColour(3, "Orange Tank", "Gate 14"),
+    TankColour(4, "Red Tank",    "Gate 14"),
+]
 
-# o16_Npc.num -> display name (npc_* string keys in the game text)
-NPCS: dict[int, str] = {
-    1: "the Crane Fisher", 2: "the Sports Car", 3: "the Smelly Truck", 4: "the Barista",
-    5: "the Traveller", 6: "the Shadow", 7: "the Brain", 8: "the Tank Friend",
-    9: "the Little Guy", 10: "the Pig Man",
-}
-
-# which hub region each sector's locations live in. The region entry rules (rules.py)
-# gate these on the matching "Mecho Gate <n>" item, one per vanilla o16_Mecho wall.
-_SECTOR_REGION: dict[int, str] = {
-    **{s: "Station Hub" for s in (0, 1, 2, 3, 4)},
-    **{s: "Hub - Gate 1" for s in (5, 6, 7, 8)},
-    **{s: "Hub - Gate 4" for s in (9, 10, 11, 12, 13)},
-    **{s: "Hub - Gate 9" for s in (15, 16, 17, 18, 19)},
-    **{s: "Hub - Gate 14" for s in (20, 23, 24, 25, 26, 27, 28)},
-    30: "Final Sector",
-}
-_COLOUR_REGION: dict[int, str] = {0: "Station Hub", 1: "Station Hub", 2: "Hub - Gate 1",
-                                  3: "Hub - Gate 4", 4: "Hub - Gate 9"}
-_NPC_REGION: dict[int, str] = {1: "Station Hub", 2: "Station Hub", 3: "Station Hub",
-                               4: "Hub - Gate 1", 5: "Hub - Gate 4", 6: "Hub - Gate 4",
-                               7: "Hub - Gate 9", 8: "Hub - Gate 9",
-                               9: "Hub - Gate 14", 10: "Hub - Gate 14"}
+# NPCs 5 / 6 flank the Barista in the cafe (5 = left "Wow! Yahoo!", 6 = right, the
+# snail) -- confirm the nums in-game if a check fires on the wrong one.
+NPCS: list[Npc] = [
+    Npc(1, "Crane Fisher", "Gate 9"),
+    Npc(2, "Sports Car",   "Gate 4"),
+    Npc(3, "Smelly Truck", "Gate 9"),
+    Npc(4, "Barista",      "Gate 14"),
+    Npc(5, "Wow! Yahoo!",  "Gate 14"),
+    Npc(6, "Snail",        "Gate 14"),
+]
 
 
 class LocationInfo(NamedTuple):
@@ -65,19 +95,18 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for s, name, has_coffee in SECTORS:
-        table[f"{name} Sector"] = LocationInfo(100 + s, _SECTOR_REGION[s])
-    for s, name, has_coffee in SECTORS:
-        if has_coffee:
-            table[f"{name} Sector - Coffee"] = LocationInfo(140 + s, _SECTOR_REGION[s])
-    for k, letter in enumerate(TANK_COLOURS):
-        table[f"Tank Colour {letter}"] = LocationInfo(400 + k, _COLOUR_REGION[k])
-    for n, who in NPCS.items():
-        table[f"Talk to {who}"] = LocationInfo(410 + n, _NPC_REGION[n])
-    table["Enter the Cafe"] = LocationInfo(430, "Hub - Gate 1")
-    table["Gift"] = LocationInfo(997, "Hub - Gate 9")
-    table["Gold"] = LocationInfo(998, "Final Sector")
-    table["Cherry"] = LocationInfo(999, "Final Sector")
+    for sec in SECTORS:
+        table[f"{sec.name} Sector"] = LocationInfo(100 + sec.index, sec.region)
+    for sec in SECTORS:
+        if sec.has_coffee:
+            table[f"{sec.name} Sector - Coffee"] = LocationInfo(140 + sec.index, sec.region)
+    for tc in TANK_COLOURS:
+        table[tc.name] = LocationInfo(400 + tc.num, tc.region)
+    for npc in NPCS:
+        table[f"{npc.name} NPC"] = LocationInfo(410 + npc.num, npc.region)
+    table["Gift"] = LocationInfo(997, "Gate 14")
+    table["Gold"] = LocationInfo(998, "Gate 22")     # own region behind "22 Capsule Gate", separate from the Final Sector
+    table["Cherry"] = LocationInfo(999, "Gate 22")
     return table
 
 
@@ -85,7 +114,7 @@ location_table: dict[str, LocationInfo] = _build_location_table()
 
 # locations reachable before any Mecho Gate opens
 sphere_1_locs: list[str] = [name for name, data in location_table.items()
-                            if data.region_name == "Station Hub"]
+                            if data.region_name == "Hub"]
 
 
 def get_locations() -> dict[str, int]:
@@ -94,11 +123,11 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Sectors"] = {f"{GAME_NAME} - {name} Sector" for _, name, _ in SECTORS}
-    groups[f"{GAME_NAME} - Coffee"] = {f"{GAME_NAME} - {name} Sector - Coffee"
-                                       for _, name, has_coffee in SECTORS if has_coffee}
-    groups[f"{GAME_NAME} - Tank Colours"] = {f"{GAME_NAME} - Tank Colour {letter}" for letter in TANK_COLOURS}
-    groups[f"{GAME_NAME} - NPCs"] = {f"{GAME_NAME} - Talk to {who}" for who in NPCS.values()}
+    groups[f"{GAME_NAME} - Sectors"] = {f"{GAME_NAME} - {s.name} Sector" for s in SECTORS}
+    groups[f"{GAME_NAME} - Coffee"] = {f"{GAME_NAME} - {s.name} Sector - Coffee"
+                                       for s in SECTORS if s.has_coffee}
+    groups[f"{GAME_NAME} - Tank Colours"] = {f"{GAME_NAME} - {tc.name}" for tc in TANK_COLOURS}
+    groups[f"{GAME_NAME} - NPCs"] = {f"{GAME_NAME} - {n.name} NPC" for n in NPCS}
     return groups
 
 

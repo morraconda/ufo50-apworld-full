@@ -36,7 +36,7 @@ UPGRADES: dict[str, tuple[int, int]] = {
 # only Gift and Cherry require it (rules.py).
 PROGRESSIVE_GUN = "Progressive Gun"
 
-FILLER = "Coin"
+FILLER = "+5 Coins"  # mod adds 5 to the per-climb coin float per copy received
 
 
 item_table: dict[str, ItemInfo] = {
@@ -62,8 +62,14 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # 11 upgrade copies + Progressive Gun x3 into the pool; framework pads with Coin
-    return _create_items(GAME_NAME, item_table, world)
+    # 11 upgrade copies + Progressive Gun into the pool; framework pads with "+5 Coins".
+    # The 3rd Progressive Gun only matters for the Cherry check (Gift / Level 2 need
+    # just one), so drop it when this game has no Cherry -- otherwise the pool would be
+    # one item bigger than the (now Cherry-less) location count.
+    overrides = None
+    if GAME_NAME not in world.options.cherry_enabled_games.value:
+        overrides = {PROGRESSIVE_GUN: 2}
+    return _create_items(GAME_NAME, item_table, world, overrides)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

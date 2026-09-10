@@ -17,7 +17,7 @@ REGION = "The Frontier"
 LEVEL_CHECKS: tuple[int, ...] = tuple(range(2, 41))
 
 # id offset layout inside Grimstone's 1000-id block:
-#     1..39   Reach Level <2..40>   (offset = level - 1)
+#     1..39   Level <2..40>   (highest party member reached that level; offset = level - 1)
 #   200       500 Teeth (filler)
 #   511       +20% XP Multiplier
 #   997/998/999   Gift / Gold / Cherry
@@ -31,7 +31,7 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for lvl in LEVEL_CHECKS:
-        table[f"Reach Level {lvl}"] = LocationInfo(lvl - 1, REGION)
+        table[f"Level {lvl}"] = LocationInfo(lvl - 1, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -50,7 +50,7 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Reach Level {lvl}" for lvl in LEVEL_CHECKS}
+    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Level {lvl}" for lvl in LEVEL_CHECKS}
     return groups
 
 

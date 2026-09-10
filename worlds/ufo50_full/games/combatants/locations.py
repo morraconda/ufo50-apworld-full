@@ -11,18 +11,36 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Combatants"
-REGION = "The Campaign"
+CAMPAIGN = "The Campaign"
 
-# Combatants is a 12-mission real-time strategy campaign (o25__Game, `mapComplete[i]`
-# for map node `indexNum` 0..11). Each location is sent when that mission's node is
-# cleared; missions can be tackled in branching order, so no cumulative sweep is
-# needed -- the mod just watches the array.
-MISSION_COUNT = 12
+# Combatants is a real-time strategy campaign of 12 missions + the hidden "Nemuru's
+# Way" (o25__Game, `mapComplete[i]` for map node `indexNum` 0..12; node 12 is the
+# invisible bonus node). Each location is sent when that mission's node is cleared;
+# missions can be tackled in branching order, so no cumulative sweep is needed -- the
+# mod just watches the array.
+#
+# offset == map node indexNum + 1, so the ids are unchanged from the old "Mission N"
+# layout; only the display names now use the real `mapN_name` strings.
+MISSION_NAMES: tuple[str, ...] = (
+    "First Blood",    # indexNum 0  -> offset 1
+    "Skirmish",       # indexNum 1  -> offset 2
+    "Surprise",       # indexNum 2  -> offset 3
+    "Pincered",       # indexNum 3  -> offset 4
+    "Ambush",         # indexNum 4  -> offset 5
+    "Spidernest",     # indexNum 5  -> offset 6
+    "Commando",       # indexNum 6  -> offset 7
+    "The Push",       # indexNum 7  -> offset 8
+    "Deathsdoor",     # indexNum 8  -> offset 9
+    "This Is It",     # indexNum 9  -> offset 10  (vanilla Gold trigger)
+    "Open Field",     # indexNum 10 -> offset 11
+    "Commando 2",     # indexNum 11 -> offset 12
+    "Nemuru's Way",   # indexNum 12 -> offset 13  (hidden bonus node; same reqs as This Is It)
+)
 
 # id offset layout inside Combatants's 1000-id block:
-#     1..12   Mission <n>   (offset = map node indexNum + 1)
+#     1..13   <mission name>   (offset = map node indexNum + 1)
 #   200       Encouragement (filler, never granted)
-#   997/998/999   Gift / Gold / Cherry
+#   997/998/999   Gift / Gold / Cherry (in gated regions, see rules.py)
 
 
 class LocationInfo(NamedTuple):
@@ -32,18 +50,18 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for n in range(1, MISSION_COUNT + 1):
-        table[f"Mission {n}"] = LocationInfo(n, REGION)
-    table["Gift"] = LocationInfo(997, REGION)
-    table["Gold"] = LocationInfo(998, REGION)
-    table["Cherry"] = LocationInfo(999, REGION)
+    for i, name in enumerate(MISSION_NAMES, start=1):
+        table[name] = LocationInfo(i, CAMPAIGN)
+    table["Gift"] = LocationInfo(997, "Spider Hunt")
+    table["Gold"] = LocationInfo(998, "Final Assault")
+    table["Cherry"] = LocationInfo(999, "Total Victory")
     return table
 
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# reachable with no abilities: First Blood and Ambush (rules.py leaves them unruled)
+sphere_1_locs: list[str] = ["First Blood", "Ambush"]
 
 
 def get_locations() -> dict[str, int]:
@@ -52,7 +70,7 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Missions"] = {f"{GAME_NAME} - Mission {n}" for n in range(1, MISSION_COUNT + 1)}
+    groups[f"{GAME_NAME} - Missions"] = {f"{GAME_NAME} - {name}" for name in MISSION_NAMES}
     return groups
 
 

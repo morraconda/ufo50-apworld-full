@@ -15,14 +15,15 @@ REGION = "The Planet"
 
 NUM_RANDOM_CHECKS = 15
 MAP_TYPES: tuple[str, ...] = ("Overworld", "Trade", "Dungeon")
-PIECES_PER_MAP = 3   # each map pickup sends 3 checks
+PIECES_PER_MAP = 3   # 3 checks per map type, unlocked one per pickup across runs
 
 # id offset layout inside Planet Zoldath's 1000-id block:
 #     1..15    Random Check <n>   -- every energy cube becomes an AP pickup;
 #              sent cumulatively in pickup order.
-#    21..23    Overworld Map Piece 1..3   (all sent when the overworld map is picked up)
-#    24..26    Trade Map Piece 1..3
-#    27..29    Dungeon Map Piece 1..3
+#    21..23    Overworld Map Piece 1..3    24..26  Trade Map Piece 1..3
+#    27..29    Dungeon Map Piece 1..3   -- one physical o48_TreasureMap pickup per type,
+#              each pickup sends only the next uncollected piece of that type (Zoldath is
+#              a roguelike: the map regenerates each run, so 3 runs collect all 3).
 #   200        +1 Starting Resource (filler)
 #   997/998/999   Gift / Gold / Cherry
 

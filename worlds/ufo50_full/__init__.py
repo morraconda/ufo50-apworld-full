@@ -8,7 +8,8 @@ from worlds.generic.Rules import add_rule, set_rule
 from .constants import *
 from . import options
 
-from .general_items import cartridge_items, cartridge_item_group
+from .general_items import (cartridge_items, cartridge_item_group, trap_items, trap_item_group,
+                            logic_gate_items, logic_gate_item_group)
 
 from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koala, rail_heist, mortol,
                     waldorf, magic_garden, mortol_ii, attactics, kick_club, velgress, campanella_2, warptank,
@@ -17,7 +18,7 @@ from .games import (barbuta, porgy, vainger, night_manor, party_house, block_koa
                     devilition, fist_hell, avianos, hot_foot, bushido_ball, hyper_contender, pingolf,
                     campanella, planet_zoldath, combatants, lords_of_diskonia, cyber_owls,
                     ninpek, rakshasa, valbrace, rock_on_island, camouflage, overbold, divers,
-                    grimstone, mooncat)
+                    grimstone, mooncat, mini_and_max, golfaria, pilot_quest, quibble_race)
 from .games.barbuta import items, locations, regions
 from .games.porgy import items, locations, regions
 from .games.vainger import items, locations, regions
@@ -64,6 +65,10 @@ from .games.overbold import items, locations, regions
 from .games.divers import items, locations, regions
 from .games.grimstone import items, locations, regions
 from .games.mooncat import items, locations, regions
+from .games.mini_and_max import items, locations, regions
+from .games.golfaria import items, locations, regions
+from .games.pilot_quest import items, locations, regions
+from .games.quibble_race import items, locations, regions
 
 
 _ALL_GAME_NAMES = sorted(name for name in game_ids if name != "Main Menu")
@@ -138,6 +143,10 @@ ufo50_games: dict = {
     "Divers": divers,
     "Grimstone": grimstone,
     "Mooncat": mooncat,
+    "Mini & Max": mini_and_max,
+    "Golfaria": golfaria,
+    "Pilot Quest": pilot_quest,
+    "Quibble Race": quibble_race,
 }
 
 
@@ -183,11 +192,15 @@ class UFO50World(World):
 
     item_name_to_id = {k: v for game in ufo50_games.values() for k, v in game.items.get_items().items()}
     item_name_to_id.update(cartridge_items)
+    item_name_to_id.update(trap_items)
+    item_name_to_id.update(logic_gate_items)
     item_name_to_id.update({"Intentional Nothing Filler Item": base_id - 100})
     location_name_to_id = temp_ufo50_location_name_to_id
 
     item_name_groups = {k: v for game in ufo50_games.values() for k, v in game.items.get_item_groups().items()}
     item_name_groups.update(cartridge_item_group)
+    item_name_groups.update(trap_item_group)
+    item_name_groups.update(logic_gate_item_group)
     location_name_groups = {k: v for game in ufo50_games.values() for k, v in game.locations.get_location_groups().items()}
 
     options_dataclass = options.UFO50Options
@@ -204,6 +217,7 @@ class UFO50World(World):
     starting_games: list[str]  # the games you start with unlocked
     goal_games: list[str]  # the games that are your goals
     sphere1_only_games: list[str]  # included games with no internal logic (all checks reachable at boot)
+    deferred_sphere1_games: list[str]  # sphere-1-only games whose boot is gated behind the Artificial Logic Gates
 
     porgy_lantern_and_radar_slots_req: dict[str, int]
 
@@ -230,8 +244,8 @@ class UFO50World(World):
                 self.options.porgy_lanternless.value = self.ut_passthrough[options.PorgyLanternless.internal_name]
                 self.options.defer_sphere_1_games.value = \
                     self.ut_passthrough[options.DeferSphere1Games.internal_name]
-                self.options.cherry_disabled_games.value = \
-                    set(self.ut_passthrough[options.CherryDisabledGames.internal_name])
+                self.options.cherry_enabled_games.value = \
+                    set(self.ut_passthrough[options.CherryEnabledGames.internal_name])
 
         included_game_names = sorted(self.options.games.value)
 
@@ -267,13 +281,16 @@ class UFO50World(World):
                      state.can_reach_location(loc, self.player))
 
         self.sphere1_only_games = []
+        self.deferred_sphere1_games = []
 
-        cherry_disabled = self.options.cherry_disabled_games.value
+        # strict allowlist: a game keeps its Cherry location only if it is listed here.
+        # An empty list means NO game has a Cherry.
+        cherry_enabled = self.options.cherry_enabled_games.value
 
         for game_name in self.included_games:
             game = ufo50_games[game_name]
             game_regions = game.regions.create_regions_and_rules(self)
-            if game_name in cherry_disabled:
+            if game_name not in cherry_enabled:
                 self._remove_location(game_regions, f"{game_name} - Cherry")
             for region in game_regions.values():
                 self.multiworld.regions.append(region)
@@ -288,7 +305,7 @@ class UFO50World(World):
                 f"{game_name} - Gift": self.location_name_to_id[f"{game_name} - Gift"],
                 f"{game_name} - Gold": self.location_name_to_id[f"{game_name} - Gold"],
             }
-            if game_name not in cherry_disabled:
+            if game_name in cherry_enabled:
                 locs[f"{game_name} - Cherry"] = self.location_name_to_id[f"{game_name} - Cherry"]
             region = Region(f"{game_name} Region", self.player, self.multiworld)
             region.add_locations(locs)
@@ -309,58 +326,19 @@ class UFO50World(World):
 
     def _lock_sphere1_only_games(self) -> None:
         """Artificially gate every sphere-1-only game (one whose every check is
-        reachable the moment you boot it) behind reaching the Gold / goal location
-        of at least half -- rounded down -- of the included games. This pushes all
-        of their checks out of the early game: nothing on the critical path can be
-        placed there, since none of it is reachable until that many other games are
-        already beaten. A game you start with is left alone (you'd have nowhere to
-        progress from otherwise), and the whole thing is skipped when fewer games
-        than the threshold could ever act as the gate's anchors -- then it isn't
-        possible, so those games stay plain sphere 1. Controlled by the
-        ``defer_sphere_1_games`` option (on by default)."""
-        if not self.options.defer_sphere_1_games:
-            return
-        locked = [g for g in self.sphere1_only_games if g not in self.starting_games]
-        if not locked:
-            return
-        total_games = len(self.included_games) + len(self.included_unimplemented_games)
-        threshold = total_games // 2
-        if threshold < 1:
-            return
+        reachable the moment you boot it) behind holding *all* of the Artificial
+        Logic Gate items. Those three progression items go into the multiworld pool
+        (added in ``create_items``) and can land anywhere reachable, so none of a
+        deferred game's checks can sit on the start of the critical path -- you have
+        to find all three gates first.
 
-        locked_set = set(locked)
-        anchor_games = [g for g in (self.included_games + self.included_unimplemented_games)
-                        if g not in locked_set]
-        if len(anchor_games) < threshold:
-            return
-
-        anchor_golds = tuple(f"{g} - Gold" for g in anchor_games)
-
-        # Evaluate the "have half the games been beaten" sweep ONCE per pass, on a
-        # single hidden event in Menu, rather than re-running it on every locked
-        # game's boot entrance (that was ~20x the anchor Gold reachability checks
-        # per sweep and dominated generation time). The boot entrances then just
-        # test for the event item, a plain dict lookup.
-        def gate(state, _golds=anchor_golds, _need=threshold) -> bool:
-            reached = 0
-            for loc in _golds:
-                if state.can_reach_location(loc, self.player):
-                    reached += 1
-                    if reached >= _need:
-                        return True
-            return False
-
-        menu = self.get_region("Menu")
-        gate_event = Location(self.player, "Beat Half The Games", None, menu)
-        gate_event.place_locked_item(Item("Half The Games Beaten", ItemClassification.progression,
-                                          None, self.player))
-        gate_event.show_in_spoiler = False
-        set_rule(gate_event, gate)
-        menu.locations.append(gate_event)
-
-        for game_name in locked:
+        A game you start with is left alone (its cartridge is precollected, so it is
+        a foothold and also a legal home for the gate items). Controlled by the
+        ``defer_sphere_1_games`` option (on by default); ``create_items`` raises if
+        deferral is wanted but there is nowhere reachable to place the gates."""
+        for game_name in self.deferred_sphere1_games:
             add_rule(self.get_entrance(f"Boot {game_name}"),
-                     lambda state: state.has("Half The Games Beaten", self.player))
+                     lambda state: all(state.has(gate, self.player) for gate in logic_gate_items))
 
     def create_item(self, name: str, item_class: ItemClassification = None) -> Item:
         # figure out which game it's from and call its create_item
@@ -368,6 +346,10 @@ class UFO50World(World):
         if game_name in ufo50_games:
             return ufo50_games[game_name].items.create_item(name, self, item_class)
         if name.endswith("Cartridge"):
+            item_class = item_class or ItemClassification.progression
+        if name in trap_items:
+            item_class = item_class or ItemClassification.trap
+        if name in logic_gate_items:
             item_class = item_class or ItemClassification.progression
         return Item(name, item_class or ItemClassification.filler, self.item_name_to_id[name], self.player)
 
@@ -394,13 +376,7 @@ class UFO50World(World):
         else:
             addtl_games_to_start_with = max(self.options.starting_game_amount.value - len(self.starting_games), 0)
             candidates = [game for game in included_game_names if game not in self.starting_games]
-            # when deferring, prefer starting on a game with real internal progression:
-            # sphere-1-only games get gated behind beating other games, poor footholds
-            preferred = candidates
-            if self.options.defer_sphere_1_games:
-                preferred = [game for game in candidates if game not in self.sphere1_only_games]
-            pool = preferred if len(preferred) >= addtl_games_to_start_with else candidates
-            self.starting_games += self.random.choices(pool, k=addtl_games_to_start_with)
+            self.starting_games += self.random.choices(candidates, k=addtl_games_to_start_with)
             for game_name in self.starting_games:
                 if game_name in ufo50_games.keys():
                     break
@@ -420,15 +396,49 @@ class UFO50World(World):
             else:
                 created_items.append(cartridge)
 
+        # "Defer No Logic Games": every no-internal-logic game you did NOT start with
+        # has its boot gated behind holding all of the Artificial Logic Gate items
+        # (rule applied in _lock_sphere1_only_games); the gate items go into the pool
+        # here so fill can scatter them anywhere reachable.
+        self.deferred_sphere1_games = []
+        if self.options.defer_sphere_1_games:
+            self.deferred_sphere1_games = [g for g in self.sphere1_only_games
+                                           if g not in self.starting_games]
+            if self.deferred_sphere1_games:
+                home_games = {g for g in self.starting_games if g not in self.deferred_sphere1_games}
+                open_home_locs = sum(
+                    1 for loc in self.multiworld.get_locations(self.player)
+                    if loc.item is None and loc.name.split(" - ", 1)[0] in home_games
+                )
+                if open_home_locs < len(logic_gate_items):
+                    raise OptionError(
+                        f"{GAME_NAME}: {self.player_name} has 'Defer No Logic Games' on but there is "
+                        f"nowhere reachable at the start to place the {len(logic_gate_items)} Artificial "
+                        f"Logic Gate items -- every starting game is itself a no-logic game that would be "
+                        f"deferred. Raise 'Starting Game Amount', include a game with internal progression, "
+                        f"or turn 'Defer No Logic Games' off."
+                    )
+                created_items += [self.create_item(name) for name in logic_gate_items]
+
         unfilled_locations = self.multiworld.get_unfilled_locations(self.player)
         extra_items_needed = len(unfilled_locations) - len(created_items)
 
-        # debug, delete this later once it all works nicely
         if extra_items_needed < 0:
-            raise Exception("Too many items for the number of games, need to fix this somehow.")
+            # A game brings more items than it has open locations -- typically a tight
+            # pool that lost its Cherry check (see cherry_enabled_games). Fail rather
+            # than silently dropping items.
+            raise OptionError(
+                f"{GAME_NAME}: {self.player_name} has {-extra_items_needed} more item(s) than open "
+                f"locations. Shorten the game list, or add the offending game(s) to "
+                f"'Cherry Enabled Games' so their Cherry location is available."
+            )
 
+        trap_chance = self.options.trap_percentage.value / 100
         for _ in range(extra_items_needed):
-            created_items.append(self.create_item(self.get_filler_item_name(), ItemClassification.filler))
+            if trap_chance and self.random.random() < trap_chance:
+                created_items.append(self.create_item("Controls Swap Trap"))
+            else:
+                created_items.append(self.create_item(self.get_filler_item_name(), ItemClassification.filler))
 
         self.multiworld.itempool += created_items
 
@@ -436,11 +446,11 @@ class UFO50World(World):
     bad_filler_games: set[str] = {"Night Manor", "Magic Garden", "Attactics", "Warptank",
                                   "Bug Hunter", "The Big Bell Race", "Paint Chase", "Onion Delivery",
                                   "Campanella 3", "Star Waspir", "Elfazar's Hat", "Caramel Caramel",
-                                  "Seaside Drive", "Devilition", "Fist Hell", "Avianos", "Hot Foot",
-                                  "Bushido Ball", "Hyper Contender", "Pingolf", "Planet Zoldath",
-                                  "Combatants", "Lords of Diskonia", "Cyber Owls", "Ninpek",
+                                  "Seaside Drive", "Fist Hell", "Avianos", "Hot Foot",
+                                  "Bushido Ball", "Hyper Contender", "Pingolf",
+                                  "Lords of Diskonia", "Cyber Owls", "Ninpek",
                                   "Rakshasa", "Valbrace", "Rock On! Island", "Camouflage",
-                                  "Overbold", "Mooncat"}
+                                  "Overbold", "Mooncat", "Golfaria"}
 
     def get_filler_item_name(self) -> str:
         if not self.included_games:
@@ -466,7 +476,13 @@ class UFO50World(World):
             options.BlockKoalaLevelRandomizer.internal_name: self.options.block_koala_level_randomizer.value,
             options.WarptankLevelRandomizer.internal_name: self.options.warptank_level_randomizer.value,
             options.DeferSphere1Games.internal_name: self.options.defer_sphere_1_games.value,
-            options.CherryDisabledGames.internal_name: sorted(self.options.cherry_disabled_games.value),
+            options.CherryEnabledGames.internal_name: sorted(self.options.cherry_enabled_games.value),
+            options.DeathLink.internal_name: self.options.death_link.value,
+            # game numbers DeathLink applies to; empty list == every game (the mod
+            # still gates on `included_games`). Only meaningful when death_link is on.
+            options.DeathLinkGames.internal_name: sorted(
+                game_ids[name] for name in self.options.deathlink_games.value
+            ),
         }
         return slot_data
 

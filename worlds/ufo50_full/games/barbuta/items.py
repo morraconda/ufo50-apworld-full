@@ -25,6 +25,9 @@ item_table: dict[str, ItemInfo] = {
     "Trash": ItemInfo(10, IC.filler, 1),
     "Egg": ItemInfo(11, IC.progression, 2),
     "A Broken Wall": ItemInfo(12, IC.progression, 1),
+    # filler: each copy adds +20% to Mas's walk speed (additive), applied live by the
+    # mod. Quantity 0 -- it only enters the pool as filler padding via get_filler_item_name.
+    "+20% Walk Speed": ItemInfo(200, IC.filler, 0),
 }
 
 
@@ -45,4 +48,4 @@ def create_items(world: "UFO50World") -> list[Item]:
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return f"{GAME_NAME} - Egg"
+    return f"{GAME_NAME} - +20% Walk Speed"

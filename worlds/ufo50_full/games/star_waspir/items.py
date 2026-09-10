@@ -11,14 +11,21 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Star Waspir"
 
-# Star Waspir runs five waves (o17__Game.wave 1..5).
-# Nothing from this game enters the multiworld pool -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
+# Star Waspir runs five waves (o17__Game.wave 1..5). Very basic logic: one item,
+# "Shooting" (101). Without it the mod destroys every player shot on spawn and
+# auto-clears wave 1, so only Wave 1 is beatable -- every other check needs Shooting.
+# Filler is the do-nothing Encouragement (Star Waspir is in `bad_filler_games`).
+SHOOTING = "Shooting"
 FILLER = "Encouragement"
+
+# id offset layout inside Star Waspir's 1000-id block:
+#   101   Shooting
+#   200   Encouragement (filler)
+#   997/998/999   Gift / Gold / Cherry
 
 
 item_table: dict[str, ItemInfo] = {
+    SHOOTING: ItemInfo(101, IC.progression, 1),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -36,7 +43,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
+    # Shooting enters the pool; the framework pads the rest with filler
     return _create_items(GAME_NAME, item_table, world)
 
 

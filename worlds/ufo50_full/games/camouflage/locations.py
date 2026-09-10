@@ -16,14 +16,20 @@ REGION = "The Jungle"
 # Camouflage has 15 levels (o04_Game.levelPercent[1..15]; > 0 means escaped/cleared).
 # Levels 1..14 each have 3 collectibles -- 1 baby + 2 fruits -- worth BABY_PERCENT (30)
 # and FRUIT_PERCENT (20) on top of ESCAPE_PERCENT (30); 100% == all 3. Level 15 (the
-# finale) has no collectibles.
-LEVEL_COUNT = 15
+# finale) has no collectibles. Names are the in-game level_1..level_15 strings for
+# game 4 (ext/<lang>/4_Text.json).
+LEVEL_NAMES: tuple[str, ...] = (
+    "West Isle", "The Ponds", "River Lands", "Three Watchmen", "Crocodile Isle",
+    "Swamp Run", "Rocky Valley", "The Crossing", "Oasis", "Sunny Banks",
+    "Devil's Pass", "Dry Gulch", "Rain or Shine", "The Cliffs", "Sky Temple",
+)
+LEVEL_COUNT = len(LEVEL_NAMES)
 COLLECTIBLE_LEVELS = 14
 COLLECTIBLES = ("Baby", "Fruit 1", "Fruit 2")
 
 # id offset layout inside Camouflage's 1000-id block:
-#     1..15    Level <n>                     (level cleared)
-#   100..141   Level <n> - <collectible>     (n 1..14; offset = 100 + (n-1)*3 + k)
+#     1..15    <level name>                  (level cleared; offset = level number)
+#   100..141   <level name> - <collectible>  (levels 1..14; offset = 100 + (n-1)*3 + k)
 #   200        Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -35,11 +41,12 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for n in range(1, LEVEL_COUNT + 1):
-        table[f"Level {n}"] = LocationInfo(n, REGION)
+    for n, level in enumerate(LEVEL_NAMES, start=1):
+        table[level] = LocationInfo(n, REGION)
     for n in range(1, COLLECTIBLE_LEVELS + 1):
+        level = LEVEL_NAMES[n - 1]
         for k, name in enumerate(COLLECTIBLES):
-            table[f"Level {n} - {name}"] = LocationInfo(100 + (n - 1) * 3 + k, REGION)
+            table[f"{level} - {name}"] = LocationInfo(100 + (n - 1) * 3 + k, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -58,9 +65,9 @@ def get_locations() -> dict[str, int]:
 
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
-    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - Level {n}" for n in range(1, LEVEL_COUNT + 1)}
+    groups[f"{GAME_NAME} - Levels"] = {f"{GAME_NAME} - {level}" for level in LEVEL_NAMES}
     groups[f"{GAME_NAME} - Collectibles"] = {
-        f"{GAME_NAME} - Level {n} - {name}"
+        f"{GAME_NAME} - {LEVEL_NAMES[n - 1]} - {name}"
         for n in range(1, COLLECTIBLE_LEVELS + 1) for name in COLLECTIBLES
     }
     return groups

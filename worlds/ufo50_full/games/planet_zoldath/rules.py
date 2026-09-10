@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from BaseClasses import CollectionState, Region
 from worlds.generic.Rules import set_rule
 
-from .items import GAME_NAME, MAX_HEALTH, ITEM_SLOT, ZOLDATH_ITEMS
+from .items import GAME_NAME, ENERGY_CUBE, ITEM_SLOT, ZOLDATH_ITEMS
 from .locations import MAP_TYPES, PIECES_PER_MAP, map_piece_name
 
 if TYPE_CHECKING:
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 START_HEALTH = 3
 
-_hp = f"{GAME_NAME} - {MAX_HEALTH}"
+_hp = f"{GAME_NAME} - {ENERGY_CUBE}"
 _slot = f"{GAME_NAME} - {ITEM_SLOT}"
 _translator = f"{GAME_NAME} - Translator"
 _equipment = tuple(f"{GAME_NAME} - {name}" for name in ZOLDATH_ITEMS)
@@ -47,7 +47,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
                 and _items(state, player) >= 6
                 and state.has(_translator, player))
 
-    # tier 4: 7 health + 2 item slots + 7 items -> RC 13-15, Dungeon Map Piece, map pieces 2/3
+    # tier 4: 7 health + 2 item slots + 7 items -> RC 13-15, Dungeon Map Piece
     def tier4(state: CollectionState) -> bool:
         return (_health(state, player) >= 7 and _slots(state, player) >= 2
                 and _items(state, player) >= 7)
@@ -69,13 +69,12 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     for n in range(13, 16):
         rule(f"Random Check {n}", tier4)
 
-    # Map pieces: piece 1 of each keeps its own tier (overworld = 2, trade = 3,
-    # dungeon = 4); the extra pieces 2 & 3 all need tier 4.
-    piece1_rule = {"Overworld": tier2, "Trade": tier3, "Dungeon": tier4}
+    # One map pickup per type (unlocking its 3 pieces one at a time across runs); every
+    # piece of a type gates at that pickup's tier.
+    map_rule = {"Overworld": tier2, "Trade": tier3, "Dungeon": tier4}
     for mt in MAP_TYPES:
-        rule(map_piece_name(mt, 1), piece1_rule[mt])
-        for p in range(2, PIECES_PER_MAP + 1):
-            rule(map_piece_name(mt, p), tier4)
+        for p in range(1, PIECES_PER_MAP + 1):
+            rule(map_piece_name(mt, p), map_rule[mt])
 
     rule("Gold", goal)
     rule("Cherry", goal)

@@ -1,65 +1,66 @@
 from dataclasses import dataclass
 
 from Options import (StartInventoryPool, Range, OptionSet, PerGameCommonOptions, OptionGroup, Choice, Toggle,
-                     DefaultOnToggle)
+                     DeathLink as DeathLinkOption, DefaultOnToggle)
 
 from .constants import game_ids
+from .death_link import DEATH_LINK_RULES
 
 
 class Games(OptionSet):
     """
-    Choose which games you want to play. Every game listed here is enabled and is a
-    goal: to finish, you must get Gold in all of them.
-
-    The following games have full implementations: Barbuta, Vainger, Night Manor, and Porgy.
-    Party House has a more minor implementation, and counts as an implemented game.
-    Any game may be selected. Games without a full implementation only have Gift,
-    Gold, and Cherry locations.
+    Choose which games you want to play. To goal, you must Gold Disk all of them.
     """
     internal_name = "games"
     display_name = "Games"
     valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
-    # default is here so the unit tests don't fail
-    default = ["Barbuta"]
+    # default: every game, in death_link.py (DEATH_LINK_RULES) order
+    default = list(DEATH_LINK_RULES.keys())
 
 
-class CherryDisabledGames(OptionSet):
+# Games whose Cherry is a genuine "beat basically the whole game" requirement -- kept
+# OFF by default so it can't sit deep on the critical path. Everything else gets its
+# Cherry by default (mostly no-logic games where it is just another sphere-1 check).
+_CHERRY_OFF_BY_DEFAULT: set[str] = {
+    "Barbuta", "Campanella", "Golfaria", "Block Koala", "Camouflage", "Porgy",
+    "Vainger", "Rock On! Island", "Fist Hell", "Campanella 2", "Valbrace",
+    "Elfazar's Hat", "Pilot Quest", "Combatants", "Cyber Owls",
+}
+
+
+class CherryEnabledGames(OptionSet):
     """
-    Games listed here have their Cherry location removed -- it will not be a check.
-    Listing a game you are not playing does nothing. The Gift and Gold locations are
-    unaffected.
+    Games listed here will have their "Cherry" location added to the pool. This does not change the Goal condition.
+    Games not listed here may still have Cherry-related checks. (eg Night Manor - Fungicide Recipe)
     """
-    internal_name = "cherry_disabled_games"
-    display_name = "Cherry Disabled Games"
+    internal_name = "cherry_enabled_games"
+    display_name = "Cherry Enabled Games"
     valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
+    # default: every game except the ones whose Cherry is a deep late-game gate,
+    # in death_link.py (DEATH_LINK_RULES) order
+    default = [game for game in DEATH_LINK_RULES if game not in _CHERRY_OFF_BY_DEFAULT]
 
 
 class DeferSphere1Games(DefaultOnToggle):
     """
-    If enabled, any included game whose every check is reachable the moment you boot
-    it ("sphere 1 only" games) is locked until you have beaten (reached the Gold
-    condition of) at least half -- rounded down -- of your included games. This keeps
-    those games from being a pile of free early checks. A game you start with is
-    exempt, and the lock is skipped entirely if too few other games could satisfy it.
-
-    Disable this for the old behaviour, where those games are playable from the start.
+    If enabled, all games with no logic will have their checks be artificially out of logic behind 3 checks.
+    You can still get all checks as soon as you receive the cartridge, they'll just be out of logic.
+    This protects against having important early items being locked behind eg. Pilot Quest Cherry.
+    If disabled, these games are fully in-logic as soon as you receive the cartridge.
     """
     internal_name = "defer_sphere_1_games"
-    display_name = "Defer Sphere 1 Games"
+    display_name = "Defer No Logic Games"
 
 
 class StartingGameAmount(Range):
     """
     Choose how many games to have unlocked at the start.
-    At least one of the starting games will always be one of the implemented games, to avoid issues with generation and very early BK.
-    If this value is higher than the number of games you selected, you will start with all of them unlocked.
-    If you put a game in your start inventory from pool, it will count towards the amount from this option.
     """
     internal_name = "starting_game_amount"
     display_name = "Starting Game Amount"
     range_start = 1
     range_end = 50
-    default = 1
+    default = 5
 
 
 class PorgyFuelDifficulty(Choice):
@@ -123,7 +124,7 @@ class NMEarlyPin(DefaultOnToggle):
 # Block Koala
 class BlockKoalaLevelRandomizer(Toggle):
     """
-    Randomize the layout/order of levels in Block Koala. Does not affect logic.
+    Randomize the levels in Block Koala. Does not affect logic.
     """
     internal_name = "block_koala_level_randomizer"
     display_name = "Block Koala - Level Randomizer"
@@ -140,13 +141,45 @@ class BlockKoalaEarlyStartGate(DefaultOnToggle):
 # Warptank
 class WarptankLevelRandomizer(Toggle):
     """
-    Randomize which sector each capsule pad warps to, seeded by the multiworld seed.
-    Clearing a pad still sends that pad's own sector check. The final sector is never
-    randomized, and the Orb / Garl / Kraft arena sectors only shuffle among each other.
-    Does not affect logic.
+    Randomize which sector each capsule pad warps to. Does not affect logic.
     """
     internal_name = "warptank_level_randomizer"
     display_name = "Warptank - Level Randomizer"
+
+
+# Traps
+class TrapPercentage(Range):
+    """
+    Replaces this percentage of the filler items in your pool with traps.
+    The only trap right now is Controls Swap, which swaps the A and B buttons for 30 seconds.
+    """
+    internal_name = "trap_percentage"
+    display_name = "Trap Percentage"
+    range_start = 0
+    range_end = 100
+    default = 20
+
+
+class DeathLink(DeathLinkOption):
+    """
+    When you die, everyone else with DeathLink dies too, and their deaths kill you.
+    Each UFO 50 game has its own send / receive condition, which may be asymmetrical.
+    Use "Deathlink Games" to restrict DeathLink to a subset of your games.
+    """
+    internal_name = "death_link"
+    display_name = "Death Link"
+
+
+class DeathLinkGames(OptionSet):
+    """
+    Which of your games have DeathLink active. Only matters when Death Link is on.
+    An explicit empty list means no game has DeathLink; the default is every game.
+    """
+    internal_name = "deathlink_games"
+    display_name = "Deathlink Games"
+    valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
+    # default: every game, in death_link.py (DEATH_LINK_RULES) order
+    default = list(DEATH_LINK_RULES.keys())
 
 
 @dataclass
@@ -155,7 +188,7 @@ class UFO50Options(PerGameCommonOptions):
     games: Games
     starting_game_amount: StartingGameAmount
     defer_sphere_1_games: DeferSphere1Games
-    cherry_disabled_games: CherryDisabledGames
+    cherry_enabled_games: CherryEnabledGames
 
     porgy_fuel_difficulty: PorgyFuelDifficulty
     porgy_check_on_touch: PorgyCheckOnTouch
@@ -169,13 +202,20 @@ class UFO50Options(PerGameCommonOptions):
 
     warptank_level_randomizer: WarptankLevelRandomizer
 
+    trap_percentage: TrapPercentage
+    death_link: DeathLink
+    deathlink_games: DeathLinkGames
+
 
 ufo50_option_groups = [
     OptionGroup("General Options", [
         Games,
         StartingGameAmount,
         DeferSphere1Games,
-        CherryDisabledGames,
+        CherryEnabledGames,
+        TrapPercentage,
+        DeathLink,
+        DeathLinkGames,
     ]),
     OptionGroup("Block Koala Options", [
         BlockKoalaLevelRandomizer,

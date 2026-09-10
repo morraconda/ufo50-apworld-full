@@ -12,13 +12,17 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Ninpek"
 REGION = "The Run"
+DEEP_REGION = "Deep Run"     # behind all 5 Shuriken -- holds Gold / Cherry
 
 # Ninpek's checks are score milestones every 5,000 points up to 40,000 (o34_Mas.points[0]).
 SCORE_STEP = 5000
 NUM_STEPS = 8
+SHINY_FREE_SCORE = 5000      # reachable with no Shuriken (pickups / bonuses, no shooting)
+SCORE_PER_SHURIKEN = 10000   # each Shuriken opens up this much more score in logic
 
 # id offset layout inside Ninpek's 1000-id block:
 #     1..8   <n*5000> Points   (offset = milestone index; sent when points[0] reaches it)
+#   100      Shuriken (x5, progression)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -28,20 +32,27 @@ class LocationInfo(NamedTuple):
     region_name: str
 
 
+def shuriken_needed(score: int) -> int:
+    """Shuriken required in logic for a given score milestone (uncapped)."""
+    if score <= SHINY_FREE_SCORE:
+        return 0
+    return -(-(score - SHINY_FREE_SCORE) // SCORE_PER_SHURIKEN)   # ceil division
+
+
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, NUM_STEPS + 1):
         table[f"{n * SCORE_STEP} Points"] = LocationInfo(n, REGION)
     table["Gift"] = LocationInfo(997, REGION)
-    table["Gold"] = LocationInfo(998, REGION)
-    table["Cherry"] = LocationInfo(999, REGION)
+    table["Gold"] = LocationInfo(998, DEEP_REGION)
+    table["Cherry"] = LocationInfo(999, DEEP_REGION)
     return table
 
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# reachable with no items: Gift and the one score milestone that needs 0 Shuriken
+sphere_1_locs: list[str] = ["Gift", f"{SHINY_FREE_SCORE} Points"]
 
 
 def get_locations() -> dict[str, int]:

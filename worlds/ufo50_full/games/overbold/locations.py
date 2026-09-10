@@ -15,12 +15,12 @@ REGION = "The Arena"
 
 # Overbold's wave prize (o30_Game.prize) runs $100..$1600 in $100 steps
 # (PRIZE_INCREASE 100, MAX_PRIZE 1600). Beating a wave worth >= $n*100 awards the
-# "Beat a $<n*100> Wave" check -- cumulative, so a big wave awards all lower ones.
+# "$<n*100> Wave" check -- cumulative, so a big wave awards all lower ones.
 PRIZE_STEP = 100
 NUM_STEPS = 16
 
 # id offset layout inside Overbold's 1000-id block:
-#     1..16   Beat a $<n*100> Wave   (offset = n; cleared a wave with prize >= n*100)
+#     1..16   $<n*100> Wave   (offset = n; cleared a wave with prize >= n*100)
 #   200       Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -31,7 +31,7 @@ class LocationInfo(NamedTuple):
 
 
 def _wave_name(n: int) -> str:
-    return f"Beat a ${n * PRIZE_STEP:,} Wave"
+    return f"${n * PRIZE_STEP:,} Wave"
 
 
 def _build_location_table() -> dict[str, LocationInfo]:

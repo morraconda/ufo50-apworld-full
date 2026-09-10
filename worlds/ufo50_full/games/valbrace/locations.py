@@ -18,7 +18,12 @@ REGION = "The Descent"
 #   3 bosses     Phantom Knight (floor 2, o35_ePhantomKnight),
 #                Hive Queen     (floor 4, o35_eBroodQueen),
 #                Abyss Lord     (floor 6, o35_eAbyssLord -- the final boss).
+#   chests       every o35_iChest, sent on first interaction. Valbrace's floors are
+#                fixed hand-built maps (o35_Game_Create_0 strMap[0..6], the "3" tiles),
+#                so a chest is stably identified by (floor, its index in row-major scan
+#                order on that floor). Counts per floor 0..6: 2 / 6 / 5 / 5 / 4 / 4 / 5.
 FLOOR_COUNT = 6            # Floor 0 .. Floor 5
+CHEST_COUNTS: tuple[int, ...] = (2, 6, 5, 5, 4, 4, 5)   # index = floor 0..6
 # (name, floor) -- the floor is only informational; the mod hooks each by offset.
 BOSSES: tuple[tuple[str, int], ...] = (
     ("Phantom Knight", 2),
@@ -29,6 +34,7 @@ BOSSES: tuple[tuple[str, int], ...] = (
 # id offset layout inside Valbrace's 1000-id block:
 #     1..6    Floor 0..5      (offset = floor number + 1; sent on leaving that floor)
 #     7..9    Phantom Knight / Hive Queen / Abyss Lord
+#    10..74   Floor <f> - Chest <k>   (offset = (f + 1) * 10 + (k - 1), f 0..6, k 1..count)
 #   200       Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -44,6 +50,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
         table[f"Floor {n}"] = LocationInfo(n + 1, REGION)
     for i, (name, _floor) in enumerate(BOSSES):
         table[name] = LocationInfo(7 + i, REGION)
+    for floor, count in enumerate(CHEST_COUNTS):
+        for k in range(1, count + 1):
+            table[f"Floor {floor} - Chest {k}"] = LocationInfo((floor + 1) * 10 + (k - 1), REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -64,6 +73,9 @@ def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Floors"] = {f"{GAME_NAME} - Floor {n}" for n in range(FLOOR_COUNT)}
     groups[f"{GAME_NAME} - Bosses"] = {f"{GAME_NAME} - {name}" for name, _floor in BOSSES}
+    groups[f"{GAME_NAME} - Chests"] = {f"{GAME_NAME} - Floor {f} - Chest {k}"
+                                       for f, count in enumerate(CHEST_COUNTS)
+                                       for k in range(1, count + 1)}
     return groups
 
 

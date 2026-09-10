@@ -12,9 +12,10 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Ninpek"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the score-milestone locations
-regions: list[str] = ["Menu", "The Run"]
+# "The Run" holds the score-milestone locations + Gift; "Deep Run" (behind all 5
+# Shuriken) holds Gold / Cherry. Score milestones above 5,000 get a per-location
+# Shuriken-count rule in rules.py.
+regions: list[str] = ["Menu", "The Run", "Deep Run"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

@@ -12,9 +12,10 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Devilition"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the unit locations
-regions: list[str] = ["Menu", "The Village"]
+# "The Village" holds the round + villager + Gift locations (each round/villager check
+# gets its own piece-count rule in rules.py). "Endgame" holds Gold / Cherry behind
+# round 10's full requirements.
+regions: list[str] = ["Menu", "The Village", "Endgame"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:
