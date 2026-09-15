@@ -159,7 +159,7 @@ tuning, Mini & Max NPC-quest checks (disabled), Party House per-threshold rule t
 Lives in **`../ufo50-ap-mod/`**:
 
 ```
-Full Archipelago Mod/
+Full Archipelago/
   code/                     full-file GML: new scripts (gml_Script_*), replaced object events
   config/
     code_patch/             Archipelago_<Game>.yaml  — find/replace patches into decompiled GML
@@ -249,9 +249,14 @@ after touching any `Archipelago_*.yaml`.
   `is_location_collected(id)`, `scout_location`/`is_location_scouted` +
   `get_location_item`/`get_location_player`/`apclient_get_item_name`. `*_manual(gameID, id)`
   variants take an explicit subgame.
-- **Attract mode**: every gameplay patch must be a no-op when `global.attractMode` — the
-  title-screen demo still has to play. Standard guard: `if (!global.attractMode) { … }`
-  or `(global.attractMode || <ap condition>)`.
+- **Attract mode is permanently disabled**, so new patches should **not** add an
+  attract-mode guard at all. `Archipelago_Internal_General.yaml` disables it game-wide via
+  three patches: `gml_Object_oTitleScreens_Other_12` (`attractTimer++` → `= 0`, so the
+  title-screen attract trigger never fires), `gml_Object_oLibrary_Step_1` (resets
+  `global.attractModeLibraryTimer` every frame), and `gml_Object_oLibrary_Other_25`
+  (unconditional `exit;`, pre-empting the library-attract code that sets
+  `global.attractMode = true`). `global.attractMode` can therefore never become `true`
+  again anywhere in the game.
 
 ### Conventions when patching a game
 

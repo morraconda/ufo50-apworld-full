@@ -89,8 +89,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# reachable with no items -- shooting up is free (the White Pea tickets included)
-sphere_1_locs: list[str] = ["Tree", "Josie", *TICKETS[:3]]   # Train now needs Shoot Down
+# reachable with no items -- shooting up is free.
+# Josie and White Pea Ticket 3 need a leftward shot; Train needs Shoot Down.
+sphere_1_locs: list[str] = ["Tree", *TICKETS[:2]]
 
 
 def get_locations() -> dict[str, int]:

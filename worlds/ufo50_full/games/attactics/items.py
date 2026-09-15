@@ -25,15 +25,17 @@ FILLER = "Encouragement"
 #                      ranked ladder; see rules.py)
 #   3  Encouragement  (filler -- a "nice try" with no mechanical effect; Attactics is
 #                      a bad filler game)
-#   4  Explosions     (useful x1 -- Kamikaze units don't detonate on death without it)
-#   5  Grunt Defence  (useful x1 -- grunts in a column of 3 don't get the no-melee-damage
-#                      formation without it)
+#   4  Explosions     (x1 -- Kamikaze units don't detonate on death without it; also
+#                      gates rank 70+ and level 16+, see rules.py)
+#   5  Grunt Defence  (x1 -- grunts in a column of 3 don't get the no-melee-damage
+#                      formation without it; also gates rank 60+ and level 21+, see
+#                      rules.py)
 #   locations: see locations.py; 997/998/999 = Gift / Gold / Cherry
 item_table: dict[str, ItemInfo] = {
     TURN_TIME: ItemInfo(1, IC.progression, 11),
     PROMOTION: ItemInfo(2, IC.progression, 1),
-    EXPLOSIONS: ItemInfo(4, IC.useful, 1),
-    GRUNT_DEFENCE: ItemInfo(5, IC.useful, 1),
+    EXPLOSIONS: ItemInfo(4, IC.progression, 1),
+    GRUNT_DEFENCE: ItemInfo(5, IC.progression, 1),
     FILLER: ItemInfo(3, IC.filler, 0),
 }
 

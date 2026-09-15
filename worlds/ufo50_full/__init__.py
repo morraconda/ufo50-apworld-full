@@ -365,6 +365,13 @@ class UFO50World(World):
                     self.starting_games.append(game_name)
                     precollected_cartridges.add(game_name)
 
+        # guarantee Pilot Quest as a starting game (uses up one starting_game_amount
+        # slot); no-op if Pilot Quest isn't in included_game_names or is already
+        # a starting game (precollected, or amount >= all included games below)
+        if (self.options.pilot_quest_start and "Pilot Quest" in included_game_names
+                and "Pilot Quest" not in self.starting_games):
+            self.starting_games.append("Pilot Quest")
+
         # if your starting game amount is higher than included games, then they're all starting games
         if self.options.starting_game_amount >= len(included_game_names):
             self.starting_games = included_game_names
@@ -472,12 +479,10 @@ class UFO50World(World):
             options.WarptankLevelRandomizer.internal_name: self.options.warptank_level_randomizer.value,
             options.DeferSphere1Games.internal_name: self.options.defer_sphere_1_games.value,
             options.CherryEnabledGames.internal_name: sorted(self.options.cherry_enabled_games.value),
-            options.DeathLink.internal_name: self.options.death_link.value,
-            # game numbers DeathLink applies to; empty list == every game (the mod
-            # still gates on `included_games`). Only meaningful when death_link is on.
-            options.DeathLinkGames.internal_name: sorted(
-                game_ids[name] for name in self.options.deathlink_games.value
-            ),
+            # DeathLink is not currently exposed as a player option; the code and mod
+            # support for it are kept in place, just always off for now.
+            "death_link": False,
+            "deathlink_games": [],
         }
         return slot_data
 

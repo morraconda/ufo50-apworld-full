@@ -13,8 +13,9 @@ GAME_NAME = "Velgress"
 
 # The upgrades the Cavian's shop sells. In o15_Game the shuffled shopItems slots map
 # to internal counters: values 0/1 -> iRecov, 2/3 -> iGun, 4/5 -> iFoot, 6 -> iMagnet,
-# 7 -> iLightning, 8 -> iJump. Recovery / Power / Lightfoot each have two tiers, so
-# their items stack x2; Magnet / Lightning are one-shot.
+# 7 -> iLightning, 8 -> iJump. Recovery / Lightfoot each have two tiers, so their items
+# stack x2; Magnet / Lightning are one-shot. Power (the shop's iGun upgrade) has been
+# merged into "Progressive Gun" below -- there is no separate Power item.
 #
 # Vanilla starts you with a mid-air jump (o15_Player.doubleJump = 1 + iJump) and the
 # shop's jump slot bumps that to a triple jump. Here the mod drops the base to a single
@@ -24,16 +25,16 @@ GAME_NAME = "Velgress"
 PROGRESSIVE_JUMP = "Progressive Jump"
 UPGRADES: dict[str, tuple[int, int]] = {
     "Recovery": (101, 2),
-    "Power": (102, 2),
     "Lightfoot": (103, 2),
     "Magnet": (104, 1),
     "Lightning": (105, 1),
     PROGRESSIVE_JUMP: (106, 3),
 }
 
-# "Progressive Gun" stacks on top of the shop's Power (iGun) upgrades -- the mod adds
-# get_item_count(107) into iGun, so each copy is another +1 shot damage. x3, progression;
-# only Gift and Cherry require it (rules.py).
+# "Progressive Gun" IS the shop's Power (iGun) upgrade now -- there is no separate Power
+# item. The mod sets iGun = get_item_count(107) - 1, so the first copy unlocks shooting
+# (an unupgraded gun) and each further copy is +1 shot damage. x3, progression; only
+# Level 2 and Gift require one (rules.py).
 PROGRESSIVE_GUN = "Progressive Gun"
 
 FILLER = "+5 Coins"  # mod adds 5 to the per-climb coin float per copy received
@@ -62,7 +63,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # 11 upgrade copies + Progressive Gun into the pool; framework pads with "+5 Coins".
+    # 9 upgrade copies + Progressive Gun into the pool; framework pads with "+5 Coins".
     # The 3rd Progressive Gun only matters for the Cherry check (Gift / Level 2 need
     # just one), so drop it when this game has no Cherry -- otherwise the pool would be
     # one item bigger than the (now Cherry-less) location count.

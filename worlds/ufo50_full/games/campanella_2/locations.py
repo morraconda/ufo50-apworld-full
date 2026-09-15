@@ -38,6 +38,10 @@ _UNITS: list[tuple[str, int, "int | None", int]] = [
     ("III", 2, None, 7),   # Crepelia only
 ]
 
+# Rink II (milestone) and Vaalpolis I Cave Item are not collectible in-game and are
+# excluded here and in the mod's Archipelago_Campanella2.yaml.
+EXCLUDED_LOCATIONS: set[str] = {"Rink II", "Vaalpolis I Cave Item"}
+
 
 class LocationInfo(NamedTuple):
     id_offset: int
@@ -50,9 +54,13 @@ def _build_location_table() -> dict[str, LocationInfo]:
         for roman, milestone_slot, cave_slot, shop_slot in _UNITS:
             if roman == "III" and not has_iii:
                 continue
-            table[f"{name} {roman}"] = LocationInfo(level_id(level, milestone_slot), region)
+            milestone_name = f"{name} {roman}"
+            if milestone_name not in EXCLUDED_LOCATIONS:
+                table[milestone_name] = LocationInfo(level_id(level, milestone_slot), region)
             if cave_slot is not None:
-                table[f"{name} {roman} Cave Item"] = LocationInfo(level_id(level, cave_slot), region)
+                cave_name = f"{name} {roman} Cave Item"
+                if cave_name not in EXCLUDED_LOCATIONS:
+                    table[cave_name] = LocationInfo(level_id(level, cave_slot), region)
             if not (name == "Burrows" and roman == "I"):
                 table[f"{name} {roman} Shop Item"] = LocationInfo(level_id(level, shop_slot), region)
     # goal locations last so create_locations' Cherry/Gold handling can break out.

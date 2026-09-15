@@ -35,13 +35,16 @@ BOSS_NAMES: tuple[str, ...] = (
 
 # Dim sums: each o45_eWDimSum a truck drops and Engle eats. They are keyed by which
 # rescue mission (o45__Game.currWorld) is active -- currWorld 1 = Chicago (Pyrat),
-# 2 = Congo Basin (Maniyak/Psycow), 3 = Moscow (Hackoon), 4 = Hong Kong (Road Toad).
+# 2 = Congo Basin (Maniyak/Psycow), 3 = Moscow (Hackoon). Hong Kong (currWorld 4,
+# Road Toad/Huxley) has no dim sum -- her mission never heals o45__Game.hp at all
+# (the mod's old hook on o45_eTruck's Step event was dead code: eTruck/eWDimSum only
+# ever appear in Engle's Congo Basin mission, never Huxley's, so currWorld was never
+# actually 4 there), so that location is unachievable and has been removed.
 # region -> (currWorld, how many dim sums appear there)
 DIM_SUMS: dict[str, tuple[int, int]] = {
     "Chicago": (1, 2),
     "Congo Basin": (2, 2),
     "Moscow": (3, 2),
-    "Hong Kong": (4, 1),
 }
 
 # id offset layout inside Cyber Owls's 1000-id block:

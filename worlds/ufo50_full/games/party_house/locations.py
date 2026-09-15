@@ -96,9 +96,9 @@ location_table: dict[str, LocationInfo] = _build_location_table()
 
 # Popularity / Cash / house-space checks now carry rules (rules._popularity_reachable,
 # rules.cash, rules._max_house_space), as do the Star Guests / Clear locations. A fresh
-# run (flat base pop 3, base cash 2, max_cash 2, days 5 -> days+1 clamp of 6) reaches
-# 6 house space, so only these are sphere 1.
-sphere_1_locs: list[str] = ([f"{n} Popularity" for n in POPULARITY_VALUES[:3]]
+# run (base cash 2 -> popularity ceiling 2*2=4, max_cash 2, days 5 -> days+1 clamp of 6)
+# reaches 6 house space, so only these are sphere 1.
+sphere_1_locs: list[str] = ([f"{n} Popularity" for n in POPULARITY_VALUES[:4]]
                             + ["1 Cash", f"{HOUSE_SPACE_VALUES[0]} House Space"])
 
 

@@ -246,22 +246,28 @@ class OptionMatrixTest(UFO50GenTestBase):
         for g in ("Barbuta", "Porgy"):
             self.assertNotIn(f"{g} - Cherry", loc_names)
 
-    def test_deathlink_games_slot_data(self) -> None:
-        from .. import game_ids
-        from ..death_link import DEATH_LINK_RULES
+    def test_deathlink_slot_data_always_off(self) -> None:
+        # death_link is not currently a player option; slot_data always reports it off
         games = ["Barbuta", "Ninpek", "Combatants"]
-        # default -> every game's number (the mod only acts on the ones actually played)
         mw = generate({"games": games, "starting_game_amount": 1}, seed=1)
-        self.assertEqual(mw.worlds[1].fill_slot_data()["deathlink_games"],
-                         sorted(game_ids[g] for g in DEATH_LINK_RULES))
-        # explicit empty -> empty (no game has DeathLink)
-        mw = generate({"games": games, "starting_game_amount": 1, "deathlink_games": []}, seed=1)
+        self.assertEqual(mw.worlds[1].fill_slot_data()["death_link"], False)
         self.assertEqual(mw.worlds[1].fill_slot_data()["deathlink_games"], [])
-        # explicit subset -> just those
-        mw = generate({"games": games, "starting_game_amount": 1,
-                       "deathlink_games": ["Barbuta", "Combatants"]}, seed=1)
-        self.assertEqual(mw.worlds[1].fill_slot_data()["deathlink_games"],
-                         sorted(game_ids[g] for g in ("Barbuta", "Combatants")))
+
+    def test_pilot_quest_start(self) -> None:
+        games = ["Barbuta", "Pilot Quest", "Combatants", "Ninpek", "Golfaria"]
+        # Pilot Quest is a no-logic game, so with only it as a starting game and
+        # "Defer No Logic Games" on (default) there'd be nowhere to place the logic
+        # gates -- turn that off here since it's not what this test is about.
+        mw = generate({"games": games, "starting_game_amount": 1, "pilot_quest_start": True,
+                       "defer_sphere_1_games": False}, seed=1)
+        self.assertIn("Pilot Quest", mw.worlds[1].starting_games)
+        self.assertTrue(any(item.name == "Pilot Quest Cartridge"
+                             for item in mw.precollected_items[1]))
+        # no-op if Pilot Quest isn't included
+        no_pilot_games = ["Barbuta", "Combatants", "Ninpek"]
+        mw = generate({"games": no_pilot_games, "starting_game_amount": len(no_pilot_games),
+                       "pilot_quest_start": True}, seed=1)
+        self.assertNotIn("Pilot Quest", mw.worlds[1].starting_games)
 
     def test_velgress_mortol_ii_pool_shrinks_without_cherry(self) -> None:
         # Velgress / Mortol II drop one item (Progressive Gun x3->x2, +10 Lives x7->x6)

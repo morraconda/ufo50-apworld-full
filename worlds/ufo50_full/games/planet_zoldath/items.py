@@ -16,9 +16,9 @@ GAME_NAME = "Planet Zoldath"
 # slots become AP items.
 ENERGY_CUBE = "Energy Cube"       # +1 max health each: start hp/hpMax 3 -> up to 10
 ITEM_SLOT = "Item Slot"           # start with 0 carry slots -> up to 3
-# filler, but a functional one -- the mod adds each copy to the run's common resource
-# stock (o48_Game.resources[0], the cheap-trade / common-ammo currency), so Planet
-# Zoldath counts as a "good filler game" (not in __init__.bad_filler_games).
+# filler, but a functional one -- each copy independently rolls a random resource tier
+# (o48_Game.resources[0..3], irandom, unseeded, 1/4 chance each) and adds 1 to it, so
+# Planet Zoldath counts as a "good filler game" (not in __init__.bad_filler_games).
 START_RESOURCE = "+1 Starting Resource"
 
 # The eight equipment items (o48 ITEM_* / 48_Text.json item_name_0..7). Without the

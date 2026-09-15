@@ -30,6 +30,9 @@ NO_LT_STAGES: frozenset[int] = frozenset({0, 1, 3, 4, 5})
 # Coffees on these stages are fully sphere 1 (no life, no Left Thruster): A-1, A-2, A-4.
 FREE_COFFEE_STAGES: frozenset[int] = frozenset({0, 1, 3})
 
+# World B's stage clears need only the life climb -- no Fuel Tank requirement.
+NO_FUEL_STAGES: frozenset[int] = frozenset(range(10, 20))
+
 _life = f"{GAME_NAME} - {LIFE}"
 _fuel = f"{GAME_NAME} - {FUEL_TANK}"
 _lt = f"{GAME_NAME} - {LEFT_THRUSTER}"
@@ -49,20 +52,23 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     player = world.player
     regions["Menu"].connect(regions["Space"])
 
-    def gate(loc_name: str, need: int, need_lt: bool) -> None:
+    def gate(loc_name: str, need: int, need_lt: bool, need_fuel: bool = True) -> None:
         # same threshold for lives and fuel tanks: one of each per level / per 1000 pts
         n = min(need, LIFE_CAP)
 
-        def rule(state, n=n, need_lt=need_lt) -> bool:
-            if _lives(state, player) < n or _fuel_tanks(state, player) < n:
+        def rule(state, n=n, need_lt=need_lt, need_fuel=need_fuel) -> bool:
+            if _lives(state, player) < n:
+                return False
+            if need_fuel and _fuel_tanks(state, player) < n:
                 return False
             return state.has(_lt, player) if need_lt else True
 
         set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"), rule)
 
-    # stage clears: currStage s -> needs s+1 lives & s+1 fuel tanks; LT unless a World A freebie
+    # stage clears: currStage s -> needs s+1 lives (& s+1 fuel tanks outside World B);
+    # LT unless a World A freebie
     for s in range(NUM_STAGES):
-        gate(stage_name(s), s + 1, s not in NO_LT_STAGES)
+        gate(stage_name(s), s + 1, s not in NO_LT_STAGES, s not in NO_FUEL_STAGES)
 
     # coffees: A-1/A-2/A-4 are free; the rest need their stage's lives & fuel; LT unless A-1
     for s in coffee_currstages():
