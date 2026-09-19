@@ -28,7 +28,7 @@ from functools import lru_cache
 from typing import NamedTuple, TYPE_CHECKING
 
 from BaseClasses import CollectionState, Region
-from worlds.generic.Rules import set_rule
+from worlds.generic.Rules import add_rule, set_rule
 
 from .items import (GUESTS, SCENARIO_GUESTS, MAX_TROUBLE, SHOP_STOCK, MAX_POPULARITY,
                     MAX_CASH, DAY, START_POPULARITY, START_CASH, item_table)
@@ -347,6 +347,11 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     def held(state: "CollectionState") -> frozenset:
         return guests_held(state, world)
 
+    _STAR_GUEST_NAMES: frozenset = frozenset(g.name for g in GUESTS if g.is_star)
+    @memoize
+    def _missing_star_guests(held: frozenset) -> int:
+        return len(_STAR_GUEST_NAMES - held)
+
     for loc_name, info in location_table.items():
         if loc_name in ("Gift", "Gold", "Cherry"):
             continue
@@ -369,6 +374,11 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
                  lambda state, s=info.region_name, t=info.threshold:
                  max_star_guests(s, ps(state), held(state)) >= t)
 
+    # Streak 3/4 (Random Scenario) additionally require holding all but one star guest.
+    for _streak in (3, 4):
+        add_rule(world.get_location(f"{GAME_NAME} - {RANDOM_SCENARIO} - Streak {_streak}"),
+                 lambda state: _missing_star_guests(held(state)) <= 1)
+
     set_rule(world.get_location(f"{GAME_NAME} - Gift"),
              lambda state: any(_can_clear(s, ps(state), held(state)) for s in SCENARIOS))
 
@@ -378,10 +388,6 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # Cherry (vanilla: a 5-win streak in Random Scenario) -- a much deeper Random run:
     # every star guest in hand and enough of them seatable there.
     _CHERRY_STAR_GUESTS = 8
-    _STAR_GUEST_NAMES: frozenset = frozenset(g.name for g in GUESTS if g.is_star)
-    @memoize
-    def _has_all_star_guests(held: frozenset) -> bool:
-        return _STAR_GUEST_NAMES <= held
     set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
-             lambda state: _has_all_star_guests(held(state))
+             lambda state: _missing_star_guests(held(state)) == 0
              and max_star_guests(RANDOM_SCENARIO, ps(state), held(state)) >= _CHERRY_STAR_GUESTS)

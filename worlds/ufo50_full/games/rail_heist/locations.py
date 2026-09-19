@@ -87,7 +87,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 location_table: dict[str, LocationInfo] = _build_location_table()
 
 # "A Simple Heist Time" is precollected (see items.create_items), so all three of Level
-# 1's locations are always reachable and seed the fill. The Gift prize (Level 10) is NOT
+# 1's locations are always reachable and seed the fill -- its Devil Star doesn't need
+# bullets either (see rules.NO_BULLET_DEVIL_LEVELS). The Gift prize (Level 10) is NOT
 # sphere 1.
 sphere_1_locs: list[str] = [check_location_name(1, check_type) for check_type in CHECK_TYPES]
 

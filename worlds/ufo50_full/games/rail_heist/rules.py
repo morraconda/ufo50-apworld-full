@@ -32,9 +32,10 @@ def level_bullets_item(level: int) -> str:
 #                               LEVEL_STAR_TIME[level]              (x1 each, per level)
 #
 # "A Simple Heist Time" (Level 1's "<level> Time") is precollected -- see
-# items.create_items -- and, for Level 1 only, also grants the Devil Star buffer, so
-# all three "A Simple Heist" locations are the sphere-1 seed for the fill with no other
-# items. This replaces the old hardcoded LEVEL_1_START_TIME.
+# items.create_items -- and, for Level 1 only, also grants the Devil Star time buffer,
+# so all three of its locations are the sphere-1 seed for the fill with no other items
+# (its Devil Star doesn't need bullets either -- see NO_BULLET_DEVIL_LEVELS below).
+# This replaces the old hardcoded LEVEL_1_START_TIME.
 #
 # get_run_time() returns how many seconds are bankable on a given level.
 # has_time() compares that against a per-location requirement.
@@ -88,9 +89,9 @@ def has_bullets(level: int, state: CollectionState, world: "UFO50World") -> bool
 #   Devil Star  = LEVEL_STAR_TIME[level] + DEVIL_TIME_BONUS
 #
 # Bullets: only the Devil Star needs them (you have to gun down every officer) -- except
-# on the levels in ALL_BULLET_LEVELS, where every location needs bullets. Level 1's Devil
-# Star is exempt so all three "A Simple Heist" locations are reachable with only its
-# (precollected) Time item.
+# on the levels in ALL_BULLET_LEVELS, where every location needs bullets, and Levels 1-2,
+# whose Devil Star never needs them (an apworld-only logic exception -- the mod's actual
+# bullet gate on Levels 1-2 is unchanged, so this is deliberately looser than in-game).
 # ---------------------------------------------------------------------------
 
 ANGEL_TIME_BONUS: int = 10
@@ -117,6 +118,9 @@ ALL_BULLET_LEVELS: frozenset[int] = frozenset(
     level for level, name in LEVEL_NAMES.items() if name in _ALL_BULLET_LEVEL_NAMES
 )
 
+# apworld-only exception: these levels' Devil Star doesn't need the Bullets item in logic
+NO_BULLET_DEVIL_LEVELS: frozenset[int] = frozenset({1, 2})
+
 
 class CheckReq(NamedTuple):
     time: int
@@ -126,7 +130,7 @@ class CheckReq(NamedTuple):
 def get_check_req(level: int, check_type: str) -> CheckReq:
     time = LEVEL_STAR_TIME[level] + CHECK_TIME_BONUS[check_type]
     needs_bullets = check_type == DEVIL or level in ALL_BULLET_LEVELS
-    if level == 1:  # sphere-1 seed -- keep every "A Simple Heist" location bullet-free
+    if check_type == DEVIL and level in NO_BULLET_DEVIL_LEVELS:
         needs_bullets = False
     return CheckReq(time=time, bullets=needs_bullets)
 

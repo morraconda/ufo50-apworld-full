@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -35,11 +35,13 @@ R_MASTERY = "Mastery"
 _FIRE_CLEARS = {"Initial Encounter", "The Spiral", "Underbrush", "Crossroads", "Jungle Rush"}
 _FIRE_PERFECTS = {"Initial Encounter", "The Spiral"}
 
-# id offset layout inside Rock On! Island's 1000-id block:
-#     1..10   <level name>            (level cleared)
-#    11..20   <level name> Perfect    (level cleared with no damage; offset = 10 + n)
-#    21       Village of Peace        (village beaten -- currLevel 0, substate YOU_WIN)
-#    22       Dinosaur Camp           (village beaten -- currLevel 11, substate YOU_WIN)
+# id offset layout inside Rock On! Island's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..100  <level name>            (level cleared; level_id(n, 0))
+#    11..101  <level name> Perfect    (level cleared with no damage; level_id(n, 1))
+#    1        Village of Peace        (village beaten -- currLevel 0, substate YOU_WIN;
+#             not tied to a level, so it's in the 0..9 reserved band)
+#    2        Dinosaur Camp           (village beaten -- currLevel 11, substate YOU_WIN)
 #   997/998/999   Gift / Gold / Cherry
 
 
@@ -52,11 +54,11 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(LEVEL_NAMES, start=1):
         clear_region = R_FIRE if name in _FIRE_CLEARS else R_SPEAR
-        table[name] = LocationInfo(n, clear_region)
+        table[name] = LocationInfo(level_id(n, 0), clear_region)
         perfect_region = R_FIRE if name in _FIRE_PERFECTS else R_MASTERY
-        table[f"{name} Perfect"] = LocationInfo(10 + n, perfect_region)
-    table[VILLAGE_PEACE] = LocationInfo(21, R_ISLAND)
-    table[VILLAGE_TWO] = LocationInfo(22, R_SPEAR)
+        table[f"{name} Perfect"] = LocationInfo(level_id(n, 1), perfect_region)
+    table[VILLAGE_PEACE] = LocationInfo(1, R_ISLAND)
+    table[VILLAGE_TWO] = LocationInfo(2, R_SPEAR)
     table["Gift"] = LocationInfo(997, R_SPEAR)
     table["Gold"] = LocationInfo(998, R_SPEAR)
     table["Cherry"] = LocationInfo(999, R_SPEAR)

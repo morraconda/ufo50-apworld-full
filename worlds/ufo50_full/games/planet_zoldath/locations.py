@@ -13,17 +13,28 @@ if TYPE_CHECKING:
 GAME_NAME = "Planet Zoldath"
 REGION = "The Planet"
 
-NUM_RANDOM_CHECKS = 15
+NUM_RANDOM_CHECKS = 10
 MAP_TYPES: tuple[str, ...] = ("Overworld", "Trade", "Dungeon")
-PIECES_PER_MAP = 3   # 3 checks per map type, unlocked one per pickup across runs
+# checks per map type, unlocked one per pickup across runs
+PIECES_PER_MAP: dict[str, int] = {"Overworld": 3, "Trade": 2, "Dungeon": 2}
+
+# holding this many of EVERY resource simultaneously (min across the 4 types)
+ALL_RESOURCE_THRESHOLDS: tuple[int, ...] = (1, 2, 3, 5, 10, 20, 31)
+# holding this many of ANY one resource (max across the 4 types)
+ANY_RESOURCE_THRESHOLDS: tuple[int, ...] = (3, 5, 10, 20, 30, 40, 50, 63)
 
 # id offset layout inside Planet Zoldath's 1000-id block:
-#     1..15    Random Check <n>   -- every energy cube becomes an AP pickup;
+#     1..10    Random Check <n>   -- every energy cube becomes an AP pickup;
 #              sent cumulatively in pickup order.
-#    21..23    Overworld Map Piece 1..3    24..26  Trade Map Piece 1..3
-#    27..29    Dungeon Map Piece 1..3   -- one physical o48_TreasureMap pickup per type,
+#    21..23    Overworld Map Piece 1..3    24..25  Trade Map Piece 1..2
+#    26..27    Dungeon Map Piece 1..2   -- one physical o48_TreasureMap pickup per type,
 #              each pickup sends only the next uncollected piece of that type (Zoldath is
-#              a roguelike: the map regenerates each run, so 3 runs collect all 3).
+#              a roguelike: the map regenerates each run, so N runs collect all N pieces
+#              of that type).
+#    28..34    <n> of All Resources (min(resources[0..3]) >= n; ALL_RESOURCE_THRESHOLDS)
+#    35..42    <n> of Any Resource (max(resources[0..3]) >= n; ANY_RESOURCE_THRESHOLDS)
+#              -- resources fluctuate (spent on trades/items), so these are a ladder:
+#              once reached they stay collected, same as the map/random checks.
 #   200        +1 Starting Resource (filler)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -37,13 +48,30 @@ def map_piece_name(map_type: str, piece: int) -> str:
     return f"{map_type} Map Piece {piece}"
 
 
+def all_resource_name(n: int) -> str:
+    return f"{n} of All Resources"
+
+
+def any_resource_name(n: int) -> str:
+    return f"{n} of Any Resource"
+
+
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, NUM_RANDOM_CHECKS + 1):
         table[f"Random Check {n}"] = LocationInfo(n, REGION)
-    for i, mt in enumerate(MAP_TYPES):
-        for p in range(1, PIECES_PER_MAP + 1):
-            table[map_piece_name(mt, p)] = LocationInfo(21 + i * PIECES_PER_MAP + (p - 1), REGION)
+    offset = 21
+    for mt in MAP_TYPES:
+        for p in range(1, PIECES_PER_MAP[mt] + 1):
+            table[map_piece_name(mt, p)] = LocationInfo(offset, REGION)
+            offset += 1
+    offset = 28
+    for n in ALL_RESOURCE_THRESHOLDS:
+        table[all_resource_name(n)] = LocationInfo(offset, REGION)
+        offset += 1
+    for n in ANY_RESOURCE_THRESHOLDS:
+        table[any_resource_name(n)] = LocationInfo(offset, REGION)
+        offset += 1
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -52,8 +80,11 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# the first six random checks need nothing (rules.py gates the rest by tier)
-sphere_1_locs: list[str] = [f"Random Check {n}" for n in range(1, 7)]
+# the first ten random checks and the lowest resource-ladder rungs need nothing
+# (rules.py gates the rest by tier)
+sphere_1_locs: list[str] = ([f"Random Check {n}" for n in range(1, 9)]
+                            + [all_resource_name(1)]
+                            + [any_resource_name(n) for n in (3, 5, 10)])
 
 
 def get_locations() -> dict[str, int]:
@@ -67,8 +98,12 @@ def get_location_groups() -> dict[str, set[str]]:
     }
     groups[f"{GAME_NAME} - Map Pieces"] = {
         f"{GAME_NAME} - {map_piece_name(mt, p)}"
-        for mt in MAP_TYPES for p in range(1, PIECES_PER_MAP + 1)
+        for mt in MAP_TYPES for p in range(1, PIECES_PER_MAP[mt] + 1)
     }
+    groups[f"{GAME_NAME} - Resource Checks"] = (
+        {f"{GAME_NAME} - {all_resource_name(n)}" for n in ALL_RESOURCE_THRESHOLDS}
+        | {f"{GAME_NAME} - {any_resource_name(n)}" for n in ANY_RESOURCE_THRESHOLDS}
+    )
     return groups
 
 

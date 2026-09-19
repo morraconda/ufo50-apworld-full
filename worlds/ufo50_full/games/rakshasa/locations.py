@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -20,10 +20,12 @@ GAME_NAME = "Rakshasa"
 # "Level N Miniboss" when that stage's mid-boss dies. "<n>0000 Points" is a monotonic
 # score ladder swept from global.g24_score (see SCORE_LOCATIONS).
 
-# id offset layout inside Rakshasa's 1000-id block:
-#     1..3   Level <n>            (stage n cleared)
-#     4..6   Level <n> Miniboss   (stage n mid-boss defeated; offset = 3 + n)
-#    10..50  <n>0000 Points       (global.g24_score reached; offset = score // 1000)
+# id offset layout inside Rakshasa's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot) for the per-stage checks:
+#    10..30   Level <n>            (stage n cleared; level_id(n, 0))
+#    11..31   Level <n> Miniboss   (stage n mid-boss defeated; level_id(n, 1))
+#   201..205  <n>0000 Points       (global.g24_score reached; not per-stage, so kept
+#             outside the level_id range: offset = 200 + (score // 10000))
 #   200      500 Points (filler)
 #   511/512/513 Fire Weapon / Spreadshot / Homing Shot
 #   997/998/999   Gift / Gold / Cherry
@@ -51,10 +53,10 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, 4):
         region = f"Stage {n}"
-        table[f"Level {n}"] = LocationInfo(n, region)
-        table[f"Level {n} Miniboss"] = LocationInfo(3 + n, region)
+        table[f"Level {n}"] = LocationInfo(level_id(n, 0), region)
+        table[f"Level {n} Miniboss"] = LocationInfo(level_id(n, 1), region)
     for score, region in SCORE_LOCATIONS.items():
-        table[f"{score} Points"] = LocationInfo(score // 1000, region)
+        table[f"{score} Points"] = LocationInfo(200 + score // 10000, region)
     table["Gift"] = LocationInfo(997, "Stage 1")
     table["Gold"] = LocationInfo(998, "Stage 3")
     table["Cherry"] = LocationInfo(999, "Stage 3")

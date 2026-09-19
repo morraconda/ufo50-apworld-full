@@ -9,7 +9,7 @@ from .death_link import DEATH_LINK_RULES
 
 class Games(OptionSet):
     """
-    Choose which games you want to play. To goal, you must Gold Disk all of them.
+    Choose which games you want to play. To goal, by default you must Gold Disk all of them.
 
     Fully Implemented: (and imo really cool implementations)
         Barbuta, Magic Garden, Velgress, Campanella, Porgy, Party House, Vainger, Campanella 2, Night Manor, Combatants
@@ -20,21 +20,20 @@ class Games(OptionSet):
 
     Somewhat Implemented: (there exists logic, but not much)
         Ninpek, Bushido Ball, Caramel Caramel, Hot Foot, Pingolf, Fist Hell, Overbold, Hyper Contender,
-        Rakshasa, Star Waspir, Elfazar's Hat, Seaside Drive, Campanella 3,
+        Rakshasa, Star Waspir, Elfazar's Hat, Mini & Max, Seaside Drive, Campanella 3,
 
     Placeholder Implemented: (All checks are sphere 1, game is not randomised)
         Bug Hunter, Paint Chase, Avianos, Mooncat, Camouflage, Golfaria, The Big Bell Race, Onion Delivery,
-        Divers, Valbrace, Grimstone, Lords of Diskonia, Pilot Quest, Mini & Max, Cyber Owls
+        Divers, Valbrace, Grimstone, Lords of Diskonia, Pilot Quest, Cyber Owls
     """
     internal_name = "games"
     display_name = "Games"
     valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
-    # default: every game, in death_link.py (DEATH_LINK_RULES) order
-    default = list(DEATH_LINK_RULES.keys())
+    default = ["Velgress", "Campanella", "Party House", "Night Manor"]
 
 _CHERRY_OFF_BY_DEFAULT: set[str] = {
     "Barbuta", "Campanella", "Golfaria", "Block Koala", "Camouflage", "Porgy", "Vainger",
-    "Rock On! Island", "Fist Hell", "Valbrace", "Pilot Quest", "Combatants", "Cyber Owls",
+    "Rock On! Island", "Fist Hell", "Pilot Quest", "Combatants", "Cyber Owls",
 }
 
 class StartingGameAmount(Range):
@@ -45,7 +44,7 @@ class StartingGameAmount(Range):
     display_name = "Starting Game Amount"
     range_start = 1
     range_end = 50
-    default = 50
+    default = 3
 
 class CherryEnabledGames(OptionSet):
     """
@@ -58,6 +57,28 @@ class CherryEnabledGames(OptionSet):
     # default: every game except the ones whose Cherry is a deep late-game gate,
     # in death_link.py (DEATH_LINK_RULES) order
     default = [game for game in DEATH_LINK_RULES if game not in _CHERRY_OFF_BY_DEFAULT]
+
+
+class GoldsToGoal(Range):
+    """
+    How many Gold Disks you need to win. Caps to Gold Disking all selected games.
+    """
+    internal_name = "golds_to_goal"
+    display_name = "Required Gold Disks to Win"
+    range_start = 1
+    range_end = 50
+    default = 50
+
+
+class CherriesToGoal(Range):
+    """
+    How many Cherry Disks you need to win. Caps to Cherry Disking all selected games.
+    """
+    internal_name = "cherries_to_goal"
+    display_name = "Required Cherry Disks To Win"
+    range_start = 0
+    range_end = 50
+    default = 0
 
 
 class DeferSphere1Games(DefaultOnToggle):
@@ -182,6 +203,8 @@ class UFO50Options(PerGameCommonOptions):
     games: Games
     starting_game_amount: StartingGameAmount
     pilot_quest_start: PilotQuestStart
+    golds_to_goal: GoldsToGoal
+    cherries_to_goal: CherriesToGoal
     defer_sphere_1_games: DeferSphere1Games
     cherry_enabled_games: CherryEnabledGames
 
@@ -203,11 +226,13 @@ class UFO50Options(PerGameCommonOptions):
 ufo50_option_groups = [
     OptionGroup("General Options", [
         Games,
-        StartingGameAmount,
-        PilotQuestStart,
-        DeferSphere1Games,
         CherryEnabledGames,
+        StartingGameAmount,
+        GoldsToGoal,
+        CherriesToGoal,
+        DeferSphere1Games,
         TrapPercentage,
+        PilotQuestStart,
     ]),
     OptionGroup("Block Koala Options", [
         BlockKoalaLevelRandomizer,

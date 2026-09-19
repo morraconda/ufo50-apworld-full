@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -15,8 +15,9 @@ UNIT = "Wave"
 NUM_WAVE = 5   # o17__Game.wave 1..5
 REGION = "Sortie"
 
-# id offset layout inside Star Waspir's 1000-id block:
-#     1..5   Wave <n>   (cleared wave n)
+# id offset layout inside Star Waspir's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..50   Wave <n>   (cleared wave n; level_id(n, 0))
 #   101      Shooting item (see items.py)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
@@ -30,7 +31,7 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, NUM_WAVE + 1):
-        table[f"{UNIT} {n}"] = LocationInfo(n, REGION)
+        table[f"{UNIT} {n}"] = LocationInfo(level_id(n, 0), REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)

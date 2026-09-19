@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -18,13 +18,16 @@ REGION = "The War"
 # level is beaten; the mod sweeps highestLevel every frame so save-loaded progress
 # reports too. Streak mode (normally unlocked by beating the campaign; the mod unlocks
 # it from the start) gives 3 more checks -- Streak 1/2/3 = your best win streak reaching
-# 1/2/3 (bestStreak, persisted; a streak of 3 is also the vanilla Cherry).
+# 1/2/3 (bestStreak, persisted; a streak of 3 is also the vanilla Cherry). The streaks
+# aren't tied to any one story scenario, so they're just placed as extra slots on
+# Level 1's id block rather than getting a level of their own.
 LEVEL_COUNT = 10
 STREAK_COUNT = 3
 
-# id offset layout inside Lords of Diskonia's 1000-id block:
-#     1..10   Level <n>
-#    11..13   Streak <n>   (bestStreak >= n)
+# id offset layout inside Lords of Diskonia's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..100  Level <n>    (level_id(n, 0))
+#    11..13   Streak <n>   (bestStreak >= n; level_id(1, n) -- slots 1..3 of Level 1)
 #   200       Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -37,9 +40,9 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(1, LEVEL_COUNT + 1):
-        table[f"Level {n}"] = LocationInfo(n, REGION)
+        table[f"Level {n}"] = LocationInfo(level_id(n, 0), REGION)
     for n in range(1, STREAK_COUNT + 1):
-        table[f"Streak {n}"] = LocationInfo(10 + n, REGION)
+        table[f"Streak {n}"] = LocationInfo(level_id(1, n), REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)

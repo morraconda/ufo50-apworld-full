@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -28,8 +28,10 @@ _LOC_REGION: dict[str, str] = {
 }
 
 # The nine tickets, three each in Stage I (White Pea), Stage III (Frostin Town) and
-# Stage IV (Grand Palace). Sent cumulatively as global.g31_ticketsFound climbs (see the
-# mod's o31_Player_Step_0 patch), so offset = 10 + ticketsFound in play order. Stage I is
+# Stage IV (Grand Palace) -- each ticket's own name says which stage it's in. Each is
+# its own independent location (not a cumulative ladder): every o31_Ticket ranks itself
+# 1..3 among its room's 3 tickets by (y, x) on its own first Step (apRank), and the mod
+# sends that specific ticket's location on pickup -- see the id layout below. Stage I is
 # free (up-shot only); the Frostin Town / Grand Palace tickets need the full cardinal kit.
 TICKETS: tuple[str, ...] = (
     "White Pea Ticket 1", "White Pea Ticket 2", "White Pea Ticket 3",
@@ -48,22 +50,46 @@ for _name in TICKETS[3:]:
 # ("Tree"/"Tank"/"Necromancer"/"Grib") have no in-game text and are the community
 # names the user supplied.
 LOCATIONS: tuple[str, ...] = (
-    "Tree",         # 1   Stage I   (White Pea)      mini-boss  -- o31_eTank
-    "Josie",        # 2   Stage I   (White Pea)      boss       -- o31_eSlorp
-    "Train",        # 3   Stage II  (Train)          stage clear (no boss) -- o31_TrainMas
-    "Tank",         # 4   Stage III (Frostin Town)   mini-boss  -- o31_ePlo
-    "Nan Noon",     # 5   Stage III (Frostin Town)   boss       -- o31_eWozart
-    "Necromancer",  # 6   Stage IV  (Grand Palace)   mini-boss  -- o31_eNecrom
-    "Grib",         # 7   Stage IV  (Grand Palace)   mini-boss  -- o31_eGryb
-    "Elfazar",      # 8   Stage IV  (Grand Palace)   boss       -- o31_eElfazarHum
-    "Zalfador",     # 9   Stage V   (Demon Tower)    boss       -- o31_eZalfadorHead
-    "Zalcore",      # 10  Stage V   (Demon Tower)    true final boss (no-continue) -- o31_eZalCoreEnd
+    "Tree",         # Stage I   (White Pea)      mini-boss  -- o31_eTank
+    "Josie",        # Stage I   (White Pea)      boss       -- o31_eSlorp
+    "Train",        # Stage II  (Train)          stage clear (no boss) -- o31_TrainMas
+    "Tank",         # Stage III (Frostin Town)   mini-boss  -- o31_ePlo
+    "Nan Noon",     # Stage III (Frostin Town)   boss       -- o31_eWozart
+    "Necromancer",  # Stage IV  (Grand Palace)   mini-boss  -- o31_eNecrom
+    "Grib",         # Stage IV  (Grand Palace)   mini-boss  -- o31_eGryb
+    "Elfazar",      # Stage IV  (Grand Palace)   boss       -- o31_eElfazarHum
+    "Zalfador",     # Stage V   (Demon Tower)    boss       -- o31_eZalfadorHead
+    "Zalcore",      # Stage V   (Demon Tower)    true final boss (no-continue) -- o31_eZalCoreEnd
 )
 NON_BOSS_LOCATIONS: frozenset[str] = frozenset({"Train"})
 
-# id offset layout inside Elfazar's Hat's 1000-id block:
-#     1..10  <boss name>       (offset = play-order position in LOCATIONS)
-#    11..19  White Pea / Frostin Town / Grand Palace Ticket 1..3 (play order)
+# Every boss/mini-boss and every ticket belongs to one of the 5 stages (the ticket's own
+# name says which). "Level" = stage number 1..5 for game_helpers.level_id.
+LOCATION_STAGE: dict[str, int] = {
+    "Tree": 1, "Josie": 1,
+    "Train": 2,
+    "Tank": 3, "Nan Noon": 3,
+    "Necromancer": 4, "Grib": 4, "Elfazar": 4,
+    "Zalfador": 5, "Zalcore": 5,
+}
+TICKET_STAGE: dict[str, int] = {
+    **{name: 1 for name in TICKETS[:3]},
+    **{name: 3 for name in TICKETS[3:6]},
+    **{name: 4 for name in TICKETS[6:9]},
+}
+
+# id offset layout inside Elfazar's Hat's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot, level = stage 1..5): each stage's bosses take slots
+# 0.., in LOCATIONS play order, then that stage's tickets (if any) take the slots
+# right after:
+#    10/11        Tree / Josie                      (Stage I)
+#    12/13/14     White Pea Ticket 1/2/3             (Stage I, after the 2 bosses)
+#    20           Train                              (Stage II)
+#    30/31        Tank / Nan Noon                     (Stage III)
+#    32/33/34     Frostin Town Ticket 1/2/3          (Stage III, after the 2 bosses)
+#    40/41/42     Necromancer / Grib / Elfazar        (Stage IV)
+#    43/44/45     Grand Palace Ticket 1/2/3          (Stage IV, after the 3 bosses)
+#    50/51        Zalfador / Zalcore                  (Stage V)
 #   200      Encouragement (filler)
 #   501..508 Shoot Down/Left/Right + 4 diagonals + Dash (see items.py)
 #   509      Ticket (x9)
@@ -77,10 +103,15 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for n, name in enumerate(LOCATIONS, start=1):
-        table[name] = LocationInfo(n, _LOC_REGION[name])
-    for n, name in enumerate(TICKETS, start=11):
-        table[name] = LocationInfo(n, _LOC_REGION[name])
+    slot: dict[int, int] = {}
+    for name in LOCATIONS:
+        stage = LOCATION_STAGE[name]
+        table[name] = LocationInfo(level_id(stage, slot.get(stage, 0)), _LOC_REGION[name])
+        slot[stage] = slot.get(stage, 0) + 1
+    for name in TICKETS:
+        stage = TICKET_STAGE[name]
+        table[name] = LocationInfo(level_id(stage, slot.get(stage, 0)), _LOC_REGION[name])
+        slot[stage] = slot.get(stage, 0) + 1
     table["Gift"] = LocationInfo(997, R_GIFT)
     table["Gold"] = LocationInfo(998, R_TOWER)
     table["Cherry"] = LocationInfo(999, R_TOWER)

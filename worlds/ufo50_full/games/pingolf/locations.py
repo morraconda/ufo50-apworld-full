@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -43,8 +43,9 @@ HOLE_NAMES: tuple[str, ...] = (
 )
 NUM_HOLES = len(HOLE_NAMES)
 
-# id offset layout inside Pingolf's 1000-id block:
-#     1..18  <hole name> - Par   (offset = play position, i.e. g23_currStage + 1)
+# id offset layout inside Pingolf's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..180  <hole name> - Par   (level_id(n, 0), n = play position, i.e. g23_currStage + 1)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry  (vanilla scrWin: hole-in-one / final score)
 
@@ -57,7 +58,7 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(HOLE_NAMES, start=1):
-        table[f"{name} - Par"] = LocationInfo(n, REGION if n <= FREE_HOLES else DUNK_REGION)
+        table[f"{name} - Par"] = LocationInfo(level_id(n, 0), REGION if n <= FREE_HOLES else DUNK_REGION)
     table["Gift"] = LocationInfo(997, DUNK_REGION)
     table["Gold"] = LocationInfo(998, DUNK_REGION)
     table["Cherry"] = LocationInfo(999, DUNK_REGION)

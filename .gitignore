@@ -199,3 +199,6 @@ _speedups.html
 .LSOverride
 Thumbs.db
 [Dd]esktop.ini
+
+# local dev tooling (this repo)
+/build_and_deploy.ps1

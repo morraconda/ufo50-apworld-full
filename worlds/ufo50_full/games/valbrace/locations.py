@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -31,10 +31,14 @@ BOSSES: tuple[tuple[str, int], ...] = (
     ("Abyss Lord", 6),
 )
 
-# id offset layout inside Valbrace's 1000-id block:
-#     1..6    Floor 0..5      (offset = floor number + 1; sent on leaving that floor)
-#     7..9    Phantom Knight / Hive Queen / Abyss Lord
-#    10..74   Floor <f> - Chest <k>   (offset = (f + 1) * 10 + (k - 1), f 0..6, k 1..count)
+# id offset layout inside Valbrace's 1000-id block, via game_helpers.level_id (offset =
+# level * 10 + slot), treating "level" as floor + 1 (1..7 -- floor 6 has no clear check
+# of its own, but does have a boss + chests):
+#    10..60   Floor 0..5              (level_id(floor + 1, 0); sent on leaving that floor)
+#    31/51/71 Phantom Knight / Hive Queen / Abyss Lord
+#             (level_id(floor + 1, 1) for boss floors 2/4/6)
+#    12..76   Floor <f> - Chest <k>   (level_id(f + 1, 2 + (k - 1)), f 0..6, k 1..count --
+#             slots 0/1 stay reserved for that floor's clear/boss)
 #   200       Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -47,12 +51,12 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n in range(FLOOR_COUNT):
-        table[f"Floor {n}"] = LocationInfo(n + 1, REGION)
-    for i, (name, _floor) in enumerate(BOSSES):
-        table[name] = LocationInfo(7 + i, REGION)
+        table[f"Floor {n}"] = LocationInfo(level_id(n + 1, 0), REGION)
+    for name, floor in BOSSES:
+        table[name] = LocationInfo(level_id(floor + 1, 1), REGION)
     for floor, count in enumerate(CHEST_COUNTS):
         for k in range(1, count + 1):
-            table[f"Floor {floor} - Chest {k}"] = LocationInfo((floor + 1) * 10 + (k - 1), REGION)
+            table[f"Floor {floor} - Chest {k}"] = LocationInfo(level_id(floor + 1, 2 + (k - 1)), REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)

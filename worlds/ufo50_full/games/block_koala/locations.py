@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -12,6 +12,23 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Block Koala"
 
+# Block Koala's story map is 50 levels split across 6 zones by the star gates
+# (rules.py). id offset layout inside Block Koala's 1000-id block, via
+# game_helpers.level_id (offset = level * 10 + slot):
+#    10..500  Level <n>   (level_id(n, 0))
+#   101       Koala Fact (filler item, see items.py)
+#   997/998/999   Gift / Gold / Cherry
+
+_ZONE_BY_LEVEL: dict[int, str] = {
+    1: "Start",
+    **{n: "Bottom Left" for n in range(2, 7)},
+    **{n: "Mid Left" for n in range(7, 15)},
+    **{n: "Bottom Right" for n in range(15, 28)},
+    **{n: "Top" for n in range(28, 41)},
+    **{n: "Mid Right" for n in range(41, 50)},
+    50: "Boss",
+}
+
 
 class LocationInfo(NamedTuple):
     id_offset: int
@@ -19,74 +36,11 @@ class LocationInfo(NamedTuple):
 
 
 location_table: dict[str, LocationInfo] = {
-    # Start (Level 1)
-    "Level 1": LocationInfo(1, "Start"),
-
-    # Bottom Left (Levels 2-6)
-    "Level 2": LocationInfo(2, "Bottom Left"),
-    "Level 3": LocationInfo(3, "Bottom Left"),
-    "Level 4": LocationInfo(4, "Bottom Left"),
-    "Level 5": LocationInfo(5, "Bottom Left"),
-    "Level 6": LocationInfo(6, "Bottom Left"),
-
-    # Mid Left (Levels 7-14)
-    "Level 7": LocationInfo(7, "Mid Left"),
-    "Level 8": LocationInfo(8, "Mid Left"),
-    "Level 9": LocationInfo(9, "Mid Left"),
-    "Level 10": LocationInfo(10, "Mid Left"),
-    "Level 11": LocationInfo(11, "Mid Left"),
-    "Level 12": LocationInfo(12, "Mid Left"),
-    "Level 13": LocationInfo(13, "Mid Left"),
-    "Level 14": LocationInfo(14, "Mid Left"),
-
-    # Bottom Right (Levels 15-27)
-    "Level 15": LocationInfo(15, "Bottom Right"),
-    "Level 16": LocationInfo(16, "Bottom Right"),
-    "Level 17": LocationInfo(17, "Bottom Right"),
-    "Level 18": LocationInfo(18, "Bottom Right"),
-    "Level 19": LocationInfo(19, "Bottom Right"),
-    "Level 20": LocationInfo(20, "Bottom Right"),
-    "Level 21": LocationInfo(21, "Bottom Right"),
-    "Level 22": LocationInfo(22, "Bottom Right"),
-    "Level 23": LocationInfo(23, "Bottom Right"),
-    "Level 24": LocationInfo(24, "Bottom Right"),
-    "Level 25": LocationInfo(25, "Bottom Right"),
-    "Level 26": LocationInfo(26, "Bottom Right"),
-    "Level 27": LocationInfo(27, "Bottom Right"),
-
-    # Top (Levels 28-40)
-    "Level 28": LocationInfo(28, "Top"),
-    "Level 29": LocationInfo(29, "Top"),
-    "Level 30": LocationInfo(30, "Top"),
-    "Level 31": LocationInfo(31, "Top"),
-    "Level 32": LocationInfo(32, "Top"),
-    "Level 33": LocationInfo(33, "Top"),
-    "Level 34": LocationInfo(34, "Top"),
-    "Level 35": LocationInfo(35, "Top"),
-    "Level 36": LocationInfo(36, "Top"),
-    "Level 37": LocationInfo(37, "Top"),
-    "Level 38": LocationInfo(38, "Top"),
-    "Level 39": LocationInfo(39, "Top"),
-    "Level 40": LocationInfo(40, "Top"),
-
-    # Mid Right (Levels 41-49)
-    "Level 41": LocationInfo(41, "Mid Right"),
-    "Level 42": LocationInfo(42, "Mid Right"),
-    "Level 43": LocationInfo(43, "Mid Right"),
-    "Level 44": LocationInfo(44, "Mid Right"),
-    "Level 45": LocationInfo(45, "Mid Right"),
-    "Level 46": LocationInfo(46, "Mid Right"),
-    "Level 47": LocationInfo(47, "Mid Right"),
-    "Level 48": LocationInfo(48, "Mid Right"),
-    "Level 49": LocationInfo(49, "Mid Right"),
-
-    # Boss (Level 50)
-    "Level 50": LocationInfo(50, "Boss"),
-
+    **{f"Level {n}": LocationInfo(level_id(n, 0), zone) for n, zone in _ZONE_BY_LEVEL.items()},
     # Goal locations
     "Gift": LocationInfo(997, "Start"),
     "Gold": LocationInfo(998, "Boss"),
-    "Cherry": LocationInfo(999, "Boss")
+    "Cherry": LocationInfo(999, "Boss"),
 }
 
 

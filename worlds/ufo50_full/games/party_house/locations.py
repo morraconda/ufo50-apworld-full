@@ -39,8 +39,16 @@ GLOBAL_REGION = "The Party"
 
 # Star Guests + Clear are per-scenario.
 STAR_GUEST_THRESHOLDS: list[int] = [1, 2, 3, 4, 5]
-# "Clear" = seat six star guests (one past the highest Star Guests location).
-CLEAR_STAR_GUESTS: int = 6
+# "Clear" = seat four star guests (matches the mod's win requirement, PRESTIGE_GOAL).
+CLEAR_STAR_GUESTS: int = 4
+
+# Random Scenario only: winning N times in a row (a "streak") raises the mod's
+# PRESTIGE_GOAL for that scenario by 1 per consecutive win, capped at +4 -- streak wins
+# 2/3/4/5 need 5/6/7/8 star guests seated (streak win 1 is just Clear, at
+# CLEAR_STAR_GUESTS). The world doesn't model play skill/luck, so the streak locations'
+# real logic requirement is simply being able to assemble that many star guests in
+# Random Scenario, same as the Star Guests ladder -- reuses the STAR_GUESTS metric.
+RANDOM_STREAK_THRESHOLDS: dict[int, int] = {2: 5, 3: 6, 4: 7, 5: 8}  # streak win # -> star guests needed
 
 # Metric names used by rules.scenario_outcome.
 POPULARITY = "popularity"
@@ -49,12 +57,15 @@ STAR_GUESTS = "star_guests"
 CASH = "cash"
 
 
-# Per-scenario id layout (Clear + 5 Star Guests = 6 slots), via the standard
-# game_helpers.level_id (level * 10 + slot; scenario = level 1..6).
+# Per-scenario id layout via the standard game_helpers.level_id (level * 10 + slot;
+# scenario = level 1..6). Random Scenario (level 6) additionally uses slots 6..9 for
+# its streak locations; slots 6..9 are unused by every other scenario.
 #   slot 0     <scenario>          (won the scenario)
 #   slots 1..5 <n> Star Guests     (STAR_GUEST_THRESHOLDS in order)
+#   slots 6..9 Streak 2/3/4/5      (Random Scenario only, RANDOM_STREAK_THRESHOLDS in order)
 _CLEAR_SLOT = 0
 _STAR_GUEST_SLOT0 = 1
+_STREAK_SLOT0 = 6
 
 
 class LocationInfo(NamedTuple):
@@ -84,6 +95,10 @@ def _build_location_table() -> dict[str, LocationInfo]:
         for i, n in enumerate(STAR_GUEST_THRESHOLDS):
             table[f"{scenario} - {n} Star Guests"] = LocationInfo(
                 level_id(level, _STAR_GUEST_SLOT0 + i), scenario, STAR_GUESTS, n)
+        if scenario == SCENARIOS[-1]:  # Random Scenario
+            for i, (streak, threshold) in enumerate(RANDOM_STREAK_THRESHOLDS.items()):
+                table[f"{scenario} - Streak {streak}"] = LocationInfo(
+                    level_id(level, _STREAK_SLOT0 + i), scenario, STAR_GUESTS, threshold)
     # goal locations last so create_locations' Cherry/Gold handling can break out.
     # (metric/threshold here are unused -- rules.py special-cases these three.)
     table["Gift"] = LocationInfo(997, SCENARIOS[0], STAR_GUESTS, CLEAR_STAR_GUESTS)

@@ -242,6 +242,10 @@ class UFO50World(World):
                 self.options.porgy_check_on_touch.value = self.ut_passthrough[options.PorgyCheckOnTouch.internal_name]
                 self.options.porgy_radar.value = self.ut_passthrough[options.PorgyRadar.internal_name]
                 self.options.porgy_lanternless.value = self.ut_passthrough[options.PorgyLanternless.internal_name]
+                self.options.golds_to_goal.value = \
+                    self.ut_passthrough[options.GoldsToGoal.internal_name]
+                self.options.cherries_to_goal.value = \
+                    self.ut_passthrough[options.CherriesToGoal.internal_name]
                 self.options.defer_sphere_1_games.value = \
                     self.ut_passthrough[options.DeferSphere1Games.internal_name]
                 self.options.cherry_enabled_games.value = \
@@ -275,21 +279,38 @@ class UFO50World(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
         menu.locations.append(victory_location)
 
-        # every goal game is beaten by reaching its Gold condition
-        for game_name in self.goal_games:
-            add_rule(victory_location, lambda state, loc=f"{game_name} - Gold":
-                     state.can_reach_location(loc, self.player))
-
-        self.sphere1_only_games = []
-        self.deferred_sphere1_games = []
-
         # strict allowlist: a game keeps its Cherry location only if it is listed here.
         # An empty list means NO game has a Cherry.
         cherry_enabled = self.options.cherry_enabled_games.value
 
+        # "Completed All Games" needs at least `golds_to_goal` of the goal games' Gold
+        # conditions reached, capped to the number of goal games actually in play --
+        # a game not in `games` is never a goal game, so it can't count toward this
+        # regardless of the option value.
+        golds_needed = min(self.options.golds_to_goal.value, len(self.goal_games))
+        goal_gold_locations = [f"{game_name} - Gold" for game_name in self.goal_games]
+        add_rule(victory_location, lambda state, locs=goal_gold_locations, n=golds_needed:
+                 sum(1 for loc in locs if state.can_reach_location(loc, self.player)) >= n)
+
+        # Cherries mirror Golds exactly: every goal game counts toward cherries_needed,
+        # regardless of cherry_enabled_games. This tracks a separate, additional
+        # "<Game> - Cherry Beaten" event per goal game (see _add_cherry_beaten_event
+        # below) rather than the real "<Game> - Cherry" location itself, which is left
+        # completely untouched -- still removed for non-cherry-enabled games exactly as
+        # before, still a real check when enabled.
+        cherries_needed = min(self.options.cherries_to_goal.value, len(self.goal_games))
+        goal_cherry_locations = [f"{game_name} - Cherry Beaten" for game_name in self.goal_games]
+        add_rule(victory_location, lambda state, locs=goal_cherry_locations, n=cherries_needed:
+                 sum(1 for loc in locs if state.can_reach_location(loc, self.player)) >= n)
+
+        self.sphere1_only_games = []
+        self.deferred_sphere1_games = []
+
         for game_name in self.included_games:
             game = ufo50_games[game_name]
             game_regions = game.regions.create_regions_and_rules(self)
+            if game_name in self.goal_games:
+                self._add_cherry_beaten_event(game_regions, game_name)
             if game_name not in cherry_enabled:
                 self._remove_location(game_regions, f"{game_name} - Cherry")
             for region in game_regions.values():
@@ -318,6 +339,26 @@ class UFO50World(World):
             for loc in list(region.locations):
                 if loc.name == loc_name:
                     region.locations.remove(loc)
+                    return
+
+    def _add_cherry_beaten_event(self, game_regions: dict[str, Region], game_name: str) -> None:
+        """Purely additive: adds a new "<Game> - Cherry Beaten" event, alongside
+        (never replacing) the real "<Game> - Cherry" location, copying that location's
+        access_rule. Only used by cherries_needed (see create_regions) so it can track
+        a goal game's Cherry condition even when cherry_enabled_games drops the real
+        Cherry location for it entirely. Must run before _remove_location for this
+        game, while the real "<Game> - Cherry" location object still exists to copy
+        the rule from -- it is never itself removed or altered afterward.
+        """
+        loc_name = f"{game_name} - Cherry"
+        for region in game_regions.values():
+            for loc in region.locations:
+                if loc.name == loc_name:
+                    event = Location(self.player, f"{game_name} - Cherry Beaten", None, region)
+                    event.access_rule = loc.access_rule
+                    event.place_locked_item(Item(f"{game_name} Cherry Beaten",
+                                                  ItemClassification.progression, None, self.player))
+                    region.locations.append(event)
                     return
 
     def set_rules(self) -> None:
@@ -477,11 +518,17 @@ class UFO50World(World):
             options.PorgyLanternless.internal_name: self.options.porgy_lanternless.value,
             options.BlockKoalaLevelRandomizer.internal_name: self.options.block_koala_level_randomizer.value,
             options.WarptankLevelRandomizer.internal_name: self.options.warptank_level_randomizer.value,
+            options.GoldsToGoal.internal_name: self.options.golds_to_goal.value,
+            options.CherriesToGoal.internal_name: self.options.cherries_to_goal.value,
             options.DeferSphere1Games.internal_name: self.options.defer_sphere_1_games.value,
             options.CherryEnabledGames.internal_name: sorted(self.options.cherry_enabled_games.value),
             # DeathLink is not currently exposed as a player option; the code and mod
-            # support for it are kept in place, just always off for now.
-            "death_link": False,
+            # support for it are kept in place, just always off for now. Sent as an int,
+            # not a bare bool -- the mod reads it with apclient_json_number_at, whose
+            # underlying nlohmann::json .get<double>() throws on a JSON boolean (it's
+            # not implicitly convertible), which gm-apclientpp catches internally and
+            # surfaces as GameMaker's own "Unknown exception" popup on every connect.
+            "death_link": int(False),
             "deathlink_games": [],
         }
         return slot_data

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 from .items import GAME_NAME, PLUS_15, TIER1
 
@@ -23,14 +23,17 @@ ROUND_NAMES: tuple[str, ...] = tuple(f"Round {n}" for n in range(1, NUM_ROUNDS +
 # round's requirements. villager count -> round.
 VILLAGER_ROUND: dict[int, int] = {3: 1, 4: 2, 5: 4, 6: 6}
 
-# id offset layout inside Devilition's 1000-id block:
-#     1..10   Round <n>
-#    11..14   <n> Villagers   (offset = 8 + n, n = 3..6)
-#    15       "0=0"           (cleared a round with 0 villagers alive)
+# id offset layout inside Devilition's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..100   Round <n>          (level_id(n, 0))
+#    11/21/41/61   <n> Villagers  (the villager check tied to round r; level_id(r, 1))
+#    1        "0=0"               (cleared a round with 0 villagers alive -- not tied
+#              to a round, so it lives in the 0..9 band level_id reserves for that)
 #   100/101/102   Tier 1 Pieces / +15 Pieces / +5 Pieces
 #   997/998/999   Gift / Gold / Cherry
 
 PYRRHIC_LOC = "0=0"     # beat a round with 0 villagers left
+PYRRHIC_OFFSET = 1
 
 TIER1_FROM_ROUND = 4     # rounds >= this also need Tier 1 Pieces
 
@@ -58,10 +61,10 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(ROUND_NAMES, start=1):
-        table[name] = LocationInfo(n, REGION)
-    for v in VILLAGER_ROUND:
-        table[villager_loc_name(v)] = LocationInfo(8 + v, REGION)
-    table[PYRRHIC_LOC] = LocationInfo(15, REGION)
+        table[name] = LocationInfo(level_id(n, 0), REGION)
+    for v, r in VILLAGER_ROUND.items():
+        table[villager_loc_name(v)] = LocationInfo(level_id(r, 1), REGION)
+    table[PYRRHIC_LOC] = LocationInfo(PYRRHIC_OFFSET, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, ENDGAME)
     table["Cherry"] = LocationInfo(999, ENDGAME)

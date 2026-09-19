@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -27,9 +27,11 @@ LEVEL_COUNT = len(LEVEL_NAMES)
 COLLECTIBLE_LEVELS = 14
 COLLECTIBLES = ("Baby", "Fruit 1", "Fruit 2")
 
-# id offset layout inside Camouflage's 1000-id block:
-#     1..15    <level name>                  (level cleared; offset = level number)
-#   100..141   <level name> - <collectible>  (levels 1..14; offset = 100 + (n-1)*3 + k)
+# id offset layout inside Camouflage's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..150   <level name>                  (level cleared; level_id(n, 0))
+#    11..143   <level name> - <collectible>  (levels 1..14; level_id(n, 1 + k),
+#              k = 0 Baby / 1 Fruit 1 / 2 Fruit 2)
 #   200        Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -42,11 +44,11 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, level in enumerate(LEVEL_NAMES, start=1):
-        table[level] = LocationInfo(n, REGION)
+        table[level] = LocationInfo(level_id(n, 0), REGION)
     for n in range(1, COLLECTIBLE_LEVELS + 1):
         level = LEVEL_NAMES[n - 1]
         for k, name in enumerate(COLLECTIBLES):
-            table[f"{level} - {name}"] = LocationInfo(100 + (n - 1) * 3 + k, REGION)
+            table[f"{level} - {name}"] = LocationInfo(level_id(n, 1 + k), REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)

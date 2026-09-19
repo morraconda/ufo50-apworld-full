@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -13,10 +13,19 @@ if TYPE_CHECKING:
 GAME_NAME = "Warptank"
 
 # id offset layout inside Warptank's 1000-id block:
-#   100 + s      <Sector> Sector            (cleared sector s, s = o16_Mas.lv* index 0..30)
-#   140 + s      <Sector> Sector - Coffee   (banked that sector's coffee on the way out)
-#   400 + k      Pink/Orange/Red Tank       (swapped to that colour at pit stop k = 0/2/3)
-#   410 + n      <npc> NPC                  (finished npc n's dialogue, n = o16_Npc.num; 1..6 used)
+#   10..270  <Sector> Sector            via game_helpers.level_id (offset = level * 10 +
+#            slot); "level" = 1-based position in SECTORS below, which is exactly the
+#            order the vanilla SLIM-TANK level-select terminal cheat lists them in
+#            (game_cheat_16_1 -> o16_Mas_Create_0's levelSelector[] build, sector index
+#            ascending 0..30 skipping unused rooms) -- 1st Crust, 2nd Yard, ..., 26th
+#            Riot; Final isn't in that terminal listing but sorts last by index anyway,
+#            so it lands as level 27, after Riot.
+#     level_id(n, 0)   <Sector> Sector           (cleared that sector)
+#     level_id(n, 1)   <Sector> Sector - Coffee  (banked that sector's coffee on the way out)
+#   0..9     Pink/Gray/Orange/Red Tank, <npc> NPC -- not tied to any one sector (the pit
+#            stops and NPCs live in the hub itself, gated by hub tier, not by sector), so
+#            they're flat offsets in the 0..9 band level_id reserves for that: Tank
+#            Colours 0..3 (pit stop num - 1), NPCs 4..9 (3 + npc num)
 #   997/998/999  Gift / Gold / Cherry
 
 class Sector(NamedTuple):
@@ -95,15 +104,14 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
-    for sec in SECTORS:
-        table[f"{sec.name} Sector"] = LocationInfo(100 + sec.index, sec.region)
-    for sec in SECTORS:
+    for level, sec in enumerate(SECTORS, start=1):
+        table[f"{sec.name} Sector"] = LocationInfo(level_id(level, 0), sec.region)
         if sec.has_coffee:
-            table[f"{sec.name} Sector - Coffee"] = LocationInfo(140 + sec.index, sec.region)
+            table[f"{sec.name} Sector - Coffee"] = LocationInfo(level_id(level, 1), sec.region)
     for tc in TANK_COLOURS:
-        table[tc.name] = LocationInfo(400 + tc.num, tc.region)
+        table[tc.name] = LocationInfo(tc.num - 1, tc.region)
     for npc in NPCS:
-        table[f"{npc.name} NPC"] = LocationInfo(410 + npc.num, npc.region)
+        table[f"{npc.name} NPC"] = LocationInfo(3 + npc.num, npc.region)
     table["Gift"] = LocationInfo(997, "Gate 14")
     table["Gold"] = LocationInfo(998, "Gate 22")     # own region behind "22 Capsule Gate", separate from the Final Sector
     table["Cherry"] = LocationInfo(999, "Gate 22")

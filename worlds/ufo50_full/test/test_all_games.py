@@ -208,7 +208,10 @@ class OptionMatrixTest(UFO50GenTestBase):
 
     def test_cherry_enabled_games(self) -> None:
         # only Barbuta keeps its Cherry; the other played games lose theirs. Pilot
-        # Quest is listed but not played, so it just has no effect.
+        # Quest is listed but not played, so it just has no effect. Every played game
+        # still gets a "Cherry Beaten" event (a separate, additional location that
+        # cherries_to_goal tracks) regardless of cherry_enabled_games -- see
+        # UFO50World._add_cherry_beaten_event.
         multiworld = generate({
             "games": ["Barbuta", "Combatants", "Hot Foot", "Waldorf's Journey"],
             "starting_game_amount": 1,
@@ -220,6 +223,8 @@ class OptionMatrixTest(UFO50GenTestBase):
         for g in ("Combatants", "Hot Foot", "Waldorf's Journey"):
             self.assertNotIn(f"{g} - Cherry", loc_names)
         self.assertIn("Barbuta - Cherry", loc_names)
+        for g in ("Barbuta", "Combatants", "Hot Foot", "Waldorf's Journey"):
+            self.assertIn(f"{g} - Cherry Beaten", loc_names)
 
     def test_cherry_enabled_games_explicit_empty(self) -> None:
         # an explicit empty list overrides the default -> no game has a Cherry location
@@ -231,6 +236,9 @@ class OptionMatrixTest(UFO50GenTestBase):
         self.assert_beatable_after_fill(multiworld)
         loc_names = {loc.name for loc in multiworld.get_locations(1)}
         self.assertEqual([n for n in loc_names if n.endswith(" - Cherry")], [])
+        # ...but "Cherry Beaten" events still exist for every goal game
+        for g in ("Barbuta", "Combatants", "Hot Foot", "Waldorf's Journey", "Night Manor"):
+            self.assertIn(f"{g} - Cherry Beaten", loc_names)
 
     def test_cherry_enabled_games_default(self) -> None:
         # the default set gives most games a Cherry but leaves the deep-gate ones out
@@ -269,16 +277,26 @@ class OptionMatrixTest(UFO50GenTestBase):
                        "pilot_quest_start": True}, seed=1)
         self.assertNotIn("Pilot Quest", mw.worlds[1].starting_games)
 
-    def test_velgress_mortol_ii_pool_shrinks_without_cherry(self) -> None:
-        # Velgress / Mortol II drop one item (Progressive Gun x3->x2, +10 Lives x7->x6)
-        # when they have no Cherry, so the tight pool still fits the location count.
-        for name, dup_item, full, cut in (("Velgress", "Progressive Gun", 3, 2),
-                                          ("Mortol II", "+10 Lives", 7, 6)):
-            with_cherry = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
-                                    "cherry_enabled_games": [name]}, seed=3)
-            without = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
-                                "cherry_enabled_games": []}, seed=3)
-            n_with = sum(i.name == f"{name} - {dup_item}" for i in with_cherry.itempool)
-            n_without = sum(i.name == f"{name} - {dup_item}" for i in without.itempool)
-            self.assertEqual(n_with, full, name)
-            self.assertEqual(n_without, cut, name)
+    def test_velgress_pool_shrinks_without_cherry(self) -> None:
+        # Velgress drops one item (Progressive Gun x3->x2) when it has no Cherry, so
+        # its tight pool still fits the location count.
+        name, dup_item, full, cut = "Velgress", "Progressive Gun", 3, 2
+        with_cherry = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
+                                "cherry_enabled_games": [name]}, seed=3)
+        without = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
+                            "cherry_enabled_games": []}, seed=3)
+        n_with = sum(i.name == f"{name} - {dup_item}" for i in with_cherry.itempool)
+        n_without = sum(i.name == f"{name} - {dup_item}" for i in without.itempool)
+        self.assertEqual(n_with, full, name)
+        self.assertEqual(n_without, cut, name)
+
+    def test_mortol_ii_door_groups_collapsed(self) -> None:
+        # Doors 1-4 (Hearts Upper) and doors 5-8 (Hearts Lower) each share a single
+        # item, so the pool has exactly one copy of each regardless of Cherry, and
+        # door(1)..door(4) / door(5)..door(8) all resolve to their shared item.
+        for cherry_enabled_games in ([], ["Mortol II"]):
+            mw = generate({"games": ["Barbuta", "Mortol II"], "starting_game_amount": 2,
+                           "cherry_enabled_games": cherry_enabled_games}, seed=3)
+            for door_name in ("Hearts Upper Doors", "Hearts Lower Doors"):
+                n = sum(i.name == f"Mortol II - {door_name}" for i in mw.itempool)
+                self.assertEqual(n, 1, (door_name, cherry_enabled_games))

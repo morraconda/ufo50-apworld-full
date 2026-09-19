@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from BaseClasses import Region, Location
 
 from ...constants import get_game_base_id
-from ...game_helpers import get_locations as _get_locations, game_location_groups
+from ...game_helpers import get_locations as _get_locations, game_location_groups, level_id
 from ...goal_locations import is_completion_event_location, place_completion_event
 
 if TYPE_CHECKING:
@@ -21,9 +21,11 @@ GAME_NAMES: tuple[str, ...] = (
     "Game 1", "Game 2", "Game 3", "Game 4", "Game 5", "Final Game",
 )
 
-# id offset layout inside Hot Foot's 1000-id block:
-#     1..6   <game name>   (won tournament game n)
-#     10     10 Points      (pointScore[1] >= 10 in a match)
+# id offset layout inside Hot Foot's 1000-id block, via game_helpers.level_id
+# (offset = level * 10 + slot):
+#    10..60   <game name>   (won tournament game n; level_id(n, 0))
+#    1        10 Points     (pointScore[1] >= 10 in a match -- not tied to a specific
+#             game, so it lives in the 0..9 band level_id reserves for that)
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -36,8 +38,8 @@ class LocationInfo(NamedTuple):
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(GAME_NAMES, start=1):
-        table[name] = LocationInfo(n, REGION)
-    table["10 Points"] = LocationInfo(10, REGION)
+        table[name] = LocationInfo(level_id(n, 0), REGION)
+    table["10 Points"] = LocationInfo(1, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)

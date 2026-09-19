@@ -94,10 +94,10 @@ each game keeps thin wrappers with these exact signatures and delegates mechanic
   for every game *except* the ~15 whose Cherry is a deep "beat basically the whole game"
   gate. `Games`' own default is every game, in `death_link.py` (`DEATH_LINK_RULES`) order.
   Cherry removal happens in `create_regions` after each game's `create_rules` (an orphaned
-  rule on the removed location is harmless). Velgress / Mortol II's pools exactly fill
-  their location count, so when *their* Cherry is off they drop one item
-  (`Progressive Gun` ×3→×2, `+10 Life` ×7→×6) via `_create_items(quantity_overrides=…)`.
-  If items still exceed open locations, `create_items` **fails generation** (`OptionError`).
+  rule on the removed location is harmless). Velgress' pool exactly fills its location
+  count, so when *its* Cherry is off it drops one item (`Progressive Gun` ×3→×2) via
+  `_create_items(quantity_overrides=…)`. If items still exceed open locations,
+  `create_items` **fails generation** (`OptionError`).
 
 ### Filler and traps
 
@@ -121,6 +121,62 @@ unfilled locations with filler:
 `cherry_enabled_games` (game names), `death_link` (bool), `deathlink_games` (game
 numbers — an explicit game list, empty = none)). `trap_percentage` is **not** sent.
 Add a key here whenever the mod needs to know an option.
+
+**Read every slot_data scalar/proxy with the raw, unchecked call —
+`apclient_json_number_at(0, key)` / `apclient_json_proxy(0, key)` — never wrapped in a
+GML `try`/`catch`, and never preceded by an `apclient_json_exists(0, key)` check on that
+same key.** `gm-apclientpp` is open source
+(`github.com/black-sliver/gm-apclientpp`, wrapping `github.com/black-sliver/apclientpp`)
+— when this class of bug shows up again, read the actual C++
+(`src/gm-apclientpp.cpp`) instead of guessing from symptoms. Relevant facts confirmed
+from that source:
+- JSON data from an event lives in a `std::vector<const json*> script_data`; proxy `0`
+  is always that event's root. `apclient_json_proxy(proxy, key)` pushes a new entry and
+  returns its index, or `-1` on failure — it never mutates or invalidates an
+  *existing* entry (so "reading other keys first corrupts handle 0" is not what's
+  happening, despite once looking that way empirically).
+- `apclient_json_number_at`, `apclient_json_proxy`, and `apclient_json_exists` **all**
+  wrap their body in their own internal C++ `try`/`catch` and, on any failure, call
+  `show_error(ex.what())` then return a sentinel (`0.`, `-1`, or `false`/`GM_FALSE`).
+  They never let a C++ exception reach GameMaker's own exception system, which is why a
+  GML-side `try`/`catch` around them can't do anything useful — there's nothing left to
+  catch by the time control returns to GML — and `show_error()` is almost certainly what
+  actually produces the generic "Unknown exception" popup, not an uncaught native throw.
+- `apclient_json_number_at(proxy, key)` does `script_data.at(int_proxy)->at(key)
+  .get<double>()`. `.get<double>()` throws if the JSON value at that key **isn't a
+  number** — e.g. a JSON `true`/`false`. **Confirmed root cause of one real bug**: the
+  apworld sent `"death_link": False` — a bare Python bool, not `int(False)` — which
+  serializes as JSON `false`, not `0`; reading it via `apclient_json_number_at` threw
+  internally (caught, `show_error`'d, returned `0.`) on every single connect regardless
+  of any mod-side code. Fixed apworld-side (`worlds/ufo50_full/__init__.py`,
+  `fill_slot_data`): `"death_link": int(False)`. **Every slot_data value read via
+  `apclient_json_number_at` must be a genuine number on the wire, not a Python bool
+  literal** — an `Options` `.value` happens to already be `int`, so this only bites a
+  bare literal like `False`/`True` written directly into `fill_slot_data`.
+- Separately (still not fully explained at the C++ level, but empirically confirmed and
+  the fix holds regardless): wrapping a scalar read in `apclient_json_exists(0, key)`
+  immediately followed by `apclient_json_number_at(0, key)` on the *same* key — the
+  pattern the now-deleted `ap_json_number_required`/`ap_json_proxy_required`
+  (`gml_Script_ap_json_number_required.gml`, removed entirely rather than kept as dead
+  code since this mod hadn't shipped a release with it yet) and their `try`/`catch`
+  replacement `ap_json_number_safe`/`ap_json_proxy_safe` (also removed) both used — makes
+  the read come back `0` regardless of the real value. This was caught by diffing against
+  the last known-working release: it reads `golds_to_goal`/`cherries_to_goal`/
+  `porgy_check_on_touch`/`porgy_radar`/`block_koala_level_randomizer`/
+  `warptank_level_randomizer` with plain, unwrapped `apclient_json_number_at(0, key)`
+  calls and works; wrapping those exact same reads is what broke them. **Never
+  reintroduce a check-then-read-the-same-key helper, and never wrap these calls in
+  `try`/`catch` either.**
+
+The missing-key-on-an-old-seed problem the deleted wrappers were trying to solve is
+still real and still unsolved: a raw call on a genuinely missing key still triggers
+`show_error()`'s "Unknown exception" popup (though it also still returns a harmless `0.`
+fallback, so the read itself doesn't corrupt anything — it's an unwanted dialog, not a
+crash). If you need to guard a new slot_data key against an old seed, don't check-then-
+read the same key and don't reach for `try`/`catch`; `apclient_json_typeof(proxy)` off a
+proxy obtained from a *different* call (not the vector-mutating pattern already ruled
+out) may be viable but is untested — verify against the real C++ source before trusting
+it.
 
 ### Testing
 
@@ -195,6 +251,26 @@ blank lines. Multiple patches per event = a YAML list under one key, applied in 
 Non-game framework files: `Archipelago_Internal_General.yaml`, `Archipelago_Internal_Saving.yaml`,
 `Archipelago_Internal_Text.yaml`, `Archipelago_Internal_Traps.yaml`, `Archipelago_Internal_DeathLink.yaml`.
 
+**Never end a `code:` block with a `//` line comment as its last line — except plain
+`append` on a bare object event.** YAML's `|-` (strip chomping) drops the block's own
+trailing newline, and `check_patches.py` only validates that `find:` text matches — it
+does **not** parse the resulting merged GML for brace balance. Whatever the loader
+splices onto the end of your code (often a closing `}`) can land on that trailing `//`
+line and get silently commented out, producing a generic, hard-to-place loader error:
+`"<script>: Unexpected end of code (expected '}' or 'end')"`. This applies to every type
+where something follows the insertion point in the merged source: `findappend(trim)`
+(original content resumes after), `findprepend` (the matched text itself resumes after),
+`findreplace(trim)` (whatever followed the replaced span resumes after), `prepend` (rest
+of the event body resumes after), and even `append` **when the target is a global
+script/function** (`gml_GlobalScript_*`, has a closing `}` after the append point) —
+only `append` on a bare object event (`gml_Object_..._Step_0` etc., a raw statement list
+with nothing after it) or a full-file override under `code/` (you control every
+surrounding line yourself) is actually safe. This bit an `Archipelago_Internal_Saving.yaml`
+edit to `gml_GlobalScript_scrSaveNotification` (a `findappendtrim` whose inserted block
+ended in three `//` lines, right before the with-block's closing `}` in vanilla). Fix:
+put trailing explanatory comments in a self-terminating `/* ... */` block instead, or
+make sure the block's last line is real code.
+
 **One key per event object.** The loader parses each yaml as a mapping, so a
 `gml_Object_..._Step_0:` key that appears twice in one file has its earlier copy
 silently dropped (last wins). When adding a patch for an event a game already hooks,
@@ -249,6 +325,40 @@ after touching any `Archipelago_*.yaml`.
   `is_location_collected(id)`, `scout_location`/`is_location_scouted` +
   `get_location_item`/`get_location_player`/`apclient_get_item_name`. `*_manual(gameID, id)`
   variants take an explicit subgame.
+- **`global.ap_*` state is lazily initialized, not Create_0-initialized** — `ap_connected`,
+  `game_goals`, `ap_cherry_earned`, `ap_locations_found`, `included_games` (and likely
+  `ap_items_received`/`ap_scouts`) are only ever assigned inside event-driven code: the
+  `ap_slot_connected` case in `oArchipelago_Step_0.gml`, or `scrLoadProfile` (patched in
+  `Archipelago_Internal_General.yaml`) which runs slightly later, after `ap_connected`
+  already flipped true. Every *existing* read of these globals happens to be reachable
+  only after a write already occurred somewhere upstream in the same frame/flow, so this
+  gap was invisible until code that runs **unconditionally every frame regardless of
+  connection state** — e.g. a persistent HUD in `oArchipelago`'s own Draw event — read one
+  cold at game boot. GameMaker's "not set before reading it" on an unset `global.*` fires
+  at the point of the raw read, even mid-expression (a `variable && globalvar` short
+  circuit only protects the second read if `variable` itself can never be true before the
+  global is set) or as a bare function argument (`is_array(global.x)` still reads `global.x`
+  first). Fix: explicit defaults for all five in `oArchipelago_Create_0.gml` (`false`/`[]`
+  of 52 `NO_GOAL`/`false`/`{}` entries, mirroring the shape `scrLoadProfile` builds). Any
+  new always-on `oArchipelago` code must either read only Create_0-initialized globals or
+  add its own default there first.
+- **`check_victory()` runs exactly once per frame, unconditionally, from
+  `oArchipelago_Step_0.gml`** (right after `apclient_poll()`, self is always
+  `oArchipelago`) — the single place that computes `goal_game_count`/`golds_have`/
+  `golds_needed`/`cherries_have`/`cherries_needed`/`victory` and fires
+  `apclient_status_update(AP_CLIENT_STATUS_GOAL)`. It used to also be called from
+  `Other_15.gml`'s `SUB_SORT_PERFORM` (self=`oLibrary`) and
+  `Archipelago_Internal_Saving.yaml`'s `scrSaveNotification` patch (self=whichever object
+  won) — three separate instances each keeping their own undeclared (non-`var`) copies of
+  the same numbers, computed at different moments. Don't add more call sites; anything
+  that needs these values (e.g. `oArchipelago_Draw_0.gml`'s golds/cherries-toward-goal
+  HUD readout, top-right of the library screen) reads them straight off `self`
+  (`golds_have`, `golds_needed`, etc.), since `self` is always `oArchipelago` and Step
+  always runs before Draw in the same frame. `golds_needed`/`cherries_needed` are
+  `min(ap_golds_to_goal/ap_cherries_to_goal, goal_game_count)` — same formula
+  `UFO50World.create_regions` (`worlds/ufo50_full/__init__.py`) uses goal-side;
+  `golds_to_goal` has `range_start = 1` so `golds_needed` should never legitimately be 0
+  once connected.
 - **Attract mode is permanently disabled**, so new patches should **not** add an
   attract-mode guard at all. `Archipelago_Internal_General.yaml` disables it game-wide via
   three patches: `gml_Object_oTitleScreens_Other_12` (`attractTimer++` → `= 0`, so the
