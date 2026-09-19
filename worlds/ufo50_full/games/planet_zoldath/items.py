@@ -52,6 +52,11 @@ ZOLDATH_ITEMS: tuple[str, ...] = (
 #   997/998/999   Gift / Gold / Cherry
 ENERGY_CUBE_COUNT = 7
 ITEM_SLOT_COUNT = 3
+# Planet Zoldath is a roguelike with nothing at all at boot otherwise -- start with a
+# couple of its own equipment items precollected, chosen at random (seeded by
+# world.random, so it's deterministic per AP seed). Equipment only -- Energy Cube/Item
+# Slot/Double Resources are stat upgrades, not carryable "items".
+STARTING_ITEM_COUNT = 2
 
 
 item_table: dict[str, ItemInfo] = {
@@ -80,7 +85,17 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 def create_items(world: "UFO50World") -> list[Item]:
     # 7 Energy Cube + 3 Item Slot + Double Resources + 8 equipment x2; framework pads
     # with resources
-    return _create_items(GAME_NAME, item_table, world)
+    items = _create_items(GAME_NAME, item_table, world)
+    # Start with STARTING_ITEM_COUNT of the equipment items precollected, picked at
+    # random from the pool just built (so the odds match ZOLDATH_ITEM_COUNT). Only
+    # equipment counts as an "item" here -- Energy Cube/Item Slot/Double Resources are
+    # excluded.
+    equipment_names = {f"{GAME_NAME} - {name}" for name in ZOLDATH_ITEMS}
+    starting_candidates = [item for item in items if item.name in equipment_names]
+    for item in world.random.sample(starting_candidates, k=min(STARTING_ITEM_COUNT, len(starting_candidates))):
+        items.remove(item)
+        world.multiworld.push_precollected(item)
+    return items
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

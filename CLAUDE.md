@@ -412,6 +412,20 @@ after touching any `Archipelago_*.yaml`.
   (`draw_set_alpha(0.55); draw_set_color(c_black); draw_rectangle(...)`) and refuse the
   action; don't play the game's "can't afford" feedback for an AP-locked option
   (see Combatants radial menu, Rock On! Island build menu).
+- **Never add a new mod-side gameplay restriction (refuse an action, block a trade,
+  disable a menu option, force an early state change) beyond what's explicitly asked
+  for — in any case.** A visual-only lock (dimmed icon, gate overlay) is the safe
+  default for representing an unfound/not-yet-unlocked item; do not also make it
+  functionally block the interaction unless the user says to. Concretely: Planet
+  Zoldath's equipment items are a softlock/BK safety net, not a real progression gate
+  (either copy of a "Progressive <Item>" unlocks it, holding both does nothing extra —
+  see items.py) — a self-initiated "AP-locked equipment trade refusal" patch that force-
+  exited the merchant dialogue mid-state-machine (`subState = 10; exit;` inside the
+  trade-confirm handler) left `o48_Game` in a state the rest of that state machine never
+  anticipated, causing an intermittent native crash on later level generation that took
+  a long debugging session to trace back to this one unrequested patch. The trade should
+  have just completed normally, same as vanilla, with only the gate icon (already added
+  for other reasons) indicating the lock visually.
 
 ### Traps (`Archipelago_Internal_Traps.yaml`)
 

@@ -29,7 +29,7 @@ VILLAGER_ROUND: dict[int, int] = {3: 1, 4: 2, 5: 4, 6: 6}
 #    11/21/41/61   <n> Villagers  (the villager check tied to round r; level_id(r, 1))
 #    1        "0=0"               (cleared a round with 0 villagers alive -- not tied
 #              to a round, so it lives in the 0..9 band level_id reserves for that)
-#   100/101/102   Tier 1 Pieces / +15 Pieces / +5 Pieces
+#   100/101/102   Tier 1 Pieces / +15 Pieces / +3 Pieces
 #   997/998/999   Gift / Gold / Cherry
 
 PYRRHIC_LOC = "0=0"     # beat a round with 0 villagers left

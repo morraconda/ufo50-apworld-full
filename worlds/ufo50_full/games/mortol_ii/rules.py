@@ -13,13 +13,13 @@ GAME_NAME = "Mortol II"
 
 # --- lives -------------------------------------------------------------------
 # A second dimension on top of the item gates. `lives(state)` = STARTING_LIVES (20) +
-# 10 per "+10 Lives" received (+ 5 per "+5 Lives", but that is filler so it never counts
+# 10 per "+10 Lives" received (+ 3 per "+3 Lives", but that is filler so it never counts
 # in logic). Each region has a hardcoded life requirement; an edge into it also needs
 # `lives(state) >= that`. With 20 base you now need 3 "+10 Lives" to reach "Ending" (50)
 # and 8 of the 10 to reach "Cherry Ending" (99).
 STARTING_LIVES = 20
 LIFE_PICKUP_ITEM = f"{GAME_NAME} - {LIFE_PICKUP}"    # "+10 Lives" (progression, x7)
-LIFE_FILLER_ITEM = f"{GAME_NAME} - {FILLER}"         # "+5 Lives" (filler, uncounted)
+LIFE_FILLER_ITEM = f"{GAME_NAME} - {FILLER}"         # "+3 Lives" (filler, uncounted)
 
 REGION_LIVES: dict[str, int] = {
     "Menu": 0,

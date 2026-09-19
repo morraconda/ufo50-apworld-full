@@ -21,10 +21,10 @@ PROG_FIRE = "Progressive Fire"                     # x1 -> FIRE_I  ; x2 -> FIRE_
 PROG_ROCK = "Progressive Rock"                     # x1 -> ROCK_I  ; x2 -> ROCK_II + WHEEL
 PROG_WEAPON_UP = "Progressive Weapon Upgrade"      # x1 -> ATK_UPGRADE_I  ; x2 -> ATK_UPGRADE_II
 PROG_THROW_UP = "Progressive Throwing Upgrade"     # x1 -> DIST_UPGRADE_I ; x2 -> DIST_UPGRADE_II
-FILLER = "+5 Starting Meat"
+FILLER = "+3 Starting Meat"
 
 # id offset layout inside Rock On! Island's 1000-id block:
-#   200        +5 Starting Meat (filler)
+#   200        +3 Starting Meat (filler)
 #   511        Chickens        512  Campfires
 #   513        Progressive Spear (x2)
 #   514        Progressive Fire (x2)

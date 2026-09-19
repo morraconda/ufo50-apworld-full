@@ -19,7 +19,7 @@ MAP_TYPES: tuple[str, ...] = ("Overworld", "Trade", "Dungeon")
 PIECES_PER_MAP: dict[str, int] = {"Overworld": 3, "Trade": 2, "Dungeon": 2}
 
 # holding this many of EVERY resource simultaneously (min across the 4 types)
-ALL_RESOURCE_THRESHOLDS: tuple[int, ...] = (1, 2, 3, 5, 10, 20, 31)
+ALL_RESOURCE_THRESHOLDS: tuple[int, ...] = (1, 3, 5, 10, 20, 31)
 # holding this many of ANY one resource (max across the 4 types)
 ANY_RESOURCE_THRESHOLDS: tuple[int, ...] = (3, 5, 10, 20, 30, 40, 50, 63)
 
@@ -31,8 +31,8 @@ ANY_RESOURCE_THRESHOLDS: tuple[int, ...] = (3, 5, 10, 20, 30, 40, 50, 63)
 #              each pickup sends only the next uncollected piece of that type (Zoldath is
 #              a roguelike: the map regenerates each run, so N runs collect all N pieces
 #              of that type).
-#    28..34    <n> of All Resources (min(resources[0..3]) >= n; ALL_RESOURCE_THRESHOLDS)
-#    35..42    <n> of Any Resource (max(resources[0..3]) >= n; ANY_RESOURCE_THRESHOLDS)
+#    28..33    <n> of All Resources (min(resources[0..3]) >= n; ALL_RESOURCE_THRESHOLDS)
+#    34..41    <n> of Any Resource (max(resources[0..3]) >= n; ANY_RESOURCE_THRESHOLDS)
 #              -- resources fluctuate (spent on trades/items), so these are a ladder:
 #              once reached they stay collected, same as the map/random checks.
 #   200        +1 Starting Resource (filler)
@@ -83,7 +83,6 @@ location_table: dict[str, LocationInfo] = _build_location_table()
 # the first ten random checks and the lowest resource-ladder rungs need nothing
 # (rules.py gates the rest by tier)
 sphere_1_locs: list[str] = ([f"Random Check {n}" for n in range(1, 9)]
-                            + [all_resource_name(1)]
                             + [any_resource_name(n) for n in (3, 5, 10)])
 
 

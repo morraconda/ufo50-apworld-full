@@ -26,7 +26,7 @@ GAME_NAME = "Rakshasa"
 #    11..31   Level <n> Miniboss   (stage n mid-boss defeated; level_id(n, 1))
 #   201..205  <n>0000 Points       (global.g24_score reached; not per-stage, so kept
 #             outside the level_id range: offset = 200 + (score // 10000))
-#   200      500 Points (filler)
+#   200      Encouragement (filler)
 #   511/512/513 Fire Weapon / Spreadshot / Homing Shot
 #   997/998/999   Gift / Gold / Cherry
 

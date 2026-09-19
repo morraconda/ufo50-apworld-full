@@ -26,7 +26,7 @@ class AllGamesGenerationTest(UFO50GenTestBase):
         self.assert_beatable_after_fill(multiworld)
 
     def test_all_goals(self) -> None:
-        self._check({"games": ALL_GAMES, "starting_game_amount": 1})
+        self._check({"games": ALL_GAMES, "starting_game_amount": 5})
 
     def test_all_games_all_starting(self) -> None:
         self._check({"games": ALL_GAMES, "starting_game_amount": 50})

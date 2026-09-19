@@ -122,7 +122,7 @@ SHRINK_REGION_IDS: dict[str, int] = {
 SHRINK_REGION_NAMES: list[str] = list(SHRINK_REGION_IDS)
 
 
-FILLER = "+5 Shinies"
+FILLER = "+3 Shinies"
 
 
 def _upgrade_class(name: str) -> IC:
@@ -163,7 +163,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 def create_items(world: "UFO50World") -> list[Item]:
     # 14 progressive-upgrade copies + 9 single upgrades + Mittens' Gate + Launch Codes
-    # into the pool; the framework pads the rest with "+5 Shinies" filler.
+    # into the pool; the framework pads the rest with "+3 Shinies" filler.
     #
     # TEMP: start with every shrink-region gate precollected (all regions unlocked from
     # the boot). Drop the precollect + the quantity_overrides to shuffle them back in.

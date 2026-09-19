@@ -11,11 +11,11 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Waldorf's Journey"
-NUM_CHESTS = 5   # cumulative across runs -- 3 chests spawn per journey (2 procedural + 1 in the castle)
+NUM_CHESTS = 6   # cumulative across runs -- 3 chests spawn per journey (2 procedural + 1 in the castle)
 NUM_SIGNS = 10   # cumulative sign reads (the game tracks signCount up to 22)
 
 # id offset layout inside Waldorf's Journey's 1000-id block:
-#     1..5     Chest <n>   (opened your n-th chest, counted across all runs)
+#     1..6     Chest <n>   (opened your n-th chest, counted across all runs)
 #    11..20    Sign <n>    (read your n-th sign, counted across all runs)
 #   101..106   items (see items.py)
 #   200        Shell (filler)
@@ -41,8 +41,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start
-sphere_1_locs: list[str] = list(location_table.keys())
+# sphere 1: what needs no Max Charge / Max Fish upgrade (see rules.py tiers)
+sphere_1_locs: list[str] = ["Chest 1", "Chest 2", "Sign 1", "Sign 2", "Sign 3", "Sign 4"]
 
 
 def get_locations() -> dict[str, int]:

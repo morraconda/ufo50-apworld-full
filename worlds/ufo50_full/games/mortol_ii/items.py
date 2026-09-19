@@ -31,12 +31,12 @@ SWITCH_COLORS = ("Blue", "Green", "Yellow")
 # The "lives" resource (rules.py: each region has a hardcoded life requirement, from a
 # STARTING_LIVES 20 budget + these). "+10 Lives" is progression (state.count only sees
 # advancement items) -- 10 of them, worth 10 each, is enough for every region incl.
-# "Cherry Ending" (99). "+5 Lives" is the filler (worth 5 each in-game via the mod;
+# "Cherry Ending" (99). "+3 Lives" is the filler (worth 3 each in-game via the mod;
 # framework-padding copies are plain filler so they do not count toward logic).
 LIFE_PICKUP = "+10 Lives"
 LIFE_PICKUP_COUNT = 10
 LIFE_PICKUP_VALUE = 10
-FILLER = "+5 Lives"
+FILLER = "+3 Lives"
 FILLER_VALUE = 5
 
 # id offset layout inside Mortol II's 1000-id block:
@@ -45,7 +45,7 @@ FILLER_VALUE = 5
 #              "Hearts Upper Doors" (covers door numbers 1-4, 112-114 unused), 115 is
 #              "Hearts Lower Doors" (covers door numbers 5-8, 116-118 unused)
 #   141..143   Blue / Green / Yellow Switch Block
-#   200        +5 Lives (filler)      201  +10 Lives (x10, progression -- lives resource)
+#   200        +3 Lives (filler)      201  +10 Lives (x10, progression -- lives resource)
 
 
 def _build_item_table() -> dict[str, ItemInfo]:

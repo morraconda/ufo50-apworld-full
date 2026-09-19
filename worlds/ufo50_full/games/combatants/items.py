@@ -15,8 +15,8 @@ GAME_NAME = "Combatants"
 # (o25__Game, `mapComplete[0..11]`). Every mission starts unlocked, but the nine
 # command-menu abilities are AP items -- the mod greys out and refuses to fire any
 # ability the player has not received. Seven are advancement (mission gates); the two
-# extras (Soldier Instinct, Surrender) are useful-only. Filler is "+20% Movement Speed"
-# (additive: the player ant's walkSpeed becomes 0.4 * (1 + 0.2 * count)), so Combatants
+# extras (Soldier Instinct, Surrender) are useful-only. Filler is "+10% Movement Speed"
+# (additive: the player ant's walkSpeed becomes 0.4 * (1 + 0.1 * count)), so Combatants
 # is a "good filler" game.
 #
 # Item offset == the in-game MENU_* radial-menu id it unlocks:
@@ -29,7 +29,7 @@ PROGRESSION_ABILITIES: tuple[str, ...] = (
 USEFUL_ABILITIES: tuple[str, ...] = ("Soldier Instinct", "Surrender")
 ABILITIES: tuple[str, ...] = (*PROGRESSION_ABILITIES, *USEFUL_ABILITIES)
 
-FILLER = "+20% Movement Speed"
+FILLER = "+10% Movement Speed"
 
 _ABILITY_ID: dict[str, int] = {
     "Follow": 101, "Hold": 102, "Instinct": 103, "Soldier Follow": 104,

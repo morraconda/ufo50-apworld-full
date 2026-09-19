@@ -76,7 +76,7 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
             rule(map_piece_name(mt, p), map_rule[mt])
 
     # Resource ladders, by tier.
-    all_resource_tier = {1: tier1, 2: tier2, 3: tier2, 5: tier3, 10: tier3, 20: tier4, 31: tier5}
+    all_resource_tier = {1: tier2, 3: tier2, 5: tier3, 10: tier3, 20: tier4, 31: tier5}
     for n in ALL_RESOURCE_THRESHOLDS:
         rule(all_resource_name(n), all_resource_tier[n])
 

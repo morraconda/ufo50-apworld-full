@@ -13,13 +13,13 @@ GAME_NAME = "Rakshasa"
 
 # Rakshasa (o24_*) is a run-based action-platformer of three stages, each with a
 # mid-boss. The three collectible weapon types are AP items -- without the unlock, the
-# in-world weapon pickup gives 500 points instead (the mod). Filler is "500 Points"
-# (a weak reward -> "bad filler" game).
+# in-world weapon pickup gives 500 points instead (the mod). Filler is the do-nothing
+# Encouragement (Rakshasa is in `bad_filler_games`).
 # o24_Item WEAPON num 0/1/2 -> weaponCurr 0/1/2 in o24_Player_Other_10's switch:
 # 0 = o24_Fireball + soundShotFire* (Fire), 1 = o24_Spreadshot x5 arc (Spreadshot),
 # 2 = o24_Homeshot + soundShotHoming* (Homing). Order here maps i -> id 511/512/513.
 WEAPONS: tuple[str, ...] = ("Fire Weapon", "Spreadshot", "Homing Shot")
-FILLER = "500 Points"
+FILLER = "Encouragement"
 
 
 item_table: dict[str, ItemInfo] = {

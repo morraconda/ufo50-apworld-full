@@ -15,8 +15,10 @@ GAME_NAME = "Waldorf's Journey"
 # BALLOON=3, PROPELLER=4, BINOCULARS=5, CANNED_FISH=6). The mod zeroes the vanilla
 # loadout and reads get_item_count(101..106); these six go in the multiworld pool
 # (one each), so Waldorf builds its toolkit over the seed rather than starting with
-# everything. Every real check is sphere 1, but Cherry needs any 2 of these six
-# (see rules.py), so they are progression -- still flagged useful, they widen your kit.
+# everything. They no longer gate any logic (see rules.py), so they are just useful.
+# 107/108 are the progressive meter upgrades: each copy is +20% (20% is the base), so
+# vanilla is 4 of each (100%); 6 of each = 140%. Max Charge scales the max jump-charge power; Max Fish scales the
+# flap-energy (fish) cap. Gating is in rules.py.
 STARTING_ITEMS: dict[str, int] = {
     "Beach Ball": 101,
     "Harpoon": 102,
@@ -25,11 +27,16 @@ STARTING_ITEMS: dict[str, int] = {
     "Binoculars": 105,
     "Canned Fish": 106,
 }
+MAX_CHARGE = "Progressive Max Charge"
+MAX_FISH = "Progressive Max Fish"
+NUM_UPGRADES = 6   # copies of each of the two progressive items
 FILLER = "Shell"
 
 
 item_table: dict[str, ItemInfo] = {
-    **{name: ItemInfo(offset, IC.progression | IC.useful, 1) for name, offset in STARTING_ITEMS.items()},
+    **{name: ItemInfo(offset, IC.useful, 1) for name, offset in STARTING_ITEMS.items()},
+    MAX_CHARGE: ItemInfo(107, IC.progression, NUM_UPGRADES),
+    MAX_FISH: ItemInfo(108, IC.progression, NUM_UPGRADES),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -49,7 +56,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # one of each of the six items into the pool; the framework pads with Shell filler
+    # one of each of the six items + 6 of each progressive item into the pool; the framework pads with Shell filler
     return _create_items(GAME_NAME, item_table, world)
 
 

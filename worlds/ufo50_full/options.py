@@ -9,7 +9,7 @@ from .death_link import DEATH_LINK_RULES
 
 class Games(OptionSet):
     """
-    Choose which games you want to play. To goal, by default you must Gold Disk all of them.
+    Choose which games you want to play. To goal, by default you must Gold Disk all of them. (can be changed)
 
     Fully Implemented: (and imo really cool implementations)
         Barbuta, Magic Garden, Velgress, Campanella, Porgy, Party House, Vainger, Campanella 2, Night Manor, Combatants
@@ -20,7 +20,7 @@ class Games(OptionSet):
 
     Somewhat Implemented: (there exists logic, but not much)
         Ninpek, Bushido Ball, Caramel Caramel, Hot Foot, Pingolf, Fist Hell, Overbold, Hyper Contender,
-        Rakshasa, Star Waspir, Elfazar's Hat, Mini & Max, Seaside Drive, Campanella 3,
+        Rakshasa, Star Waspir, Elfazar's Hat, Mini & Max, Seaside Drive, Campanella 3
 
     Placeholder Implemented: (All checks are sphere 1, game is not randomised)
         Bug Hunter, Paint Chase, Avianos, Mooncat, Camouflage, Golfaria, The Big Bell Race, Onion Delivery,
@@ -38,7 +38,7 @@ _CHERRY_OFF_BY_DEFAULT: set[str] = {
 
 class StartingGameAmount(Range):
     """
-    Choose how many games to have unlocked at the start.
+    How many games to have unlocked at the start.
     """
     internal_name = "starting_game_amount"
     display_name = "Starting Game Amount"
@@ -73,9 +73,10 @@ class GoldsToGoal(Range):
 class CherriesToGoal(Range):
     """
     How many Cherry Disks you need to win. Caps to Cherry Disking all selected games.
+    These are in addition to the Required Gold Disks condition, not instead of.
     """
     internal_name = "cherries_to_goal"
-    display_name = "Required Cherry Disks To Win"
+    display_name = "Required Cherry Disks to Win"
     range_start = 0
     range_end = 50
     default = 0
@@ -85,16 +86,15 @@ class DeferSphere1Games(DefaultOnToggle):
     """
     If enabled, all games with no logic will have their checks be artificially out of logic behind 3 checks.
     You can still get all checks as soon as you receive the cartridge, they'll just be out of logic.
-    This protects against having important early items being locked behind eg. Pilot Quest Cherry.
-    If disabled, these games are fully in-logic as soon as you receive the cartridge.
+    This makes it less likely important early items will be locked behind eg. Pilot Quest Cherry.
+    If disabled, these games are fully in-logic if you have the cartridge.
     """
     internal_name = "defer_sphere_1_games"
     display_name = "Defer No Logic Games"
 
-class PilotQuestStart(Toggle):
+class PilotQuestStart(DefaultOnToggle):
     """
     If enabled, Pilot Quest is guaranteed to be one of your starting cartridges.
-    Has no effect if Pilot Quest is not in "Games".
     """
     internal_name = "pilot_quest_start"
     display_name = "Pilot Quest Start"
@@ -188,13 +188,13 @@ class WarptankLevelRandomizer(Toggle):
 class TrapPercentage(Range):
     """
     Replaces this percentage of the filler items in your pool with traps.
-    The only trap right now is Controls Swap, which swaps the A and B buttons for 30 seconds.
+    The only current trap is Controls Swap, which swaps the A and B buttons for 30 seconds.
     """
     internal_name = "trap_percentage"
     display_name = "Trap Percentage"
     range_start = 0
     range_end = 100
-    default = 20
+    default = 0
 
 
 @dataclass
