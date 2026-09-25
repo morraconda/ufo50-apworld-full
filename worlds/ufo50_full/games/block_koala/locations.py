@@ -15,6 +15,7 @@ GAME_NAME = "Block Koala"
 # Block Koala's story map is 50 levels split across 6 zones by the star gates
 # (rules.py). id offset layout inside Block Koala's 1000-id block, via
 # game_helpers.level_id (offset = level * 10 + slot):
+#    7        Progressive Move Speed (filler item, see items.py)
 #    10..500  Level <n>   (level_id(n, 0))
 #   101       Koala Fact (filler item, see items.py)
 #   997/998/999   Gift / Gold / Cherry

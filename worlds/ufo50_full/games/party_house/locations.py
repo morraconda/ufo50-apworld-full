@@ -18,43 +18,39 @@ SCENARIOS: list[str] = [
     "Alien Invitation",
     "High or Low",
     "Best Wishes",
-    "Money Management",   # in-game scenario[3] (menu "4 MONEY MANAGEMENT")
-    "A Magical Night",    # in-game scenario[4] (menu "5 A MAGICAL NIGHT")
+    "Money Management",
+    "A Magical Night",
     "Random Scenario",
 ]
 FIXED_SCENARIOS: list[str] = SCENARIOS[:5]
 
 # Popularity + House Space checks are GLOBAL -- one set for the whole game, reachable
 # in any scenario, awarded once. Popularity: every value 1..20, then every 2 up to 80.
-# House Space: every value 6..33, plus the max (34) as its own check named "UFO"; the
-# former "5 House Space" slot (id 805) is now the "1 Cash" check.
+# House Space: every value 5..33, plus the max (34) as its own check named "UFO". The
+# mod starts a run at 4 house space, so even 5 has to be bought.
 POPULARITY_VALUES: list[int] = list(range(1, 21)) + list(range(22, 81, 2))
-HOUSE_SPACE_VALUES: list[int] = list(range(6, 34))
+HOUSE_SPACE_VALUES: list[int] = list(range(5, 34))
 HOUSE_SPACE_MAX: int = 34
 HOUSE_SPACE_MAX_NAME: str = "UFO"
-CASH_OFFSET: int = 805           # "1 Cash" (reuses the old "5 House Space" id)
 POP_OFFSET_BASE: int = 700       # "<n> Popularity"  -> POP_OFFSET_BASE + n  (701..780)
-SPACE_OFFSET_BASE: int = 800     # "<n> House Space" -> SPACE_OFFSET_BASE + n (806..833; 834 = "UFO")
+SPACE_OFFSET_BASE: int = 800     # "<n> House Space" -> SPACE_OFFSET_BASE + n (805..833; 834 = "UFO")
 GLOBAL_REGION = "The Party"
 
 # Star Guests + Clear are per-scenario.
 STAR_GUEST_THRESHOLDS: list[int] = [1, 2, 3, 4, 5]
-# "Clear" = seat four star guests (matches the mod's win requirement, PRESTIGE_GOAL).
-CLEAR_STAR_GUESTS: int = 4
-
-# Random Scenario only: winning N times in a row (a "streak") raises the mod's
-# PRESTIGE_GOAL for that scenario by 1 per consecutive win, capped at +4 -- streak wins
-# 2/3/4/5 need 5/6/7/8 star guests seated (streak win 1 is just Clear, at
-# CLEAR_STAR_GUESTS). The world doesn't model play skill/luck, so the streak locations'
-# real logic requirement is simply being able to assemble that many star guests in
-# Random Scenario, same as the Star Guests ladder -- reuses the STAR_GUESTS metric.
-RANDOM_STREAK_THRESHOLDS: dict[int, int] = {2: 5, 3: 6, 4: 7, 5: 8}  # streak win # -> star guests needed
+CLEAR_STAR_GUESTS: int = 6
+# streak win # -> star guests. Entry 1 is a single Random win, which has no location of
+# its own (that's the scenario's Clear); it carries the floor every Random star-guest
+# check needs, since Random deals only a random couple of the 9 prestige types into its
+# store. 2..5 are both the seatable threshold their location asks for and, in
+# rules.create_rules, how many of the 9 you must hold to sustain that streak.
+RANDOM_STREAK_THRESHOLDS: dict[int, int] = {1: 3, 2: 5, 3: 6, 4: 7, 5: 8}
+STREAK_LOCATION_WINS: tuple[int, ...] = (2, 3, 4, 5)
 
 # Metric names used by rules.scenario_outcome.
 POPULARITY = "popularity"
 HOUSE_SPACE = "house_space"
 STAR_GUESTS = "star_guests"
-CASH = "cash"
 
 
 # Per-scenario id layout via the standard game_helpers.level_id (level * 10 + slot;
@@ -62,7 +58,7 @@ CASH = "cash"
 # its streak locations; slots 6..9 are unused by every other scenario.
 #   slot 0     <scenario>          (won the scenario)
 #   slots 1..5 <n> Star Guests     (STAR_GUEST_THRESHOLDS in order)
-#   slots 6..9 Streak 2/3/4/5      (Random Scenario only, RANDOM_STREAK_THRESHOLDS in order)
+#   slots 6..9 Streak 2/3/4/5      (Random Scenario only, STREAK_LOCATION_WINS in order)
 _CLEAR_SLOT = 0
 _STAR_GUEST_SLOT0 = 1
 _STREAK_SLOT0 = 6
@@ -81,7 +77,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
     for n in POPULARITY_VALUES:
         table[f"{n} Popularity"] = LocationInfo(
             POP_OFFSET_BASE + n, GLOBAL_REGION, POPULARITY, n)
-    table["1 Cash"] = LocationInfo(CASH_OFFSET, GLOBAL_REGION, CASH, 1)
     for n in HOUSE_SPACE_VALUES:
         table[f"{n} House Space"] = LocationInfo(
             SPACE_OFFSET_BASE + n, GLOBAL_REGION, HOUSE_SPACE, n)
@@ -96,9 +91,10 @@ def _build_location_table() -> dict[str, LocationInfo]:
             table[f"{scenario} - {n} Star Guests"] = LocationInfo(
                 level_id(level, _STAR_GUEST_SLOT0 + i), scenario, STAR_GUESTS, n)
         if scenario == SCENARIOS[-1]:  # Random Scenario
-            for i, (streak, threshold) in enumerate(RANDOM_STREAK_THRESHOLDS.items()):
+            for i, streak in enumerate(STREAK_LOCATION_WINS):
                 table[f"{scenario} - Streak {streak}"] = LocationInfo(
-                    level_id(level, _STREAK_SLOT0 + i), scenario, STAR_GUESTS, threshold)
+                    level_id(level, _STREAK_SLOT0 + i), scenario, STAR_GUESTS,
+                    RANDOM_STREAK_THRESHOLDS[streak])
     # goal locations last so create_locations' Cherry/Gold handling can break out.
     # (metric/threshold here are unused -- rules.py special-cases these three.)
     table["Gift"] = LocationInfo(997, SCENARIOS[0], STAR_GUESTS, CLEAR_STAR_GUESTS)
@@ -108,13 +104,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 
 location_table: dict[str, LocationInfo] = _build_location_table()
-
-# Popularity / Cash / house-space checks now carry rules (rules._popularity_reachable,
-# rules.cash, rules._max_house_space), as do the Star Guests / Clear locations. A fresh
-# run (base cash 2 -> popularity ceiling 2*2=4, max_cash 2, days 5 -> days+1 clamp of 6)
-# reaches 6 house space, so only these are sphere 1.
-sphere_1_locs: list[str] = ([f"{n} Popularity" for n in POPULARITY_VALUES[:4]]
-                            + ["1 Cash", f"{HOUSE_SPACE_VALUES[0]} House Space"])
 
 
 def get_locations() -> dict[str, int]:

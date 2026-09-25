@@ -80,9 +80,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# the first ten random checks and the lowest resource-ladder rungs need nothing
-# (rules.py gates the rest by tier)
-sphere_1_locs: list[str] = ([f"Random Check {n}" for n in range(1, 9)]
+# rules.py tier 1: the first five random checks and the lowest resource-ladder rungs
+sphere_1_locs: list[str] = ([f"Random Check {n}" for n in range(1, 6)]
                             + [any_resource_name(n) for n in (3, 5, 10)])
 
 

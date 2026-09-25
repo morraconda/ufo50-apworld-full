@@ -12,15 +12,15 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Magic Garden"
 
-OPPY_THRESHOLDS = (15, 30, 50, 100, 150)
-SCORE_THRESHOLDS = (1000, 5000, 10000)
+OPPY_THRESHOLDS = tuple(range(10, 201, 10))
+SCORE_THRESHOLDS = (1000, 2000, 3000, 4000, 5000, 10000, 15000, 20000)
 
 # id offset layout inside Magic Garden's 1000-id block (thresholds hit within a
 # single run -- the mod sends the location the moment savedTotal/myScore/multiplier
 # crosses the value):
-#    1..5   <n> Oppies Saved   (15 / 30 / 50 / 100 / 150 oppies dropped on stars)
-#   11..13  <n> Score          (1000 / 5000 / 10000 points)
+#   11..18  <n> Score          (1000 / 2000 / 3000 / 4000 / 5000 / 10000 / 15000 / 20000 points)
 #   21      8x Multiplier      (reach an 8x score multiplier during an eating frenzy)
+#   31..50  <n> Oppies Saved   (10 / 20 / ... / 200 oppies dropped on stars; 30 + n / 10)
 #   997/998/999   Gift / Gold / Cherry
 
 
@@ -30,8 +30,8 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, "LocationInfo"]:
     table: dict[str, LocationInfo] = {}
-    for offset, n in enumerate(OPPY_THRESHOLDS, start=1):
-        table[f"{n} Oppies Saved"] = LocationInfo(offset)
+    for n in OPPY_THRESHOLDS:
+        table[f"{n} Oppies Saved"] = LocationInfo(30 + n // 10)
     for offset, n in enumerate(SCORE_THRESHOLDS, start=11):
         table[f"{n} Score"] = LocationInfo(offset)
     table["8x Multiplier"] = LocationInfo(21)
@@ -45,7 +45,7 @@ def _build_location_table() -> dict[str, "LocationInfo"]:
 location_table: dict[str, LocationInfo] = _build_location_table()
 
 # reachable from the start with no items
-sphere_1_locs: list[str] = ["Gift", "15 Oppies Saved"]
+sphere_1_locs: list[str] = ["Gift", "10 Oppies Saved"]
 
 
 def get_locations() -> dict[str, int]:

@@ -12,9 +12,9 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Camouflage"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the level / collectible locations
-regions: list[str] = ["Menu", "The Jungle"]
+# only the finale (Sky Temple, Gold) is beatable from the start; every other check
+# (The Jungle) needs the Camouflage item
+regions: list[str] = ["Menu", "The Jungle", "Sky Temple"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

@@ -63,7 +63,9 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
         return (_health(state, player) >= 8 and _slots(state, player) >= 2
                 and _items(state, player) >= len(ZOLDATH_ITEMS))
 
-    # Random Checks by tier: 1-5 free (sphere 1), 6-10 tier2.
+    # Random Checks by tier: 1-5 tier1, 6-10 tier2.
+    for n in range(1, 6):
+        rule(f"Random Check {n}", tier1)
     for n in range(6, NUM_RANDOM_CHECKS + 1):
         rule(f"Random Check {n}", tier2)
     rule("Gift", tier2)

@@ -13,10 +13,12 @@ if TYPE_CHECKING:
 GAME_NAME = "Waldorf's Journey"
 NUM_CHESTS = 6   # cumulative across runs -- 3 chests spawn per journey (2 procedural + 1 in the castle)
 NUM_SIGNS = 10   # cumulative sign reads (the game tracks signCount up to 22)
+NUM_VANES = 10   # cumulative weather vane spins
 
 # id offset layout inside Waldorf's Journey's 1000-id block:
 #     1..6     Chest <n>   (opened your n-th chest, counted across all runs)
 #    11..20    Sign <n>    (read your n-th sign, counted across all runs)
+#    21..30    Weather Vane <n>  (spun your n-th weather vane, counted across all runs)
 #   101..106   items (see items.py)
 #   200        Shell (filler)
 #   997/998/999   Gift / Gold / Cherry
@@ -33,6 +35,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
         table[f"Chest {n}"] = LocationInfo(n, "Island")
     for n in range(1, NUM_SIGNS + 1):
         table[f"Sign {n}"] = LocationInfo(10 + n, "Island")
+    for n in range(1, NUM_VANES + 1):
+        table[f"Weather Vane {n}"] = LocationInfo(20 + n, "Island")
     table["Gift"] = LocationInfo(997, "Island")
     table["Gold"] = LocationInfo(998, "Island")
     table["Cherry"] = LocationInfo(999, "Island")
@@ -41,8 +45,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# sphere 1: what needs no Max Charge / Max Fish upgrade (see rules.py tiers)
-sphere_1_locs: list[str] = ["Chest 1", "Chest 2", "Sign 1", "Sign 2", "Sign 3", "Sign 4"]
+# sphere 1: rules.py tier 1 (no upgrades needed)
+sphere_1_locs: list[str] = [*(f"Sign {n}" for n in range(1, 4)), *(f"Weather Vane {n}" for n in range(1, 4))]
 
 
 def get_locations() -> dict[str, int]:
@@ -53,6 +57,7 @@ def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Chests"] = {f"{GAME_NAME} - Chest {n}" for n in range(1, NUM_CHESTS + 1)}
     groups[f"{GAME_NAME} - Signs"] = {f"{GAME_NAME} - Sign {n}" for n in range(1, NUM_SIGNS + 1)}
+    groups[f"{GAME_NAME} - Weather Vanes"] = {f"{GAME_NAME} - Weather Vane {n}" for n in range(1, NUM_VANES + 1)}
     return groups
 
 

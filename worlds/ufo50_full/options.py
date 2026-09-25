@@ -12,28 +12,28 @@ class Games(OptionSet):
     Choose which games you want to play. To goal, by default you must Gold Disk all of them. (can be changed)
 
     Fully Implemented: (and imo really cool implementations)
-        Barbuta, Magic Garden, Velgress, Campanella, Porgy, Party House, Vainger, Campanella 2, Night Manor, Combatants
+        Barbuta, Magic Garden, Velgress, Campanella, Waldorf's Journey, Porgy, Party House, Vainger,
+        Mortol II, Campanella 2, Night Manor, Pilot Quest, Combatants
 
     Fully Implemented:
-        Mortol, Planet Zoldath, Attactics, Devilition, Kick Club, Block Koala, Warptank, Waldorf's Journey,
-        Rail Heist, Rock On! Island, Mortol II, Quibble Race
+        Bug Hunter, Mortol, Planet Zoldath, Attactics, Devilition, Kick Club, Block Koala, Warptank,
+        Onion Delivery, Rail Heist, Rock On! Island, Quibble Race
 
     Somewhat Implemented: (there exists logic, but not much)
-        Ninpek, Bushido Ball, Caramel Caramel, Hot Foot, Pingolf, Fist Hell, Overbold, Hyper Contender,
-        Rakshasa, Star Waspir, Elfazar's Hat, Mini & Max, Seaside Drive, Campanella 3
+        Ninpek, Paint Chase, Avianos, Bushido Ball, Camouflage, Caramel Caramel, Hot Foot, Pingolf, Fist Hell,
+        Overbold, Hyper Contender, Rakshasa, Star Waspir, Elfazar's Hat, Mini & Max, Seaside Drive, Campanella 3
 
     Placeholder Implemented: (All checks are sphere 1, game is not randomised)
-        Bug Hunter, Paint Chase, Avianos, Mooncat, Camouflage, Golfaria, The Big Bell Race, Onion Delivery,
-        Divers, Valbrace, Grimstone, Lords of Diskonia, Pilot Quest, Cyber Owls
+        Mooncat, Golfaria, The Big Bell Race, Divers, Valbrace, Grimstone, Lords of Diskonia, Cyber Owls
     """
     internal_name = "games"
     display_name = "Games"
     valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
-    default = ["Velgress", "Campanella", "Party House", "Night Manor"]
+    default = ["Velgress", "Waldorf's Journey", "Party House", "Night Manor"]
 
 _CHERRY_OFF_BY_DEFAULT: set[str] = {
-    "Barbuta", "Campanella", "Golfaria", "Block Koala", "Camouflage", "Porgy", "Vainger",
-    "Rock On! Island", "Fist Hell", "Pilot Quest", "Combatants", "Cyber Owls",
+    "Barbuta", "Block Koala", "Campanella", "Golfaria", "Camouflage", "Porgy", "Vainger",
+    "Rock On! Island", "Fist Hell", "Combatants", "Cyber Owls",
 }
 
 class StartingGameAmount(Range):
@@ -44,7 +44,7 @@ class StartingGameAmount(Range):
     display_name = "Starting Game Amount"
     range_start = 1
     range_end = 50
-    default = 3
+    default = 50
 
 class CherryEnabledGames(OptionSet):
     """
@@ -159,7 +159,7 @@ class NMEarlyPin(DefaultOnToggle):
 
 
 # Block Koala
-class BlockKoalaLevelRandomizer(Toggle):
+class BlockKoalaLevelRandomizer(DefaultOnToggle):
     """
     Randomize the levels in Block Koala. Does not affect logic.
     """
@@ -176,7 +176,7 @@ class BlockKoalaEarlyStartGate(DefaultOnToggle):
 
 
 # Warptank
-class WarptankLevelRandomizer(Toggle):
+class WarptankLevelRandomizer(DefaultOnToggle):
     """
     Randomize which sector each capsule pad warps to. Does not affect logic.
     """

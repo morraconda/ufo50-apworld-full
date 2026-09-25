@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Avianos"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the unit locations
+# the required Menu region plus one region holding every location; gating is
+# per-location in rules.py
 regions: list[str] = ["Menu", "The War"]
 
 

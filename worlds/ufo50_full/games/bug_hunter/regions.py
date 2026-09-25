@@ -12,9 +12,10 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Bug Hunter"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the job locations
-regions: list[str] = ["Menu", "The Hunt"]
+# Warmup (job 1's 2..6 kills) is free; Job 1 (the rest of job 1, Gift) needs the hand
+# unlocked; The Hunt (every later job, Gold, Cherry) also needs 2 of the 3 shop slots;
+# Energy's checks each need a high enough energy cap -- see rules.py
+regions: list[str] = ["Menu", "Warmup", "Job 1", "The Hunt", "Energy"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

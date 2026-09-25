@@ -11,15 +11,25 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Onion Delivery"
 
-# Onion Delivery is a seven-day week (o32_Mas.dayNumber 0..6); every day is reachable from the start.
-# Nothing here goes in the multiworld pool from this game -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
-FILLER = "Encouragement"
+# Onion Delivery is a seven-day week (o32_Mas.dayNumber 0..6). Two restrictive items
+# go in the pool, and the mod reads them live every frame (has_item):
+#   101 Throttle  -- without it the gas button does nothing; the van can only reverse.
+#   102 Handbrake -- without it gas+brake while turning never starts a drift
+#                    (so no drift / spin attack); reversing is unaffected.
+#   103 Progressive Top Speed -- top speed starts at 3 of the 7 speedometer bars; each
+#                    copy is +1 bar (4 copies = vanilla, the 5th goes past it). Extra
+#                    copies are also this game's filler.
+# Gating is in rules.py.
+THROTTLE = "Throttle"
+HANDBRAKE = "Handbrake"
+TOP_SPEED = "Progressive Top Speed"
+NUM_TOP_SPEED = 5
 
 
 item_table: dict[str, ItemInfo] = {
-    FILLER: ItemInfo(200, IC.filler, 0),
+    THROTTLE: ItemInfo(101, IC.progression, 1),
+    HANDBRAKE: ItemInfo(102, IC.progression, 1),
+    TOP_SPEED: ItemInfo(103, IC.progression, NUM_TOP_SPEED),
 }
 
 
@@ -36,9 +46,10 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
+    # Throttle + Handbrake + 5 Progressive Top Speed into the pool; the framework pads
+    # the rest with more Progressive Top Speed (as filler)
     return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return f"{GAME_NAME} - {FILLER}"
+    return f"{GAME_NAME} - {TOP_SPEED}"

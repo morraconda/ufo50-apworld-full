@@ -28,9 +28,19 @@ UNIT_NAMES: tuple[str, ...] = (
 )
 NUM_UNITS = len(UNIT_NAMES)
 
+# resource-count checks: sent on holding at least that many of a resource
+RESOURCE_NAMES: tuple[str, ...] = (
+    "9 Bones",
+    "9 Workers",
+    "50 Seeds",
+    "99 Seeds",
+)
+
 # id offset layout inside Avianos's 1000-id block:
 #     1..8   <unit name>   (offset = play-order position)
-#   200      Encouragement (filler, never granted)
+#     9..12  9 Bones / 9 Workers / 50 Seeds / 99 Seeds
+#     1..3   items: Blessings / Rexadon / Trilock
+#   201..203 items: +3 Starting Seeds / +1 Starting Bone / +1 Starting Worker
 #   997/998/999   Gift / Gold / Cherry
 
 
@@ -43,6 +53,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
     for n, name in enumerate(UNIT_NAMES, start=1):
         table[name] = LocationInfo(n, REGION)
+    for n, name in enumerate(RESOURCE_NAMES, start=NUM_UNITS + 1):
+        table[name] = LocationInfo(n, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, REGION)
     table["Cherry"] = LocationInfo(999, REGION)
@@ -51,8 +63,8 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# tier 1 in rules.py: Hatchling and the resource-count checks
+sphere_1_locs: list[str] = ["Hatchling", *RESOURCE_NAMES]
 
 
 def get_locations() -> dict[str, int]:
@@ -62,6 +74,7 @@ def get_locations() -> dict[str, int]:
 def get_location_groups() -> dict[str, set[str]]:
     groups = game_location_groups(GAME_NAME, location_table)
     groups[f"{GAME_NAME} - Scenarios"] = {f"{GAME_NAME} - {name}" for name in UNIT_NAMES}
+    groups[f"{GAME_NAME} - Resources"] = {f"{GAME_NAME} - {name}" for name in RESOURCE_NAMES}
     return groups
 
 

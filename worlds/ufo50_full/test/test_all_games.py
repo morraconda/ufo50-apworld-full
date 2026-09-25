@@ -163,10 +163,13 @@ class OptionMatrixTest(UFO50GenTestBase):
         self.assert_beatable_after_fill(multiworld)
 
     def test_defer_sphere_1_games_on_mixed(self) -> None:
+        # seed-sensitive: with one starting game, a seed that starts on Valbrace or
+        # Divers has nowhere to host the gates and raises OptionError by design
+        # (test_defer_sphere_1_games_no_logic_host_fails covers that case)
         multiworld = generate({
             "games": ["Barbuta", "Porgy", "Combatants", "Valbrace", "Ninpek", "Divers"],
             "starting_game_amount": 1, "defer_sphere_1_games": True,
-        }, seed=4)
+        }, seed=0)
         self.assert_all_reachable(multiworld)
         world = multiworld.worlds[1]
         # the sphere-1-only games in the seed are deferred
@@ -187,7 +190,7 @@ class OptionMatrixTest(UFO50GenTestBase):
         self.assert_beatable_after_fill(multiworld)
 
     def test_defer_sphere_1_games_mostly_no_logic(self) -> None:
-        # Divers/Avianos/Mooncat are deferred; the logic games (Barbuta, Ninpek,
+        # Divers/Mooncat are deferred; the logic games (Barbuta, Ninpek, Avianos,
         # Bushido Ball) host the gates. All games start so a host is guaranteed.
         multiworld = generate({
             "games": ["Barbuta", "Ninpek", "Divers", "Avianos", "Mooncat", "Bushido Ball"],
@@ -263,9 +266,8 @@ class OptionMatrixTest(UFO50GenTestBase):
 
     def test_pilot_quest_start(self) -> None:
         games = ["Barbuta", "Pilot Quest", "Combatants", "Ninpek", "Golfaria"]
-        # Pilot Quest is a no-logic game, so with only it as a starting game and
-        # "Defer No Logic Games" on (default) there'd be nowhere to place the logic
-        # gates -- turn that off here since it's not what this test is about.
+        # deferral isn't what this test is about -- keep it off so the one starting
+        # game doesn't have to host the Logic Gates
         mw = generate({"games": games, "starting_game_amount": 1, "pilot_quest_start": True,
                        "defer_sphere_1_games": False}, seed=1)
         self.assertIn("Pilot Quest", mw.worlds[1].starting_games)

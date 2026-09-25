@@ -12,14 +12,28 @@ if TYPE_CHECKING:
 GAME_NAME = "Avianos"
 
 # Avianos is an eight-scenario turn-based strategy game (o50_Game).
-# Nothing from this game enters the multiworld pool -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
-FILLER = "Encouragement"
+# Progression (1P, mod-side locks while missing):
+#   Blessings -- without it, earned blessings are never granted (no action upgrades)
+#   Rexadon   -- without it, you cannot pray to Rexadon
+#   Trilock   -- without it, you cannot pray to Trilock
+# Filler starting-resource bonuses: +3 Starting Seeds (x3), +1 Starting Bone (x1),
+# +1 Starting Worker (x1). All three stack past that as filler padding; the framework
+# pads the rest of its locations with filler.
+BLESSINGS = "Blessings"
+REXADON = "Rexadon"
+TRILOCK = "Trilock"
+STARTING_SEEDS = "+3 Starting Seeds"
+STARTING_BONE = "+1 Starting Bone"
+STARTING_WORKER = "+1 Starting Worker"
 
 
 item_table: dict[str, ItemInfo] = {
-    FILLER: ItemInfo(200, IC.filler, 0),
+    BLESSINGS: ItemInfo(1, IC.progression),
+    REXADON: ItemInfo(2, IC.progression),
+    TRILOCK: ItemInfo(3, IC.progression),
+    STARTING_SEEDS: ItemInfo(201, IC.filler, 3),
+    STARTING_BONE: ItemInfo(202, IC.filler, 1),
+    STARTING_WORKER: ItemInfo(203, IC.filler, 1),
 }
 
 
@@ -36,9 +50,8 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
     return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return f"{GAME_NAME} - {FILLER}"
+    return f"{GAME_NAME} - {world.random.choice((STARTING_SEEDS, STARTING_BONE, STARTING_WORKER))}"

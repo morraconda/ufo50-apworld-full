@@ -33,8 +33,9 @@ from worlds.generic.Rules import add_rule, set_rule
 from .items import (GUESTS, SCENARIO_GUESTS, MAX_TROUBLE, SHOP_STOCK, MAX_POPULARITY,
                     MAX_CASH, DAY, START_POPULARITY, START_CASH, item_table)
 from .locations import (SCENARIOS, FIXED_SCENARIOS, HOUSE_SPACE_MAX, CLEAR_STAR_GUESTS,
-                        GAME_NAME, POPULARITY, HOUSE_SPACE, STAR_GUESTS, CASH,
-                        location_table)
+                        RANDOM_STREAK_THRESHOLDS, STREAK_LOCATION_WINS, GAME_NAME,
+                        POPULARITY, HOUSE_SPACE,
+                        STAR_GUESTS, location_table)
 
 if TYPE_CHECKING:
     from ... import UFO50World
@@ -79,15 +80,6 @@ def available_guests(scenario: str, held: frozenset) -> tuple:
     return tuple(g for g in GUESTS if g.name in held and g.name in pool)
 
 RANDOM_SCENARIO = SCENARIOS[-1]
-_STAR_SUPPLY_PER_CHECK: dict[tuple[str, str], int] = {
-    ("Alien Invitation", "Alien"): 2,
-}
-
-def _star_supply(scenario: str, guest, ps: PartyState) -> int:
-    """Copies of ``guest`` you could buy in ``scenario``: 1 base plus this scenario's
-    per-``+1 Shop Stock`` rate (``ps.shop_stock - 1`` = the number of those items)."""
-    per_check = _STAR_SUPPLY_PER_CHECK.get((scenario, guest.name), 1)
-    return 1 + per_check * (ps.shop_stock - 1)
 
 
 # Flag weight per guest. A real flag guest is worth 1, except Unicorn (a 45-pop star)
@@ -131,23 +123,24 @@ def star_guests_from_house_space(house_space: int) -> int:
 
 @memoize
 def max_star_guests(scenario: str, ps: PartyState, held: frozenset) -> int:
-    all_stars = available_guests(scenario, held)
-    flags = _flag_count_for_trouble_cap(all_stars)
-    trouble_cap = ps.max_trouble + int(flags) - 1
-    available_stars = 0
-    for g in all_stars:
-        if not g.is_star or g.cost + _STAR_GUEST_POP_HEADROOM > ps.max_popularity:
-            continue
-        copies = _star_supply(scenario, g, ps)
-        if g.is_trouble:
-            copies = max(0, min(copies, trouble_cap))
-        available_stars += copies
-    if scenario == RANDOM_SCENARIO:
-        available_stars //= _RANDOM_SCORE_DIVISOR
+    """How many star guests you could seat in ``scenario``. The mod leaves star guests
+    at vanilla's ``STORE_SUPPLY + 1`` stock, which ``o36_Game`` Other_17 never
+    decrements, so one usable star card refills as often as you can pay for it: supply
+    caps nothing and house space is the real limit. What still bites is whether *any*
+    star is usable, plus the trouble cap when Dinosaur -- the one troublemaker star --
+    is the only one. Random Scenario's shuffled prestige draw is not modelled here;
+    create_rules gates that scenario's own locations."""
+    available = available_guests(scenario, held)
+    usable = [g for g in available
+              if g.is_star and g.cost + _STAR_GUEST_POP_HEADROOM <= ps.max_popularity]
+    if not usable:
+        return 0
 
-    house_space = _house_space_for_scenario(scenario, ps, held)
-    possible_stars = star_guests_from_house_space(house_space)
-    return min(possible_stars, available_stars)
+    seats = star_guests_from_house_space(_house_space_for_scenario(scenario, ps, held))
+    if all(g.is_trouble for g in usable):
+        flags = _flag_count_for_trouble_cap(available)
+        seats = min(seats, max(0, ps.max_trouble + int(flags) - 1))
+    return seats
 
 @memoize
 def _can_clear(scenario: str, ps: PartyState, held: frozenset) -> bool:
@@ -169,10 +162,12 @@ def _scaled_days(days: int) -> float:
         lo = hi
     return total + max(0, days - lo) * _DAY_RATE_OVER
 
-# Cash available with only rich pals.
-_TROUBLE_CASH_MULTIPLIER = [0.1, 0.5, 1.5, 3, 5]
+# Cash available with only rich pals: purely the days-by-trouble product, with no flat
+# floor under it. Indices 0 and 1 share a rate, so the first +1 Max Trouble pays off
+# only through the guest multipliers -- which ``cash`` skips entirely at trouble 0.
+_TROUBLE_CASH_MULTIPLIER = [0.5, 0.5, 1.5, 3, 5]
 def _base_cash_calc(max_trouble: int, days: int) -> int:
-    return 2 + math.floor(_TROUBLE_CASH_MULTIPLIER[max_trouble] * _scaled_days(days))
+    return math.floor(_TROUBLE_CASH_MULTIPLIER[max_trouble] * _scaled_days(days))
 
 # _base_cash depends only on (max_trouble, days), both bounded by the item pool --
 # precompute the whole grid once so the sweep never recomputes it.
@@ -189,9 +184,11 @@ def _base_cash(ps: PartyState) -> int:
     return _BASE_CASH[key] if key in _BASE_CASH else _base_cash_calc(*key)
 
 
-# Buying house space: you start at 5, raising it to ``n`` costs ``min(n - 4, 12)``
-# (so 6 costs $2, 7 costs $3, ... flat $12 from 16 on), and 34 is the ceiling.
-_HOUSE_SPACE_BASE = 5
+# Buying house space: the mod starts you at 4 (vanilla 5) with $0, and raising it to
+# ``n`` costs ``min(n - 4, 12)`` (so 5 costs $1, 6 costs $2, ... flat $12 from 16 on),
+# with 34 the ceiling. Starting a step lower makes 5 house space a check you have to
+# earn your way back up to.
+_HOUSE_SPACE_BASE = 4
 _HOUSE_SPACE_STEP_CAP = 12
 
 # Cumulative cash to reach each house-space level: _HOUSE_SPACE_COST[n] = cash needed
@@ -223,7 +220,7 @@ def _guest_score(guest, category: str, ps: PartyState) -> int:
         return rungs[min(ps.max_trouble, len(rungs) - 1)]
     return getattr(guest, category)
 # Random Scenario can turn up any held guest, so it averages a much wider pool: the
-# best 40 slots per category, then the totals divided by 5 back to the /8 scale.
+# best 32 slots per category, then the totals divided by 4 back to the /8 scale.
 _RANDOM_SCORE_SLOTS = 32
 _RANDOM_SCORE_DIVISOR = 4
 
@@ -240,8 +237,9 @@ def adjusted_scores(scenario: str, ps: PartyState, held: frozenset) -> tuple:
     short lists just leave slots empty -- worth 0). Each pooled slot contributes the
     guest's *entire* score, so a guest taken for its popularity still drags in its
     negative utility. A guest already pooled for an earlier category is skipped, so
-    no guest is counted twice. Random Scenario instead pools the best 40 slots per
-    category and divides the totals by 5."""
+    no guest is counted twice. Random Scenario instead pools the best
+    ``_RANDOM_SCORE_SLOTS`` slots per category and divides the totals by
+    ``_RANDOM_SCORE_DIVISOR``."""
     available = available_guests(scenario, held)
     flags = _flag_count(available)
     guests = [g for g in available if not g.is_star and not g.is_trouble]
@@ -273,20 +271,25 @@ def adjusted_scores(scenario: str, ps: PartyState, held: frozenset) -> tuple:
 
 @memoize
 def cash(scenario: str, ps: PartyState, held: frozenset) -> int:
+    base = _base_cash(ps)
+    # At max trouble 0 a single troublemaker busts the party, so it never runs long
+    # enough for guest synergies to compound: no multiplier applies, just the base grind.
+    if ps.max_trouble == 0:
+        return base + ps.starting_cash
+
     cash_score, pop_score, util_score = adjusted_scores(scenario, ps, held)
     base_mult = min(pop_score / 4, cash_score / 5)
     util_penalty = max(util_score / 5, -1) # only matters if util_score is negative
     util_bonus = min(util_score / 10, base_mult * 0.5) # only matters if util_score is positive
     multiplier = base_mult + min(util_penalty, 0) + max(util_bonus, 0)
-
-    base = _base_cash(ps)
     if multiplier < 1:
         return base + ps.starting_cash
     return int(base * multiplier) + ps.starting_cash
 
 @memoize
 def _house_space_for_scenario(scenario: str, ps: PartyState, held: frozenset) -> int:
-    space = bisect_right(_HOUSE_SPACE_COST, cash(scenario, ps, held))
+    # bisect_right lands one past the last level you can afford, so step back to it.
+    space = bisect_right(_HOUSE_SPACE_COST, cash(scenario, ps, held)) - 1
     cap = min(ps.max_cash + 4, HOUSE_SPACE_MAX)
     if ps.max_cash < 24:
         cap = min(cap, ps.days + 1)
@@ -295,7 +298,7 @@ def _house_space_for_scenario(scenario: str, ps: PartyState, held: frozenset) ->
 
 @memoize
 def _max_house_space(ps: PartyState, held: frozenset) -> int:
-    return max(_house_space_for_scenario(scenario, ps, held) for scenario in SCENARIOS)
+    return max(_house_space_for_scenario(s, ps, held) for s in FIXED_SCENARIOS)
 
 
 @memoize
@@ -349,8 +352,14 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
 
     _STAR_GUEST_NAMES: frozenset = frozenset(g.name for g in GUESTS if g.is_star)
     @memoize
-    def _missing_star_guests(held: frozenset) -> int:
-        return len(_STAR_GUEST_NAMES - held)
+    def _held_star_guests(held: frozenset) -> int:
+        return len(_STAR_GUEST_NAMES & held)
+
+    def _random_held_stars(loc_name: str) -> int:
+        for streak in STREAK_LOCATION_WINS:
+            if loc_name == f"{RANDOM_SCENARIO} - Streak {streak}":
+                return RANDOM_STREAK_THRESHOLDS[streak]
+        return RANDOM_STREAK_THRESHOLDS[1]
 
     for loc_name, info in location_table.items():
         if loc_name in ("Gift", "Gold", "Cherry"):
@@ -363,24 +372,26 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
             set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
                      lambda state, t=info.threshold: _max_house_space(ps(state), held(state)) >= t)
             continue
-        if info.metric == CASH:
-            set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
-                     lambda state, t=info.threshold:
-                     max(cash(s, ps(state), held(state)) for s in SCENARIOS) >= t)
-            continue
         if info.metric != STAR_GUESTS:
             continue
-        set_rule(world.get_location(f"{GAME_NAME} - {loc_name}"),
-                 lambda state, s=info.region_name, t=info.threshold:
+        star_loc = world.get_location(f"{GAME_NAME} - {loc_name}")
+        set_rule(star_loc, lambda state, s=info.region_name, t=info.threshold:
                  max_star_guests(s, ps(state), held(state)) >= t)
+        # Random Scenario deals only a random couple of the 9 prestige types into its
+        # store, so which stars it offers is out of your hands: every star-guest check
+        # there also wants enough of the 9 in hand for one to be reliably on the shelf.
+        # A single win (Clear, and the 1..5 ladder) takes the RANDOM_STREAK_THRESHOLDS[1]
+        # floor; a streak can't re-roll a bad draw part-way through, so each streak
+        # location takes its own, higher entry. The five fixed scenarios stock the same
+        # stars every run and need no floor at all.
+        if info.region_name == RANDOM_SCENARIO:
+            add_rule(star_loc, lambda state, h=_random_held_stars(loc_name):
+                     _held_star_guests(held(state)) >= h)
 
-    # Streak 3/4 (Random Scenario) additionally require holding all but one star guest.
-    for _streak in (3, 4):
-        add_rule(world.get_location(f"{GAME_NAME} - {RANDOM_SCENARIO} - Streak {_streak}"),
-                 lambda state: _missing_star_guests(held(state)) <= 1)
-
+    # Gift is GARDEN_GOAL (1) of the five fixed scenarios beaten: Other_18 counts
+    # scenariosBeat over indices 0..4, so a Random Scenario win never contributes.
     set_rule(world.get_location(f"{GAME_NAME} - Gift"),
-             lambda state: any(_can_clear(s, ps(state), held(state)) for s in SCENARIOS))
+             lambda state: any(_can_clear(s, ps(state), held(state)) for s in FIXED_SCENARIOS))
 
     set_rule(world.get_location(f"{GAME_NAME} - Gold"),
              lambda state: all(_can_clear(s, ps(state), held(state)) for s in FIXED_SCENARIOS))
@@ -389,5 +400,5 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # every star guest in hand and enough of them seatable there.
     _CHERRY_STAR_GUESTS = 8
     set_rule(world.get_location(f"{GAME_NAME} - Cherry"),
-             lambda state: _missing_star_guests(held(state)) == 0
+             lambda state: _held_star_guests(held(state)) == len(_STAR_GUEST_NAMES)
              and max_star_guests(RANDOM_SCENARIO, ps(state), held(state)) >= _CHERRY_STAR_GUESTS)

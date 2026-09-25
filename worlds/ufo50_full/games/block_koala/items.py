@@ -19,7 +19,9 @@ item_table: dict[str, ItemInfo] = {
     "Mid Left Gate": ItemInfo(3, IC.progression),
     "Top Right Gates": ItemInfo(4, IC.progression),
     "Boss Gate": ItemInfo(6, IC.progression),
-    "Koala Fact": ItemInfo(101, IC.filler, quantity=44),
+    # each copy takes one frame off the 16-frame tile move (x8 -> 8 frames, double speed)
+    "Progressive Move Speed": ItemInfo(7, IC.filler, quantity=8),
+    "Koala Fact": ItemInfo(101, IC.filler, quantity=36),
 }
 
 

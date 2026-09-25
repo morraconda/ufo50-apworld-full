@@ -52,7 +52,7 @@ GUESTS: list[Guest] = [
     Guest("Athlete", 21, cost=6, cash_score=1, util_score=1),
     Guest("Mr. Popular", 22, cost=5, pop_score=2, util_score=-1),
     Guest("Celebrity", 23, cost=11, cash_score=3, pop_score=1, util_score=-1),
-    Guest("Comedian", 24, cost=5, pop_score=3),      # pop overridden per-tt in rules._TT_SCALED_SCORE
+    Guest("Comedian", 24, cost=5, pop_score=3),      # pop scales with max trouble: rules._MAX_TROUBLE_SCALED_SCORE
     Guest("Photographer", 25, cost=5, cash_score=1, pop_score=2),
     Guest("Caterer", 26, cost=5, pop_score=2),
     Guest("Ticket Taker", 27, cost=4, cash_score=1),
@@ -66,8 +66,8 @@ GUESTS: list[Guest] = [
     Guest("Introvert", 35, cost=4, pop_score=1),
     Guest("Counselor", 36, cost=7, is_flag=True),
     Guest("Stylist", 37, cost=7, pop_score=2),
-    Guest("Bartender", 38, cost=11, cash_score=4),   # cash overridden per-tt in rules._TT_SCALED_SCORE
-    Guest("Writer", 39, cost=8, pop_score=3),         # pop overridden per-tt in rules._TT_SCALED_SCORE
+    Guest("Bartender", 38, cost=11, cash_score=4),   # cash scales with max trouble: rules._MAX_TROUBLE_SCALED_SCORE
+    Guest("Writer", 39, cost=8, pop_score=3),         # pop scales with max trouble: rules._MAX_TROUBLE_SCALED_SCORE
     Guest("Social Climber", 40, cost=12, pop_score=3),
     Guest("Cupid", 41, cost=8, util_score=3),
     Guest("Magician", 42, cost=5, util_score=1),

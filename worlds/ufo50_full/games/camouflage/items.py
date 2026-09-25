@@ -11,14 +11,17 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Camouflage"
 
-# Camouflage (o04_*) is a 15-level stealth game (guide the lizard home). Nothing from
-# this game enters the multiworld pool -- its only item is the Encouragement filler (a
-# nothing item, hence a "bad filler" game). The framework pads every location with
-# filler from the other games in the seed.
+# Camouflage (o04_*) is a 15-level stealth game (guide the lizard home). All levels are
+# open from the start; the one real item is Camouflage, the lizard's colour change
+# (fire2) -- without it the lizard keeps its starting colour, which only gets you
+# through the Sky Temple finale (and so Gold); every other check needs it. Encouragement is the do-nothing filler (hence a "bad
+# filler" game).
+CAMOUFLAGE = "Camouflage"
 FILLER = "Encouragement"
 
 
 item_table: dict[str, ItemInfo] = {
+    CAMOUFLAGE: ItemInfo(1, IC.progression),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -36,7 +39,6 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
     return _create_items(GAME_NAME, item_table, world)
 
 

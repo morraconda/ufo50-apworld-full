@@ -50,8 +50,8 @@ def lives(state: CollectionState, player: int) -> int:
             + FILLER_VALUE * state.count(LIFE_FILLER_ITEM, player))
 
 WARRIOR = f"{GAME_NAME} - Warrior"
-SCOUT = f"{GAME_NAME} - Scout"
-ENGINEER = f"{GAME_NAME} - Engineer"
+SCOUT = f"{GAME_NAME} - Progressive Scout"
+ENGINEER = f"{GAME_NAME} - Progressive Engineer"
 BOMBER = f"{GAME_NAME} - Bomber"
 
 # --- predicates -----------------------------------------------------------------

@@ -11,15 +11,29 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Bug Hunter"
 
-# Bug Hunter is an endless job streak; the first six jobs (Gift at 1, Gold at 3, Cherry at 6) are the locations and all are nominally reachable from the start.
-# Nothing here goes in the multiworld pool from this game -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
-FILLER = "Encouragement"
+# Bug Hunter is an endless job streak; the first six jobs (Gift at 1, Gold at 3, Cherry at 6)
+# and kill counts / held energy are the locations. The items lock parts of your hand / the
+# shop (1P only, mod-side): Module 6 / 7 (deck slots 6 / 7), Shop Slot 1..3 (the first
+# three shop entries). +1 Max Energy (x10) raises the energy cap from 5. +1 Energy Cube
+# Drop (x6) drops one more energy cube each day; +1 Starting Energy (x5) is energy you
+# start each job with. All three stack past that as filler (padding copies are
+# filler-classified, so logic only counts the 10 Max Energy).
+MODULES = ("Module 6", "Module 7")
+SHOP_SLOTS = ("Shop Slot 1", "Shop Slot 2", "Shop Slot 3")
+ENERGY_DROP = "+1 Energy Cube Drop"
+MAX_ENERGY = "+1 Max Energy"
+STARTING_ENERGY = "+1 Starting Energy"
 
 
 item_table: dict[str, ItemInfo] = {
-    FILLER: ItemInfo(200, IC.filler, 0),
+    MODULES[0]: ItemInfo(2, IC.progression),
+    MODULES[1]: ItemInfo(3, IC.progression),
+    SHOP_SLOTS[0]: ItemInfo(4, IC.progression),
+    SHOP_SLOTS[1]: ItemInfo(5, IC.progression),
+    SHOP_SLOTS[2]: ItemInfo(6, IC.progression),
+    ENERGY_DROP: ItemInfo(7, IC.filler, 6),
+    MAX_ENERGY: ItemInfo(8, IC.progression, 10),
+    STARTING_ENERGY: ItemInfo(9, IC.filler, 5),
 }
 
 
@@ -36,9 +50,8 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
     return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
-    return f"{GAME_NAME} - {FILLER}"
+    return f"{GAME_NAME} - {world.random.choice((ENERGY_DROP, STARTING_ENERGY, MAX_ENERGY))}"

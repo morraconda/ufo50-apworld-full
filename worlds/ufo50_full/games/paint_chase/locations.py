@@ -17,6 +17,7 @@ REGION = "The Circuit"
 
 # id offset layout inside Paint Chase's 1000-id block, via game_helpers.level_id
 # (offset = level * 10 + slot):
+#     1      Turn Left (item)
 #    10..260   Level <n>   (cleared level n; level_id(n, 0))
 #   200      Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
@@ -39,8 +40,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+# levels 1..FREE_LEVELS need no Turn Left (rules.tier1)
+FREE_LEVELS = 3
+sphere_1_locs: list[str] = [f"{UNIT} {n}" for n in range(1, FREE_LEVELS + 1)]
 
 
 def get_locations() -> dict[str, int]:

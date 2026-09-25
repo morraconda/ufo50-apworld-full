@@ -48,8 +48,13 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 def create_items(world: "UFO50World") -> list[Item]:
     # PLUS_15_COUNT "+15 Pieces" + 1 "Tier 1 Pieces" into the pool; the framework pads
-    # the rest of Devilition's locations with "+3 Pieces".
-    return _create_items(GAME_NAME, item_table, world)
+    # the rest of Devilition's locations with "+3 Pieces". Logic never needs more than
+    # 9 "+15 Pieces", so drop one when this game has no Cherry -- otherwise the pool
+    # would be one item bigger than the (now Cherry-less) location count.
+    overrides = None
+    if GAME_NAME not in world.options.cherry_enabled_games.value:
+        overrides = {PLUS_15: PLUS_15_COUNT - 1}
+    return _create_items(GAME_NAME, item_table, world, overrides)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

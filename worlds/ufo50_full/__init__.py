@@ -419,7 +419,9 @@ class UFO50World(World):
         else:
             addtl_games_to_start_with = max(self.options.starting_game_amount.value - len(self.starting_games), 0)
             candidates = [game for game in included_game_names if game not in self.starting_games]
-            self.starting_games += self.random.choices(candidates, k=addtl_games_to_start_with)
+            # sample, not choices: choices draws with replacement, so it could pick the same
+            # game twice and hand out fewer distinct starting cartridges than asked for
+            self.starting_games += self.random.sample(candidates, k=addtl_games_to_start_with)
             for game_name in self.starting_games:
                 if game_name in ufo50_games.keys():
                     break
@@ -486,10 +488,10 @@ class UFO50World(World):
         self.multiworld.itempool += created_items
 
     # games where the filler is a nothing item, so let's just exclude these where we can
-    bad_filler_games: set[str] = {"Night Manor", "Magic Garden", "Attactics", "Warptank",
-                                  "Bug Hunter", "The Big Bell Race", "Paint Chase", "Onion Delivery",
+    bad_filler_games: set[str] = {"Night Manor", "Attactics", "Warptank",
+                                  "The Big Bell Race", "Paint Chase",
                                   "Campanella 3", "Star Waspir", "Elfazar's Hat", "Caramel Caramel",
-                                  "Seaside Drive", "Fist Hell", "Avianos", "Hot Foot",
+                                  "Seaside Drive", "Fist Hell", "Hot Foot",
                                   "Bushido Ball", "Hyper Contender", "Pingolf",
                                   "Lords of Diskonia", "Cyber Owls", "Ninpek",
                                   "Rakshasa", "Valbrace", "Rock On! Island", "Camouflage",

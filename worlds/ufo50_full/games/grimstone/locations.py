@@ -13,11 +13,11 @@ if TYPE_CHECKING:
 GAME_NAME = "Grimstone"
 REGION = "The Frontier"
 
-# A check for the highest party member (o12__Game.party[i].level) reaching each of 2..40.
-LEVEL_CHECKS: tuple[int, ...] = tuple(range(2, 41))
+# A check for the highest party member (o12__Game.party[i].level) reaching each of 2..30.
+LEVEL_CHECKS: tuple[int, ...] = tuple(range(2, 31))
 
 # id offset layout inside Grimstone's 1000-id block:
-#     1..39   Level <2..40>   (highest party member reached that level; offset = level - 1)
+#     1..29   Level <2..30>   (highest party member reached that level; offset = level - 1)
 #   200       500 Teeth (filler)
 #   511       +20% XP Multiplier
 #   997/998/999   Gift / Gold / Cherry

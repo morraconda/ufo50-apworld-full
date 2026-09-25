@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Camouflage"
 REGION = "The Jungle"
+SKY_TEMPLE_REGION = "Sky Temple"
 
 # Camouflage has 15 levels (o04_Game.levelPercent[1..15]; > 0 means escaped/cleared).
 # Levels 1..14 each have 3 collectibles -- 1 baby + 2 fruits -- worth BABY_PERCENT (30)
@@ -32,6 +33,7 @@ COLLECTIBLES = ("Baby", "Fruit 1", "Fruit 2")
 #    10..150   <level name>                  (level cleared; level_id(n, 0))
 #    11..143   <level name> - <collectible>  (levels 1..14; level_id(n, 1 + k),
 #              k = 0 Baby / 1 Fruit 1 / 2 Fruit 2)
+#     1        Camouflage (item)
 #   200        Encouragement (filler, never granted)
 #   997/998/999   Gift / Gold / Cherry
 
@@ -43,22 +45,25 @@ class LocationInfo(NamedTuple):
 
 def _build_location_table() -> dict[str, LocationInfo]:
     table: dict[str, LocationInfo] = {}
+    # Sky Temple (level 15, the finale) is beatable without Camouflage; clearing it is
+    # also Gold. Everything else (incl. Gift / Cherry) needs Camouflage.
     for n, level in enumerate(LEVEL_NAMES, start=1):
-        table[level] = LocationInfo(level_id(n, 0), REGION)
+        region = SKY_TEMPLE_REGION if n == LEVEL_COUNT else REGION
+        table[level] = LocationInfo(level_id(n, 0), region)
     for n in range(1, COLLECTIBLE_LEVELS + 1):
         level = LEVEL_NAMES[n - 1]
         for k, name in enumerate(COLLECTIBLES):
             table[f"{level} - {name}"] = LocationInfo(level_id(n, 1 + k), REGION)
     table["Gift"] = LocationInfo(997, REGION)
-    table["Gold"] = LocationInfo(998, REGION)
+    table["Gold"] = LocationInfo(998, SKY_TEMPLE_REGION)
     table["Cherry"] = LocationInfo(999, REGION)
     return table
 
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# every location is reachable from the start -- no item gating anywhere in this game
-sphere_1_locs: list[str] = list(location_table.keys())
+sphere_1_locs: list[str] = [name for name, info in location_table.items()
+                             if info.region_name == SKY_TEMPLE_REGION]
 
 
 def get_locations() -> dict[str, int]:

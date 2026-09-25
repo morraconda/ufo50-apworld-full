@@ -27,13 +27,8 @@ VILLAGER_ROUND: dict[int, int] = {3: 1, 4: 2, 5: 4, 6: 6}
 # (offset = level * 10 + slot):
 #    10..100   Round <n>          (level_id(n, 0))
 #    11/21/41/61   <n> Villagers  (the villager check tied to round r; level_id(r, 1))
-#    1        "0=0"               (cleared a round with 0 villagers alive -- not tied
-#              to a round, so it lives in the 0..9 band level_id reserves for that)
 #   100/101/102   Tier 1 Pieces / +15 Pieces / +3 Pieces
 #   997/998/999   Gift / Gold / Cherry
-
-PYRRHIC_LOC = "0=0"     # beat a round with 0 villagers left
-PYRRHIC_OFFSET = 1
 
 TIER1_FROM_ROUND = 4     # rounds >= this also need Tier 1 Pieces
 
@@ -64,7 +59,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
         table[name] = LocationInfo(level_id(n, 0), REGION)
     for v, r in VILLAGER_ROUND.items():
         table[villager_loc_name(v)] = LocationInfo(level_id(r, 1), REGION)
-    table[PYRRHIC_LOC] = LocationInfo(PYRRHIC_OFFSET, REGION)
     table["Gift"] = LocationInfo(997, REGION)
     table["Gold"] = LocationInfo(998, ENDGAME)
     table["Cherry"] = LocationInfo(999, ENDGAME)
@@ -73,9 +67,9 @@ def _build_location_table() -> dict[str, LocationInfo]:
 
 location_table: dict[str, LocationInfo] = _build_location_table()
 
-# reachable with no items: round 1, the villager check tied to round 1, "0=0"
+# reachable with no items: round 1 and the villager check tied to round 1
 # (Gift is level-5 logic; Gold/Cherry are level-10)
-sphere_1_locs: list[str] = ["Round 1", villager_loc_name(3), PYRRHIC_LOC]
+sphere_1_locs: list[str] = ["Round 1", villager_loc_name(3)]
 
 
 def get_locations() -> dict[str, int]:

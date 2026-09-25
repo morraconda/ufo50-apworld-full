@@ -18,7 +18,8 @@ GAME_NAME = "Waldorf's Journey"
 # everything. They no longer gate any logic (see rules.py), so they are just useful.
 # 107/108 are the progressive meter upgrades: each copy is +20% (20% is the base), so
 # vanilla is 4 of each (100%); 6 of each = 140%. Max Charge scales the max jump-charge power; Max Fish scales the
-# flap-energy (fish) cap. Gating is in rules.py.
+# flap-energy (fish) cap. 109 +1 Max Puffin: each copy raises the puffin carry
+# cap by 1 (base 0, vanilla cap 6). Gating is in rules.py.
 STARTING_ITEMS: dict[str, int] = {
     "Beach Ball": 101,
     "Harpoon": 102,
@@ -29,7 +30,8 @@ STARTING_ITEMS: dict[str, int] = {
 }
 MAX_CHARGE = "Progressive Max Charge"
 MAX_FISH = "Progressive Max Fish"
-NUM_UPGRADES = 6   # copies of each of the two progressive items
+MAX_PUFFIN = "+1 Max Puffin"
+NUM_UPGRADES = 6   # copies of each of the three progressive items
 FILLER = "Shell"
 
 
@@ -37,6 +39,7 @@ item_table: dict[str, ItemInfo] = {
     **{name: ItemInfo(offset, IC.useful, 1) for name, offset in STARTING_ITEMS.items()},
     MAX_CHARGE: ItemInfo(107, IC.progression, NUM_UPGRADES),
     MAX_FISH: ItemInfo(108, IC.progression, NUM_UPGRADES),
+    MAX_PUFFIN: ItemInfo(109, IC.progression, NUM_UPGRADES),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 

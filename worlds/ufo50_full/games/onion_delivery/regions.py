@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Onion Delivery"
 
-# every location is reachable from the start, so there is just the required Menu region
-# plus one region holding all the day locations
+# the required Menu region plus one region holding every location; gating is per
+# location (tiers in rules.py)
 regions: list[str] = ["Menu", "The Route"]
 
 

@@ -8,6 +8,8 @@ every id.
 
 - apworld repo: `github.com/morraconda/ufo50-apworld-full`, branch `main`.
 - mod repo: sibling directory `../ufo50-ap-mod/` (not a git repo here).
+- YAML generator repo: sibling directory `../ufo50-ap-yaml-generator/`
+  (`github.com/morraconda/ufo50-ap-yaml-generator`) — see ["The YAML generator"](#the-yaml-generator).
 - AP game name: **`UFO 50 Full`**. `required_client_version = (0, 5, 0)`.
 
 UFO 50 is a 50-game retro collection. This world randomizes all 50 games at once: each
@@ -205,6 +207,38 @@ mw = generate({"games": ALL_GAMES, "starting_game_amount": 5, "trap_percentage":
 3. Give the mod a matching `Archipelago_<Game>.yaml` using the **same offsets**.
 4. Run the generation tests; add the game to `test/test_all_games.py:_PER_GAME`.
 
+**Never edit the `Games` option docstring in `options.py` (the "Fully / Somewhat /
+Placeholder Implemented" lists) without asking first** — not even to move a game between
+tiers after giving it logic. That categorisation is the maintainer's call; mention the
+suggested move in your summary instead.
+
+### Tiered logic ("more upgrades → more checks")
+
+When a game's checks gate on *how many* upgrades you hold rather than on a specific
+route, split them into **tiers**. Tiers are **hand-rolled per game** in its own
+`rules.py`: there's no shared helper or required table shape, so each game writes
+whatever reads most naturally for its requirements. The conventions:
+
+- Tiers are numbered from **1 = sphere 1** (no requirements), and each tier is defined
+  by what it **requires**. Write both down: what each tier needs, and which locations
+  sit in it.
+- Gift/Gold/Cherry go in a tier like any other check.
+- **Spell out tier 1 explicitly.** Define a `tier1` that returns `True` and assign every
+  sphere-1 check to it with the same `rule(...)` calls as the other tiers, so every
+  location's tier shows in `rules.py` (none are free just because a rule is missing).
+- Keep `locations.sphere_1_locs` in step with tier 1.
+
+Games that use tiers now:
+- **Waldorf's Journey:** `tier1`..`tier4` closures (N-1 copies of each upgrade), with
+  locations assigned tier by tier.
+- **Planet Zoldath:** `tier1`..`tier5` closures, with locations assigned tier by tier.
+- **Magic Garden:** `_SPHERE_TWO/_MID/_HIGH/_TOP_TIER_LOCS` tuples plus one predicate
+  per tier.
+- **Campanella 2:** a `WORLD_REQUIREMENTS` table whose tiers are regions A→D.
+- **Seaside Drive:** an inline `{location: count}` dict.
+- **Devilition:** a `round_requirements(n)` function whose requirements other
+  locations borrow.
+
 TODO hot-spots (incomplete logic *within* otherwise-working games): Vainger boss/route
 tuning, Mini & Max NPC-quest checks (disabled), Party House per-threshold rule tables.
 
@@ -230,6 +264,13 @@ An external UFO 50 mod loader applies `config/code_patch/*.yaml` to the game's G
 load and registers everything in `code/` (any `gml_Script_<name>.gml` becomes a callable
 script — no manifest). Author `find:` blocks against `ufo50-vanilla-code/`, **not** the
 `code/` folder.
+
+**Prefer code patches wherever possible.** Per-game behaviour goes inline in that game's
+`Archipelago_<Game>.yaml`, not in new `code/` files — no per-game `gml_Script_*` helpers,
+even when the same small check is needed in two or three events (repeat it inline, or
+compute it once into a local at the top of the event with a `prepend`). `code/` is for
+shared framework scripts (`has_item`, `collect_location`, `ap_send_death`, …) and full-file
+overrides that genuinely can't be expressed as patches.
 
 ### YAML patch format
 
@@ -440,6 +481,95 @@ you to be in a game and freezes on pause). While it's `> 0`, `scrGetInput` swaps
 To add another trap: pick subgame-51 offset in `general_items.trap_items` + register it
 in `__init__.py` like `Controls Swap Trap`, then handle `subgame_id == 51 && item_id == N`
 in `Archipelago_Internal_Traps.yaml`.
+
+---
+
+## The YAML generator
+
+Lives in **`../ufo50-ap-yaml-generator/`** (own git repo, `.nojekyll` → served as a static
+GitHub Pages site). A single-page, no-build web form that writes a player YAML for
+`UFO 50 Full`.
+
+```
+index.html        the whole app (vanilla JS, no deps); renders entirely from options.json
+options.json      GENERATED — every option, its kind/default/doc, plus games_order + status tiers
+dump_options.py   regenerates options.json from this apworld checkout
+carts/<n>.png     cartridge art, n = 1-based index into games_order (death_link.py order)
+```
+
+**Whenever `options.py` changes (new option, changed default/docstring/range/choices, group
+changes) — or the `Games` docstring tiers or `death_link.py` order change — re-run the dump
+and commit `options.json` in that repo:**
+
+```
+cd ../ufo50-ap-yaml-generator
+python dump_options.py < /dev/null        # checkout defaults to ../ufo50-apworld-full
+```
+
+It imports `worlds.AutoWorldRegister`, so other worlds' missing deps (e.g. a `zilliandomizer`
+`ModuleNotFoundError` traceback) print noise but are harmless — success is the final
+`wrote …/options.json: N options` line. Then `git diff options.json` to sanity-check.
+
+What `dump_options.py` pulls, and what's hard-coded where:
+
+- Options come from `Options.get_option_groups(world, Visibility.template)`, i.e.
+  `ufo50_option_groups` plus AP's common groups. Kind is inferred from the option class
+  (toggle / choice / range / set / list / counter / text / raw YAML). `HIDDEN` keys
+  (`progression_balancing`, `accessibility`) and the `Item & Location Options` group are
+  still written to the YAML at their default but not shown.
+- `AP_VERSION` (the `requires: version:` written into YAMLs) is a constant in the script —
+  bump it by hand. `world_version` comes from `worlds/ufo50_full/archipelago.json`.
+- `games_order` = `list(DEATH_LINK_RULES)` — grid order and cart art numbering.
+- `status_tiers` / `status` are **parsed out of the `Games` docstring**: each line whose
+  text before `:` ends in `Implemented` starts a tier, following comma-separated names
+  belong to it. Keep that docstring's shape; the script warns about unknown/missing game
+  names. (Tier edits themselves are still the maintainer's call — see
+  ["Adding / editing a game"](#adding--editing-a-game).)
+- `index.html` hard-codes a few option keys/names: `games` + `cherry_enabled_games` are
+  merged into one clickable cart grid (off → on → on-with-Cherry); `SIDE =
+  starting_game_amount, golds_to_goal, cherries_to_goal` sit next to the grid; the rest of
+  `"General Options"` goes under a collapsed "More options". A group named
+  `"<Game> Options"` where `<Game>` is a valid game name is only shown when that game is
+  included; otherwise it's written at its `options.py` default (toggles too — never
+  forced off). Every control's initial value is its `options.json` default, so the
+  generator has no defaults of its own. **Renaming any of those keys or the
+  `General Options` / `<Game> Options` group names needs a matching `index.html` edit**;
+  anything else is picked up from `options.json` automatically.
+- Local testing: `python -m http.server` in that folder (it `fetch`es `options.json`, so
+  opening the file directly fails).
+
+---
+
+## Dead code
+
+**When a change makes code unused, delete it in the same change** — never leave it
+commented out, `if (false)`-guarded, or sitting as an unreferenced helper "in case". This
+applies to both repos and to the comments too: a doc comment that describes behaviour the
+change removed is dead code with extra steps (the `ap_json_number_required` /
+`ap_json_number_safe` scripts under ["slot_data → mod"](#slot_data--mod) were deleted
+outright rather than kept as dead code, and that's the standard).
+
+What counts, per repo:
+
+- **apworld** — helper functions, constants, and per-game lookup tables (especially
+  special-case dicts keyed by game/level/item name) whose last caller just went away, and
+  now-unused imports. Check a name with
+  `grep -rn "\bNAME\b" worlds/ufo50_full/` and confirm the only hit is its own
+  definition. Don't strip a name that's part of the per-game module contract
+  (`get_items`, `create_locations`, …) just because nothing in the package calls it —
+  `UFO50World` calls those **by name**.
+- **mod** — `gml_Script_<name>.gml` files under `code/` that nothing calls. The loader
+  registers every file in `code/` unconditionally, so an uncalled script ships silently
+  and never shows up as an error. A script's own body never mentions its own name, so
+  `grep -rl "\b<name>\b" code config` returning nothing (or only its own file) means
+  uncalled. Also drop whole `find:`/`code:` patch pairs that no longer do anything rather
+  than leaving a patch that matches and re-inserts what it replaced.
+- **never** — anything in `ufo50-vanilla-code/`. It's read-only decompile reference, and a
+  vanilla identifier that only appears inside a `find:` block is doing its job, not dead.
+
+**Scope it to your own change.** Remove what *this* change orphaned; pre-existing dead
+code gets **reported, not swept up** — a wider scan is welcome, an unrequested cleanup
+commit is not. Known-uncalled today, left alone: `code/gml_Script_is_location_hinted.gml`.
 
 ---
 

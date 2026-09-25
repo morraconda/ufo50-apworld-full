@@ -2,13 +2,17 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
+from .items import GAME_NAME, CAMOUFLAGE
+
 if TYPE_CHECKING:
     from ... import UFO50World
 
 
-GAME_NAME = "Camouflage"
-
-
 def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
-    # every location (levels, collectibles, Gift/Gold/Cherry) is sphere 1 -- no item gating
-    regions["Menu"].connect(regions["The Jungle"])
+    player = world.player
+
+    # Sky Temple / Gold are sphere 1
+    regions["Menu"].connect(regions["Sky Temple"])
+    # every other level, collectible, Gift and Cherry needs Camouflage
+    regions["Menu"].connect(regions["The Jungle"],
+                            rule=lambda state: state.has(f"{GAME_NAME} - {CAMOUFLAGE}", player))

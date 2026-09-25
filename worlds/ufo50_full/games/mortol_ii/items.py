@@ -11,8 +11,16 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Mortol II"
 
-# The four playable guises. Every location needs at least one of them.
-CHARACTERS = ("Warrior", "Scout", "Engineer", "Bomber")
+# The playable guises, by item name. Every location needs at least one of the four
+# CHARACTERS. Scout / Engineer / Gunner are progressive x2: the first copy unlocks the
+# vanilla guise, the second upgrades it in the mod (Gunner fires on every press + x2
+# ammo; Engineer x2 fire rate + x2 wrench damage + x2 ammo; Scout x2 ammo + triple
+# jump). Logic only ever needs one copy.
+CHARACTERS = ("Warrior", "Progressive Scout", "Progressive Engineer", "Bomber")
+# The Gunner (vanilla playerType 1, the Archer) is the guise you boot as: its first
+# copy is always precollected, only the upgrade copy is shuffled into the pool.
+STARTER = "Progressive Gunner"
+PROGRESSIVE_COPIES = 2
 # The 14 locked doors, in door-number order (door n -> DOOR_NAMES[n - 1], id 110 + n).
 # rules.py's door()/doors() index this by number. Doors 1-4 (Hearts Upper) and doors
 # 5-8 (Hearts Lower) are each always required together as a group (doors(1, 4) /
@@ -40,7 +48,8 @@ FILLER = "+3 Lives"
 FILLER_VALUE = 5
 
 # id offset layout inside Mortol II's 1000-id block:
-#   101..104   Warrior / Scout / Engineer / Bomber
+#   101..104   Warrior / Progressive Scout / Progressive Engineer / Bomber
+#   105        Progressive Gunner (first copy precollected, second in the pool)
 #   111..124   the 14 locked doors (DOOR_NAMES order = door number 1..14); 111 is
 #              "Hearts Upper Doors" (covers door numbers 1-4, 112-114 unused), 115 is
 #              "Hearts Lower Doors" (covers door numbers 5-8, 116-118 unused)
@@ -51,7 +60,9 @@ FILLER_VALUE = 5
 def _build_item_table() -> dict[str, ItemInfo]:
     table: dict[str, ItemInfo] = {}
     for offset, name in enumerate(CHARACTERS, start=101):
-        table[name] = ItemInfo(offset, IC.progression, 1)
+        copies = PROGRESSIVE_COPIES if name.startswith("Progressive") else 1
+        table[name] = ItemInfo(offset, IC.progression, copies)
+    table[STARTER] = ItemInfo(105, IC.progression, PROGRESSIVE_COPIES)
     for n, name in enumerate(DOOR_NAMES, start=1):
         if name in table:
             continue
@@ -72,7 +83,7 @@ def get_items() -> dict[str, int]:
 
 def get_item_groups() -> dict[str, set[str]]:
     groups = game_item_groups(GAME_NAME, item_table)
-    groups[f"{GAME_NAME} - Characters"] = {f"{GAME_NAME} - {name}" for name in CHARACTERS}
+    groups[f"{GAME_NAME} - Characters"] = {f"{GAME_NAME} - {name}" for name in (*CHARACTERS, STARTER)}
     groups[f"{GAME_NAME} - Doors"] = {f"{GAME_NAME} - {name}" for name in DOOR_NAMES}
     groups[f"{GAME_NAME} - Switch Blocks"] = {f"{GAME_NAME} - {c} Switch Block" for c in SWITCH_COLORS}
     groups[f"{GAME_NAME} - Lives"] = {f"{GAME_NAME} - {LIFE_PICKUP}", f"{GAME_NAME} - {FILLER}"}
@@ -84,7 +95,13 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    return _create_items(GAME_NAME, item_table, world)
+    world.multiworld.push_precollected(create_item(STARTER, world))
+    overrides = {STARTER: PROGRESSIVE_COPIES - 1}
+    # With no Cherry the pool would be one item bigger than the location count, so drop
+    # one "+10 Lives" -- the remaining 9 are still far past Ending's 50.
+    if GAME_NAME not in world.options.cherry_enabled_games.value:
+        overrides[LIFE_PICKUP] = LIFE_PICKUP_COUNT - 1
+    return _create_items(GAME_NAME, item_table, world, overrides)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

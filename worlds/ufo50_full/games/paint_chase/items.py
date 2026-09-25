@@ -11,14 +11,15 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Paint Chase"
 
-# Paint Chase runs 1..26 levels (LAST_LEVEL = 26); every level is reachable from the start.
-# Nothing here goes in the multiworld pool from this game -- its only item is the
-# Encouragement filler (a nothing item, hence a "bad filler" game). The framework
-# pads every location with filler from the other games in the seed.
+# Paint Chase runs 1..26 levels (LAST_LEVEL = 26). Its one pool item is Turn Left:
+# without it the mod refuses every relative left turn, so only Levels 1-4 are in logic.
+# Encouragement is a nothing filler (hence a "bad filler" game) and never enters the pool.
+TURN_LEFT = "Turn Left"
 FILLER = "Encouragement"
 
 
 item_table: dict[str, ItemInfo] = {
+    TURN_LEFT: ItemInfo(1, IC.progression),
     FILLER: ItemInfo(200, IC.filler, 0),
 }
 
@@ -36,7 +37,6 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # nothing from this game enters the pool; the framework fills its locations with filler
     return _create_items(GAME_NAME, item_table, world)
 
 
