@@ -27,7 +27,6 @@ finding its **Cartridge**.
 | `game_ids.py` | same map sorted by id, plus `id_to_name` — reference only |
 | `options.py` | `UFO50Options` dataclass + `ufo50_option_groups` |
 | `general_items.py` | `cartridge_items`, `trap_items`, the meta id block (`META_BASE_ID`) |
-| `goal_locations.py` | shared Gift/Gold/Cherry location handling; goal = **Gold** |
 | `game_helpers.py` | boilerplate every per-game module delegates to (`level_id`, `get_items`, `build_regions`, …) |
 | `games/<game>/` | one package per game: `items.py`, `locations.py`, `rules.py`, `regions.py` |
 | `test/` | plain `unittest` generation tests (no pytest in this tree) |
@@ -57,14 +56,13 @@ item/location id = (ap_id - BASE_ID)  % 1000
 
 `UFO50World` calls these **by name** on `ufo50_games[name].{items,locations,regions}`, so
 each game keeps thin wrappers with these exact signatures and delegates mechanics to
-`game_helpers` / `goal_locations`:
+`game_helpers`:
 
 - `items.py`: `get_items()`, `get_item_groups()`, `create_item(name, world, cls=None)`,
   `create_items(world) -> list[Item]`, `get_filler_item_name(world)`.
 - `locations.py`: `get_locations()`, `get_location_groups()`,
   `create_locations(world, regions)`. Its `location_table` **must** end with
-  `Gift` / `Gold` / `Cherry`, routed through `goal_locations` (aliased
-  `is_completion_event_location` / `place_completion_event`).
+  `Gift` / `Gold` / `Cherry` (offsets 997/998/999), created like any other location.
 - `regions.py`: `create_regions_and_rules(world) -> dict[str, Region]`, usually just
   `build_regions(world, GAME_NAME, [...region names...], create_locations, create_rules)`.
   Region objects are titled `"<Game> - <region>"`; every game has a `"<Game> - Menu"`
@@ -75,9 +73,8 @@ each game keeps thin wrappers with these exact signatures and delegates mechanic
 - Every game listed in the `games` option is **both enabled and a goal**. Goal = reach
   that game's **`<Game> - Gold`** location. There is no Cherry goal; the client treats a
   Cherry as also satisfying Gold.
-- A goal game's `Gold` is a real sendable location carrying a **locked filler item**
-  (must survive reconnects); `Completed All Games` (the `Victory` event in `Menu`) is
-  gated on `can_reach_location` of every goal game's Gold.
+- `Gold` is an ordinary location (fill may put any item there); `Completed All Games`
+  (the `Victory` event in `Menu`) is gated on `can_reach_location` of the goal games' Gold locations.
 - **Sphere-1 deferral** (`defer_sphere_1_games`, on by default; option display name
   "Defer No Logic Games"): games whose every check is reachable at boot
   (`_game_is_sphere1_only`): fill gates their `Boot <Game>` entrance behind holding
@@ -96,9 +93,7 @@ each game keeps thin wrappers with these exact signatures and delegates mechanic
   for every game *except* the ~15 whose Cherry is a deep "beat basically the whole game"
   gate. `Games`' own default is every game, in `death_link.py` (`DEATH_LINK_RULES`) order.
   Cherry removal happens in `create_regions` after each game's `create_rules` (an orphaned
-  rule on the removed location is harmless). Velgress' pool exactly fills its location
-  count, so when *its* Cherry is off it drops one item (`Progressive Gun` ×3→×2) via
-  `_create_items(quantity_overrides=…)`. If items still exceed open locations,
+  rule on the removed location is harmless). If items exceed open locations,
   `create_items` **fails generation** (`OptionError`).
 
 ### Filler and traps
@@ -203,7 +198,7 @@ mw = generate({"games": ALL_GAMES, "starting_game_amount": 5, "trap_percentage":
 
 1. `constants.game_ids` already has all 50 — a game is "implemented" once it's in
    `ufo50_games` in `__init__.py` (keep menu order) with a real `games/<game>/` package.
-2. Follow the module contract above; lean on `game_helpers` / `goal_locations`.
+2. Follow the module contract above; lean on `game_helpers`.
 3. Give the mod a matching `Archipelago_<Game>.yaml` using the **same offsets**.
 4. Run the generation tests; add the game to `test/test_all_games.py:_PER_GAME`.
 

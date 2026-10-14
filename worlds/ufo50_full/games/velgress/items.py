@@ -64,12 +64,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 def create_items(world: "UFO50World") -> list[Item]:
     # 9 upgrade copies + Progressive Gun into the pool; framework pads with "+3 Coins".
-    # The pool exactly fills the location count, so when this game has no Cherry drop
-    # one item -- the 3rd Progressive Gun (logic only ever needs one).
-    overrides = None
-    if GAME_NAME not in world.options.cherry_enabled_games.value:
-        overrides = {PROGRESSIVE_GUN: 2}
-    return _create_items(GAME_NAME, item_table, world, overrides)
+    return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:
