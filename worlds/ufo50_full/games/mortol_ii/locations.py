@@ -76,7 +76,7 @@ LOCATION_REGIONS: dict[str, str] = {
     "Ruins Worm": "Lower Ruins",
     "Sewer Worm": "Sewers",
     "Gold": "Ending",
-    "Cherry": "Cherry Ending",   # Ending + 49 more lives
+    "Cherry": "Ending",
 }
 
 

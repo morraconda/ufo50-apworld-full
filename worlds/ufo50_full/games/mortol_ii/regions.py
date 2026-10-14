@@ -35,7 +35,6 @@ regions: list[str] = [
     "Lower Castle",
     "Final Corridor",
     "Ending",
-    "Cherry Ending",     # off "Ending"; needs 99 lives (Cherry only)
 ]
 
 

@@ -12,9 +12,8 @@ if TYPE_CHECKING:
 
 GAME_NAME = "Velgress"
 
-# One region per floor of the climb. Menu -> Tower 1 is free; Tower 1 -> Tower 2 needs
-# one Progressive Jump and Tower 2 -> Tower 3 needs two (rules.py).
-regions: list[str] = ["Menu", "Tower 1", "Tower 2", "Tower 3"]
+# One region for the whole climb; per-floor requirements are tiers in rules.py.
+regions: list[str] = ["Menu", "Tower"]
 
 
 def create_regions_and_rules(world: "UFO50World") -> dict[str, Region]:

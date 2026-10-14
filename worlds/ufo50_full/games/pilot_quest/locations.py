@@ -45,7 +45,7 @@ GAME_NAME = "Pilot Quest"
 #             RESOURCE_THRESHOLDS for both)
 #    121..123 Dungeon Trader <1..3>                 (the one-time Zoldnak trade at the three
 #             dungeon spots that spawn a scorpion in vanilla)
-#    131..153 <Enemy>                               (killing one of that enemy type; ENEMIES
+#    131..154 <Enemy>                               (killing one of that enemy type; ENEMIES
 #             order, gated in rules.py to the regions it appears in)
 #   997/998/999   Gift / Gold / Cherry -- vanilla scrWin(GARDEN/GOLD/CHERRY_WIN)
 
@@ -118,8 +118,12 @@ ENEMIES: dict[str, tuple[str, ...]] = {
     "Worm":       (UNDERGROUND,),                        # o37_eWorm
     "Twister":    (LEFT, TOP, BORLG),                    # o37_eTwister (spawned in areas 11-13)
     # o37_eDarkPilot, once all 3 ship parts are in; sent on his first defeat (the first
-    # of his taunt-and-teleport knockdowns), not the final kill -- keep him last
+    # of his taunt-and-teleport knockdowns), not the final kill -- the mod hard-codes his
+    # offset (153), so keep him here
     "Nozzlo":     (UNDERGROUND,),
+    # o37_eTick, the eyeball that only takes damage while peeking open (orange dungeon);
+    # added after Nozzlo so no earlier offset moves -- the mod hard-codes 154
+    "Eyeball Duder Scooter": (UNDERGROUND,),
 }
 
 # Moon Drop ladder, offsets 161..166; requirements in rules.py

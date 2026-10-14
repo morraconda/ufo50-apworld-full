@@ -38,14 +38,14 @@ SWITCH_COLORS = ("Blue", "Green", "Yellow")
 
 # The "lives" resource (rules.py: each region has a hardcoded life requirement, from a
 # STARTING_LIVES 20 budget + these). "+10 Lives" is progression (state.count only sees
-# advancement items) -- 10 of them, worth 10 each, is enough for every region incl.
-# "Cherry Ending" (99). "+3 Lives" is the filler (worth 3 each in-game via the mod;
+# advancement items) -- 10 of them, worth 10 each, is far more than every region needs
+# ("Ending", 50). "+3 Lives" is the filler (worth 3 each in-game via the mod;
 # framework-padding copies are plain filler so they do not count toward logic).
 LIFE_PICKUP = "+10 Lives"
 LIFE_PICKUP_COUNT = 10
 LIFE_PICKUP_VALUE = 10
 FILLER = "+3 Lives"
-FILLER_VALUE = 5
+FILLER_VALUE = 3
 
 # id offset layout inside Mortol II's 1000-id block:
 #   101..104   Warrior / Progressive Scout / Progressive Engineer / Bomber

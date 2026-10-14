@@ -232,6 +232,7 @@ Games that use tiers now:
 - **Waldorf's Journey:** `tier1`..`tier4` closures (N-1 copies of each upgrade), with
   locations assigned tier by tier.
 - **Planet Zoldath:** `tier1`..`tier5` closures, with locations assigned tier by tier.
+- **Velgress:** `tier1`..`tier3` closures, one per floor (Jumps + Gun).
 - **Magic Garden:** `_SPHERE_TWO/_MID/_HIGH/_TOP_TIER_LOCS` tuples plus one predicate
   per tier.
 - **Campanella 2:** a `WORLD_REQUIREMENTS` table whose tiers are regions A→D.
