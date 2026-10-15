@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Hyper Contender"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Hyper Contender is a platform-fighter tournament (o42_Game). You start with Yogo
 # unlocked; the other 7 fighters arrive from the multiworld and only owned

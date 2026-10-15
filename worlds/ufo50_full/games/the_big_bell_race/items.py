@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "The Big Bell Race"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # The Big Bell Race is a short 8-race grand prix; every race is reachable from the start.
 # Nothing here goes in the multiworld pool from this game -- its only item is the

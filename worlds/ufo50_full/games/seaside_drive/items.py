@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Seaside Drive"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Progressive Max Charge"
 
 # Seaside Drive is a five-stage drive (o47_Control.level 0..4). One real item,
 # "Progressive Max Charge" x4 -- the mod caps the player's drift-charge gauge

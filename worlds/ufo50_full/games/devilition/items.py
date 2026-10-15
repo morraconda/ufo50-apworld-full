@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Devilition"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+15 Pieces"
 
 # Devilition is a ten-round survival puzzler (o05_Game). Rounds no longer hand out
 # pieces -- your placement budget starts at the vanilla 15 and only grows from items:
@@ -24,7 +26,7 @@ PLUS_15 = "+15 Pieces"
 TIER1 = "Tier 1 Pieces"
 FILLER = "+3 Pieces"
 
-PLUS_15_COUNT = 15
+PLUS_15_COUNT = 13
 
 
 item_table: dict[str, ItemInfo] = {
@@ -48,13 +50,8 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 def create_items(world: "UFO50World") -> list[Item]:
     # PLUS_15_COUNT "+15 Pieces" + 1 "Tier 1 Pieces" into the pool; the framework pads
-    # the rest of Devilition's locations with "+3 Pieces". Logic never needs more than
-    # 9 "+15 Pieces", so drop one when this game has no Cherry -- otherwise the pool
-    # would be one item bigger than the (now Cherry-less) location count.
-    overrides = None
-    if GAME_NAME not in world.options.cherry_enabled_games.value:
-        overrides = {PLUS_15: PLUS_15_COUNT - 1}
-    return _create_items(GAME_NAME, item_table, world, overrides)
+    # the rest of Devilition's locations with "+3 Pieces".
+    return _create_items(GAME_NAME, item_table, world)
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

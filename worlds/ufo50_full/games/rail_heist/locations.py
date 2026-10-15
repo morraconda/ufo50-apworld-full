@@ -76,7 +76,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
         for level in range(1, NUM_LEVELS + 1):
             table[check_location_name(level, check_type)] = LocationInfo(
                 level_id(level, CHECK_TYPE_SLOT[check_type]), "Levels", level, check_type)
-    # goal locations always come last so create_locations' Cherry/Gold handling can break out safely
     table["Gift"] = LocationInfo(997, "Levels", 0, "")
     table["Gold"] = LocationInfo(998, "Levels", 0, "")
     table["Cherry"] = LocationInfo(999, "Levels", 0, "")

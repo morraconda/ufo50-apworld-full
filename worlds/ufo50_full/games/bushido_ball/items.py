@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Bushido Ball"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Bushido Ball is a 1v1 tournament (o22_Game). You start with Chiyome unlocked;
 # the other 5 fighters arrive from the multiworld and only owned fighters can be

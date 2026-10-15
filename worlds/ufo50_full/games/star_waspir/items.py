@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Star Waspir"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Shooting"
 
 # Star Waspir runs five waves (o17__Game.wave 1..5). Very basic logic: one item,
 # "Shooting" (101). Without it the mod destroys every player shot on spawn and

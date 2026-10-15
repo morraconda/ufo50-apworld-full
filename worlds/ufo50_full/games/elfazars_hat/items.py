@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Elfazar's Hat"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Elfazar's Hat is a top-down 8-direction shooter (o31_Player, rm31_Elfazar_lv1..5).
 # The player aims where they move (dirAim = scr8dir(...), GML angles 0/45/90/.../315)

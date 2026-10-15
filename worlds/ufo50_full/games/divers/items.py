@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Divers"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Divers (o19_*) is a party RPG dive. The AP items are quality-of-life only:
 #   +20% XP Multiplier (useful) -- each copy adds 20% to post-battle XP gain.

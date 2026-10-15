@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Overbold"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Overbold (o30_*) is a wave-survival arena shooter where you can voluntarily raise the
 # wave's prize (o30_Game.prize, $100..$1600) and buy gear between waves.

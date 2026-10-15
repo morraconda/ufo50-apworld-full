@@ -1,12 +1,12 @@
 from typing import Any
 
-from BaseClasses import Tutorial, Region, Item, ItemClassification, Location, Entrance
+from BaseClasses import Tutorial, Region, Item, ItemClassification, Location, Entrance, CollectionState
 from Options import OptionError
 from worlds.AutoWorld import World, WebWorld
 from worlds.generic.Rules import add_rule, set_rule
 
 from .constants import *
-from . import options
+from . import options, cartridge_chains
 
 from .general_items import (cartridge_items, cartridge_item_group, trap_items, trap_item_group,
                             logic_gate_items, logic_gate_item_group)
@@ -150,6 +150,9 @@ ufo50_games: dict = {
 }
 
 
+# "Cartridge Item Chains": {chained item name: (game, original item name)}
+cartridge_chain_table = cartridge_chains.build_chains(ufo50_games)
+
 # for the purpose of generically making the gift, gold, and cherry locations
 unimplemented_ufo50_games: list[str] = [name for name in game_ids.keys() if name not in ufo50_games.keys()]
 
@@ -194,6 +197,7 @@ class UFO50World(World):
     item_name_to_id.update(cartridge_items)
     item_name_to_id.update(trap_items)
     item_name_to_id.update(logic_gate_items)
+    item_name_to_id.update(cartridge_chains.chain_item_ids(ufo50_games, cartridge_chain_table))
     item_name_to_id.update({"Intentional Nothing Filler Item": base_id - 100})
     location_name_to_id = temp_ufo50_location_name_to_id
 
@@ -201,6 +205,7 @@ class UFO50World(World):
     item_name_groups.update(cartridge_item_group)
     item_name_groups.update(trap_item_group)
     item_name_groups.update(logic_gate_item_group)
+    item_name_groups.update({"Cartridge Item Chains": set(cartridge_chain_table)})
     location_name_groups = {k: v for game in ufo50_games.values() for k, v in game.locations.get_location_groups().items()}
 
     options_dataclass = options.UFO50Options
@@ -250,6 +255,8 @@ class UFO50World(World):
                     self.ut_passthrough[options.DeferSphere1Games.internal_name]
                 self.options.cherry_enabled_games.value = \
                     set(self.ut_passthrough[options.CherryEnabledGames.internal_name])
+                self.options.cartridge_item_chains.value = \
+                    self.ut_passthrough[options.CartridgeItemChains.internal_name]
 
         included_game_names = sorted(self.options.games.value)
 
@@ -376,7 +383,21 @@ class UFO50World(World):
             add_rule(self.get_entrance(f"Boot {game_name}"),
                      lambda state: all(state.has(gate, self.player) for gate in logic_gate_items))
 
+    def collect(self, state: CollectionState, item: Item) -> bool:
+        changed = super().collect(state, item)
+        if changed:
+            cartridge_chains.on_collect(state, self.player, cartridge_chain_table, item)
+        return changed
+
+    def remove(self, state: CollectionState, item: Item) -> bool:
+        changed = super().remove(state, item)
+        if changed:
+            cartridge_chains.on_remove(state, self.player, cartridge_chain_table, item)
+        return changed
+
     def create_item(self, name: str, item_class: ItemClassification = None) -> Item:
+        if name in cartridge_chain_table:
+            return cartridge_chains.create_chain_item(self, name)
         # figure out which game it's from and call its create_item
         game_name = name.split(" - ", 1)[0]
         if game_name in ufo50_games:
@@ -432,10 +453,18 @@ class UFO50World(World):
                     self.starting_games.pop()
                     self.starting_games.append(self.random.choice(self.included_games))
 
+        # "Cartridge Item Chains": a chained game's Cartridge is the first copy of its
+        # chained item, the other copies go straight into the pool
+        chained = cartridge_chains.active_chains(self, cartridge_chain_table, precollected_cartridges)
         all_games = self.included_games + self.included_unimplemented_games
         for game_name in all_games:
-            cartridge = self.create_item(f"{game_name} Cartridge",
-                                         ItemClassification.progression | ItemClassification.useful)
+            if game_name in chained:
+                cartridge, *copies = cartridge_chains.chain_pool(
+                    self, game_name, chained[game_name], cartridge_chain_table, created_items)
+                created_items += copies
+            else:
+                cartridge = self.create_item(f"{game_name} Cartridge",
+                                             ItemClassification.progression | ItemClassification.useful)
             if game_name in self.starting_games and game_name not in precollected_cartridges:
                 self.multiworld.push_precollected(cartridge)
             else:
@@ -524,6 +553,11 @@ class UFO50World(World):
             options.CherriesToGoal.internal_name: self.options.cherries_to_goal.value,
             options.DeferSphere1Games.internal_name: self.options.defer_sphere_1_games.value,
             options.CherryEnabledGames.internal_name: sorted(self.options.cherry_enabled_games.value),
+            options.CartridgeItemChains.internal_name: self.options.cartridge_item_chains.value,
+            options.ReleaseOnCherryGames.internal_name:
+                sorted(game_ids[game] for game in self.options.release_on_cherry_games.value),
+            options.ReleaseOnGoldGames.internal_name:
+                sorted(game_ids[game] for game in self.options.release_on_gold_games.value),
             # DeathLink is not currently exposed as a player option; the code and mod
             # support for it are kept in place, just always off for now. Sent as an int,
             # not a bare bool -- the mod reads it with apclient_json_number_at, whose

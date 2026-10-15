@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Pingolf"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Dunking"
 
 # Pingolf is an 18-hole pinball-golf game (o23_Mas / o23_Ball).
 # One real item, "Dunking" (id 500): needed for every location EXCEPT the Par

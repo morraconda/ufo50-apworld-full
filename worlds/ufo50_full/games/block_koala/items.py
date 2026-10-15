@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Block Koala"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 item_table: dict[str, ItemInfo] = {
     "Start Gate": ItemInfo(0, IC.progression),

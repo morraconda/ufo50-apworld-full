@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Bug Hunter"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+1 Max Energy"
 
 # Bug Hunter is an endless job streak; the first six jobs (Gift at 1, Gold at 3, Cherry at 6)
 # and kill counts / held energy are the locations. The items lock parts of your hand / the

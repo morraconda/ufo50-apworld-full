@@ -34,7 +34,6 @@ def _build_location_table() -> dict[str, "LocationInfo"]:
     for offset, n in enumerate(SCORE_THRESHOLDS, start=11):
         table[f"{n} Score"] = LocationInfo(offset)
     table["8x Multiplier"] = LocationInfo(21)
-    # goal locations last so create_locations' Cherry/Gold handling can break out safely
     table["Gift"] = LocationInfo(997)
     table["Gold"] = LocationInfo(998)
     table["Cherry"] = LocationInfo(999)

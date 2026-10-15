@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Ninpek"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Shuriken"
 
 # Ninpek is an endless arcade run-and-gun (o34_Mas). Its shuriken IS the weapon: the mod
 # blocks all shooting until you have received at least one "Shuriken" (id 100, x5), and

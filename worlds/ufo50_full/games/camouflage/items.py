@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Camouflage"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Camouflage"
 
 # Camouflage (o04_*) is a 15-level stealth game (guide the lizard home). All levels are
 # open from the start; the one real item is Camouflage, the lizard's colour change

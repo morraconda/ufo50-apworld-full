@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Quibble Race"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Quibble Race (o14_*) is a 1-3 player betting board game. The four turn-menu "shops"
 # and the six individual thug actions are AP items -- the mod greys the shop button /

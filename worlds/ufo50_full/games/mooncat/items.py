@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Mooncat"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Mooncat (o11_*) is a short atmospheric platformer with three boss endings, each
 # granting an egg. Nothing from this game enters the multiworld pool -- its only item is

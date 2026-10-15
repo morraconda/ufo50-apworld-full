@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Avianos"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Avianos is an eight-scenario turn-based strategy game (o50_Game).
 # Progression (1P, mod-side locks while missing):

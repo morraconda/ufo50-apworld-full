@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Hot Foot"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Jumping"
 
 # Hot Foot is a 6-game bean-bag tournament (o43_Game, `game` 1..6). The draftable
 # athletes are no longer AP items -- instead shuffled abilities gate the run:

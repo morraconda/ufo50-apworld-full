@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Mortol"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+10 Lives"
 
 PLUS_3 = "+3 Lives"
 PLUS_5 = "+5 Lives"

@@ -67,7 +67,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
         table[level_name(n)] = LocationInfo(level_id(n, 0), level_name(n))
     for r in RANKS:
         table[rank_region(r)] = LocationInfo(300 + r // RANK_STEP, rank_region(r))
-    # goal locations last so create_locations' Cherry/Gold handling can break out safely
     table["Gift"] = LocationInfo(997, GIFT_REGION)
     table["Gold"] = LocationInfo(998, GOLD_REGION)
     table["Cherry"] = LocationInfo(999, CHERRY_REGION)

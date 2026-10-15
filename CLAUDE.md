@@ -49,6 +49,15 @@ item/location id = (ap_id - BASE_ID)  % 1000
   has id `BASE_ID + game_num`, i.e. subgame 0 / item_id `1..50`.
 - **subgame 51** = reserved **meta namespace** for cross-game items (traps, future stuff).
   `META_BASE_ID = BASE_ID + 51000`. `Controls Swap Trap` = `META_BASE_ID + 1`.
+- **subgame 100+g** = "Cartridge Item Chains" (`cartridge_chains.py`, option on by default).
+  Each game's `items.py` names one `cartridge_item` (`"N/A"` = none). With the option on,
+  every copy of that item becomes `"<Game> - Cartridge / <item>"` with id
+  `BASE_ID + (100+g)*1000 + <item's own offset>`, one extra copy replaces the Cartridge
+  (two for a single-copy item: Cartridge, item, then a do-nothing spare), and
+  the first copy received counts as the Cartridge, later copies as the item. Logic gets the
+  same split via `UFO50World.collect`/`remove`; the mod remaps it in
+  `oArchipelago_Step_0.gml`'s `ap_items_received` (no slot_data needed). Skipped for a
+  game whose Cartridge is already in start inventory.
 - `Intentional Nothing Filler Item` = `BASE_ID - 100` (negative offset → the mod ignores
   it); only used when a slot has zero real games.
 
@@ -115,7 +124,10 @@ unfilled locations with filler:
 `fill_slot_data()` sends `included_games` (list of game **numbers**), `goal_games`
 (numbers), and the per-game option values the mod needs (`porgy_*`,
 `block_koala_level_randomizer`, `warptank_level_randomizer`, `defer_sphere_1_games`,
-`cherry_enabled_games` (game names), `death_link` (bool), `deathlink_games` (game
+`release_on_cherry_games` (game numbers, default every game: an earned Cherry makes
+the mod send every location `apclient_get_missing_locations()` still lists for that game,
+once per session per game, from the Cherry sweep in `oArchipelago_Step_0.gml`), `release_on_gold_games` (game numbers;
+same release on earning that game's Gold, default Golfaria/Porgy/Vainger/Combatants/Rock On! Island), `cherry_enabled_games` (game names), `death_link` (bool), `deathlink_games` (game
 numbers — an explicit game list, empty = none)). `trap_percentage` is **not** sent.
 Add a key here whenever the mod needs to know an option.
 
@@ -187,6 +199,15 @@ python -m unittest worlds.ufo50_full.test.test_all_games
 They build multiworlds with `test/__init__.py:generate(options, seed)` and assert
 "all locations reachable with all items" + "beatable after `distribute_items_restrictive`".
 They do **not** pin item counts or ids. `ALL_GAMES = list(ufo50_games.keys())`.
+
+**No game-specific tests unless they test a yaml option.** Don't write a test that
+checks one game's internals (its pool size, item quantities, door grouping, …) — that's
+pinned behaviour that goes stale the moment the game is retuned. A test may name
+specific games only to exercise an option: a per-game option (`porgy_radar`,
+`nm_early_pin`, …) or a general one that needs concrete games to show its effect
+(`cherry_enabled_games`, `cartridge_item_chains`). The `_PER_GAME` table is fine: it
+runs the same generic reachable + beatable check on every game.
+
 Quick ad-hoc check:
 
 ```python

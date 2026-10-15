@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Attactics"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+1s Turn Time"
 
 TURN_TIME = "+1s Turn Time"
 PROMOTION = "Promotion"

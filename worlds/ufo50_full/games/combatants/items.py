@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Combatants"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Follow"
 
 # Combatants is a real-time ant-war campaign of 12 missions on a branching map
 # (o25__Game, `mapComplete[0..11]`). Every mission starts unlocked, but the nine

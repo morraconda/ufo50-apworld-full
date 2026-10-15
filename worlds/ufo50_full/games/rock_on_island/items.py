@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Rock On! Island"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Rock On! Island (o44_*) is a tower-defense of 10 levels + 2 villages. The AP items do
 # NOT hand you anything -- they merely unlock a build-menu option so it can be bought

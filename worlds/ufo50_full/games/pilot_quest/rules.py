@@ -83,6 +83,15 @@ def _doublers(amount: int) -> int:
     return min(_MAX_DOUBLERS, max(0, ceil(log2(amount / 20)))) if amount else 0
 
 
+# weapon level = Progressive Weapons held (0: the yoyo can't hit enemies, 1 vanilla yoyo,
+# 2 Metal Yoyo, 3 Blaster, 4 Wizard Yoyo). Chests and the rest of the Wild Zone need
+# nothing; killing an enemy needs 1, a boss 2, Cherry 3.
+_LEVEL_ENEMIES = 1
+_LEVEL_BOSSES = 2
+_LEVEL_CHERRY = 3
+_BOSSES: tuple[str, ...] = ("Big Borlg", "Unktomi", "Big Mech", "Big Plant", "Big Zuzu",
+                            "Nozzlo")
+
 # the Wild Zone areas; each has a dungeon door, and which interior a door leads to is
 # reshuffled every run (scr37_ResetData dunLoc), so the Underground needs all of them
 _WILD_ZONE: tuple[str, ...] = (START, BORLG, LEFT, TOP, RIGHT)
@@ -163,12 +172,21 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
     # Grull only hands over the Blaster for the Letter item
     set_rule(world.get_location(_g("Blaster")), lambda state: state.has(_g("Letter"), player))
 
+    def weapon_level(state: CollectionState) -> int:
+        return state.count(_g("Progressive Weapon"), player)
+
     # an enemy's check needs any region it appears in
     for name, where in ENEMIES.items():
         if where != (START,):
             set_rule(world.get_location(_g(name)),
                      lambda state, where=tuple(regions[r] for r in where):
                      any(state.can_reach(region) for region in where))
+
+    # ...and a weapon that can hit it: level 1 for an enemy, 2 for a boss
+    for name in (*ENEMIES, "Big Borlg", "Unktomi"):
+        add_rule(world.get_location(_g(name)),
+                 lambda state, level=_LEVEL_BOSSES if name in _BOSSES else _LEVEL_ENEMIES:
+                 weapon_level(state) >= level)
 
     # upgrading a silo needs Big Silos to offer it (building it first is covered by the
     # upgrade's own ingot costs below, which are stricter than the build's)
@@ -234,11 +252,11 @@ def create_rules(world: "UFO50World", regions: dict[str, Region]) -> None:
             add_rule(loc, lambda state, source=_g(source): state.has(source, player))
             add_cost_rules(loc, cost)
 
-    # Cherry also needs all 4 cap steps (both silos, both resource caps) and a strong weapon
-    # (the Wizard Yoyo or the Blaster)
+    # Cherry also needs all 4 cap steps (both silos, both resource caps) and weapon level 3
+    # (the Blaster)
     add_rule(campsite[_g("Cherry")],
              lambda state: sum(state.count(item, player) for item in cap_items) >= 4
-             and state.has_any((_g("Wizard Yoyo"), _g("Blaster")), player))
+             and weapon_level(state) >= _LEVEL_CHERRY)
 
     # the Bottom Left Chest (KeyItemGen n6) sits in its own pocket, opened by Tree 1 or
     # Tree 3

@@ -12,14 +12,17 @@ if TYPE_CHECKING:
 GAME_NAME = "Magic Garden"
 
 POTION = "Progressive Potion"
-OPPY = "+1 Starting Red Oppy"
+OPPY = "+1 Red Oppy"
 POTION_TIME = "Progressive Potion Time"
 JUMP = "Jump"
+
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = OPPY
 
 # id offset layout inside Magic Garden's 1000-id block:
 #   1  Progressive Potion       (x6 -- unlock progressively stronger brews; start with none.
 #                                only 4 tiers exist, so copies 5 and 6 do nothing)
-#   2  +1 Starting Red Oppy     (x4 -- extra oppies on the field at the start of a run;
+#   2  +1 Red Oppy     (x4 -- extra oppies on the field at the start of a run;
 #                                you begin with just one)
 #   4  Progressive Potion Time  (x10 -- a potion's eating frenzy lasts 20 + 5 per copy on
 #                                the in-game counter, vs 48 in vanilla. Also this game's
@@ -47,7 +50,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 
 def create_items(world: "UFO50World") -> list[Item]:
-    # 6x Progressive Potion + 4x +1 Starting Red Oppy + 10x Progressive Potion Time +
+    # 6x Progressive Potion + 4x +1 Red Oppy + 10x Progressive Potion Time +
     # 1x Jump; the framework pads with filler.
     return _create_items(GAME_NAME, item_table, world)
 

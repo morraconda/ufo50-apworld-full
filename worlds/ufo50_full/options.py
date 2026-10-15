@@ -44,7 +44,7 @@ class StartingGameAmount(Range):
     display_name = "Starting Game Amount"
     range_start = 1
     range_end = 50
-    default = 50
+    default = 5
 
 class CherryEnabledGames(OptionSet):
     """
@@ -82,7 +82,43 @@ class CherriesToGoal(Range):
     default = 0
 
 
-class DeferSphere1Games(DefaultOnToggle):
+class CartridgeItemChains(DefaultOnToggle):
+    """
+    If enabled, Game Cartridges will be tied to an important item rather than being a separate check.
+    Example: "Party House - Cartridge / +1 Max Trouble".
+    """
+    internal_name = "cartridge_item_chains"
+    display_name = "Cartridge Item Chains"
+
+class ReleaseOnCherryGames(OptionSet):
+    """
+    Games listed here send every remaining check in that game when you earn its Cherry.
+    """
+    internal_name = "release_on_cherry_games"
+    display_name = "Release On Cherry Games"
+    valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
+    default = list(DEATH_LINK_RULES)
+
+
+class ReleaseOnGoldGames(OptionSet):
+    """
+    Games listed here send every remaining check in that game when you earn its Gold.
+    """
+    internal_name = "release_on_gold_games"
+    display_name = "Release On Gold Games"
+    valid_keys = {game_name for game_name in game_ids.keys() if game_name != "Main Menu"}
+    default = ["Golfaria", "Porgy", "Vainger", "Combatants", "Rock On! Island"]
+
+
+class PilotQuestStart(Toggle):
+    """
+    If enabled, Pilot Quest is guaranteed to be one of your starting cartridges.
+    """
+    internal_name = "pilot_quest_start"
+    display_name = "Pilot Quest Start"
+
+
+class DeferSphere1Games(Toggle):
     """
     If enabled, all games with no logic will have their checks be artificially out of logic behind 3 checks.
     You can still get all checks as soon as you receive the cartridge, they'll just be out of logic.
@@ -91,13 +127,6 @@ class DeferSphere1Games(DefaultOnToggle):
     """
     internal_name = "defer_sphere_1_games"
     display_name = "Defer No Logic Games"
-
-class PilotQuestStart(DefaultOnToggle):
-    """
-    If enabled, Pilot Quest is guaranteed to be one of your starting cartridges.
-    """
-    internal_name = "pilot_quest_start"
-    display_name = "Pilot Quest Start"
 
 
 class PorgyFuelDifficulty(Choice):
@@ -203,10 +232,13 @@ class UFO50Options(PerGameCommonOptions):
     games: Games
     starting_game_amount: StartingGameAmount
     pilot_quest_start: PilotQuestStart
+    cartridge_item_chains: CartridgeItemChains
     golds_to_goal: GoldsToGoal
     cherries_to_goal: CherriesToGoal
     defer_sphere_1_games: DeferSphere1Games
     cherry_enabled_games: CherryEnabledGames
+    release_on_cherry_games: ReleaseOnCherryGames
+    release_on_gold_games: ReleaseOnGoldGames
 
     porgy_fuel_difficulty: PorgyFuelDifficulty
     porgy_check_on_touch: PorgyCheckOnTouch
@@ -230,7 +262,10 @@ ufo50_option_groups = [
         StartingGameAmount,
         GoldsToGoal,
         CherriesToGoal,
+        CartridgeItemChains,
         DeferSphere1Games,
+        ReleaseOnCherryGames,
+        ReleaseOnGoldGames,
         TrapPercentage,
         PilotQuestStart,
     ]),

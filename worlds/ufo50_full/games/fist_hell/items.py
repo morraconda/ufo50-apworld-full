@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Fist Hell"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Fist Hell (o09__Game) is a five-"scare" beat-em-up. Mortol-style rework: every scare
 # clear is a check, and every BILL and WATCH is a check, while in-game level progression

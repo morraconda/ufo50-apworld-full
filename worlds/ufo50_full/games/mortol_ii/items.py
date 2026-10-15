@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Mortol II"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+10 Lives"
 
 # The playable guises, by item name. Every location needs at least one of the four
 # CHARACTERS. Scout / Engineer / Gunner are progressive x2: the first copy unlocks the
@@ -38,11 +40,11 @@ SWITCH_COLORS = ("Blue", "Green", "Yellow")
 
 # The "lives" resource (rules.py: each region has a hardcoded life requirement, from a
 # STARTING_LIVES 20 budget + these). "+10 Lives" is progression (state.count only sees
-# advancement items) -- 10 of them, worth 10 each, is far more than every region needs
+# advancement items) -- 9 of them, worth 10 each, is far more than every region needs
 # ("Ending", 50). "+3 Lives" is the filler (worth 3 each in-game via the mod;
 # framework-padding copies are plain filler so they do not count toward logic).
 LIFE_PICKUP = "+10 Lives"
-LIFE_PICKUP_COUNT = 10
+LIFE_PICKUP_COUNT = 9
 LIFE_PICKUP_VALUE = 10
 FILLER = "+3 Lives"
 FILLER_VALUE = 3
@@ -54,7 +56,7 @@ FILLER_VALUE = 3
 #              "Hearts Upper Doors" (covers door numbers 1-4, 112-114 unused), 115 is
 #              "Hearts Lower Doors" (covers door numbers 5-8, 116-118 unused)
 #   141..143   Blue / Green / Yellow Switch Block
-#   200        +3 Lives (filler)      201  +10 Lives (x10, progression -- lives resource)
+#   200        +3 Lives (filler)      201  +10 Lives (x9, progression -- lives resource)
 
 
 def _build_item_table() -> dict[str, ItemInfo]:
@@ -96,12 +98,7 @@ def create_item(item_name: str, world: "UFO50World", item_class: IC = None) -> I
 
 def create_items(world: "UFO50World") -> list[Item]:
     world.multiworld.push_precollected(create_item(STARTER, world))
-    overrides = {STARTER: PROGRESSIVE_COPIES - 1}
-    # With no Cherry the pool would be one item bigger than the location count, so drop
-    # one "+10 Lives" -- the remaining 9 are still far past Ending's 50.
-    if GAME_NAME not in world.options.cherry_enabled_games.value:
-        overrides[LIFE_PICKUP] = LIFE_PICKUP_COUNT - 1
-    return _create_items(GAME_NAME, item_table, world, overrides)
+    return _create_items(GAME_NAME, item_table, world, {STARTER: PROGRESSIVE_COPIES - 1})
 
 
 def get_filler_item_name(world: "UFO50World") -> str:

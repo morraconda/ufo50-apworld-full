@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Lords of Diskonia"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Lords of Diskonia is a ten-level turn-based strategy campaign (o33_Game, story mode,
 # `lvl` 1..10). Nothing from this game enters the multiworld pool -- its only item is

@@ -94,7 +94,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
                 table[f"{scenario} - Streak {streak}"] = LocationInfo(
                     level_id(level, _STREAK_SLOT0 + i), scenario, STAR_GUESTS,
                     RANDOM_STREAK_THRESHOLDS[streak])
-    # goal locations last so create_locations' Cherry/Gold handling can break out.
     # (metric/threshold here are unused -- rules.py special-cases these three.)
     table["Gift"] = LocationInfo(997, SCENARIOS[0], STAR_GUESTS, CLEAR_STAR_GUESTS)
     table["Gold"] = LocationInfo(998, FIXED_SCENARIOS[-1], STAR_GUESTS, CLEAR_STAR_GUESTS)

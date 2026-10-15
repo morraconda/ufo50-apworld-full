@@ -78,7 +78,6 @@ def _build_location_table() -> dict[str, LocationInfo]:
         if i in HIDDEN_PICKUPS:
             name += " (hidden)"
         table[name] = LocationInfo(level_id(lvl, per_level[lvl]), level_name(lvl))
-    # goal locations last (Cherry/Gold handling in create_locations breaks out)
     table["Gift"] = LocationInfo(997, level_name(6))   # vanilla fires GARDEN_WIN on clearing 2-C
     table["Gold"] = LocationInfo(998, level_name(NUM_LEVELS))
     table["Cherry"] = LocationInfo(999, level_name(NUM_LEVELS))

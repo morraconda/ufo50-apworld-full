@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Rakshasa"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Fire Weapon"
 
 # Rakshasa (o24_*) is a run-based action-platformer of three stages, each with a
 # mid-boss. The three collectible weapon types are AP items -- without the unlock, the

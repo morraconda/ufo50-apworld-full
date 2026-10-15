@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Pilot Quest"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Progressive Weapon"
 
 # Pilot Quest (o37_*): the Wild Zone (rm37_Incremental2) is split into regions by its
 # obstacle blocks and teleporters. Every block starts in place and every teleporter
@@ -41,12 +43,15 @@ GAME_NAME = "Pilot Quest"
 #     22       x2 Moon Drops (x5): doubles Moon Drop income
 #     23       -50% Meat Generation Time (x4): each halves the Meat Shack's meat timer
 #     13..14   Ingot Table / Science Table
-#     15..16   Letter (Grull trades it for the Blaster pickup) / Blaster
+#     15       Letter (Grull trades it for the Blaster pickup)
 #     20       x2 Idle Time Multiplier (x4): doubles the time counted while you're away
 #     17..19   Productivity / Defense / Metabolism (x5 each): each gives that
 #              prestige statue at level = copies held (the statues no longer upgrade)
 #     21       Friend (x10)
-#     61..65   <Dr Lumin upgrade>
+#     61       Progressive Weapon (x4): with none the yoyo can't hit enemies; the 1st is
+#              the vanilla yoyo, the 2nd the Metal Yoyo, the 3rd the Blaster, the 4th the
+#              Wizard Yoyo
+#     62..64   Fertilizer / Big Silos / Stamin Pill
 #    101..106  region-boundary blocks
 #    111..115  Bottom Left blocks (its entrances, and the Bottom Left Chest pocket)
 #    121..124  teleporter pads, teleporter[0..3]
@@ -72,6 +77,9 @@ SILK_UPGRADES: tuple[str, ...] = ("Big Silos", "Stamin Pill", "Wizard Yoyo")
 LUMIN_UPGRADES: tuple[str, ...] = (
     "Metal Yoyo", "Fertilizer", "Big Silos", "Stamin Pill", "Wizard Yoyo",
 )
+# the items Dr Lumin's upgrades arrive as: both yoyos are copies of the Progressive Weapon
+# (offset 61)
+LUMIN_ITEMS: tuple[str, ...] = ("Progressive Weapon", "Fertilizer", "Big Silos", "Stamin Pill")
 
 # name -> (id offset, room x, room y, vanilla object) for every block item
 BLOCKS: dict[str, tuple[int, int, int, str]] = {
@@ -112,15 +120,17 @@ item_table: dict[str, ItemInfo] = {
     "Ingot Table": ItemInfo(13, IC.useful),
     "Science Table": ItemInfo(14, IC.useful),
     "Letter": ItemInfo(15, IC.progression),
-    "Blaster": ItemInfo(16, IC.progression),  # one of the Cherry weapons
     "x2 Idle Time Multiplier": ItemInfo(20, IC.useful, NUM_IDLE_MULTIPLIERS),
     **{upgrade: ItemInfo(offset, IC.useful, PRESTIGE_LEVELS)
        for offset, upgrade in ((17, "Productivity"), (18, "Defense"), (19, "Metabolism"))},
     "Friend": ItemInfo(21, IC.progression, NUM_FRIENDS),
-    # Big Silos is what lets a silo be upgraded (buSilo checks shopBought[2]); the Wizard
-    # Yoyo is one of the Cherry weapons
-    **{name: ItemInfo(60 + n, IC.progression if name in ("Big Silos", "Wizard Yoyo") else IC.useful)
-       for n, name in enumerate(LUMIN_UPGRADES, start=1)},
+    # 0 copies: the yoyo can't hit enemies; 1st: vanilla yoyo, 2nd: Metal Yoyo, 3rd:
+    # Blaster (what Cherry expects), 4th: Wizard Yoyo
+    "Progressive Weapon": ItemInfo(61, IC.progression, 4),
+    "Fertilizer": ItemInfo(62, IC.useful),
+    # Big Silos is what lets a silo be upgraded (buSilo checks shopBought[2])
+    "Big Silos": ItemInfo(63, IC.progression),
+    "Stamin Pill": ItemInfo(64, IC.useful),
     **{name: ItemInfo(offset, IC.progression)
        for name, (offset, _x, _y, _obj) in BLOCKS.items()},
     **{name: ItemInfo(offset, IC.progression) for name, (offset, _n) in TELEPORTERS.items()},
@@ -134,7 +144,7 @@ def get_items() -> dict[str, int]:
 
 def get_item_groups() -> dict[str, set[str]]:
     groups = game_item_groups(GAME_NAME, item_table)
-    groups[f"{GAME_NAME} - Dr Lumin Upgrades"] = {f"{GAME_NAME} - {name}" for name in LUMIN_UPGRADES}
+    groups[f"{GAME_NAME} - Dr Lumin Upgrades"] = {f"{GAME_NAME} - {name}" for name in LUMIN_ITEMS}
     groups[f"{GAME_NAME} - Blocks"] = {f"{GAME_NAME} - {name}" for name in BLOCKS}
     groups[f"{GAME_NAME} - Teleporters"] = {f"{GAME_NAME} - {name}" for name in TELEPORTERS}
     return groups

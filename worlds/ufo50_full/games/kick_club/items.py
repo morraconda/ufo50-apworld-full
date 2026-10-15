@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Kick Club"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+5 Seconds"
 
 REAL_SECOND = "+5 Seconds"
 EXTRA_LIFE = "Extra Life"

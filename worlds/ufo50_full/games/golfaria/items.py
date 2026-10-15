@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Golfaria"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Golfaria (o06_*) is a golf-'em-up metroidvania. Simple implementation: nothing from
 # this game enters the pool -- its only item is the Encouragement filler (a nothing

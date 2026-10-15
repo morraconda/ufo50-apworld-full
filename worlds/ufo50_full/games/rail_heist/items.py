@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Rail Heist"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "All Levels +2 Seconds"
 NUM_LEVELS = 20
 
 # the global time upgrades apply to every level, hence the "All Levels" prefix

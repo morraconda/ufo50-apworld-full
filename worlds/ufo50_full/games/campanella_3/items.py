@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Campanella 3"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Campanella 3 is a five-stage rail shmup (o08_Mas). The o08_Ufo has two weapons: a
 # forward pellet shot (fire1 -> o08_UfoShot, mirrored by Isabell) and an aimed beam

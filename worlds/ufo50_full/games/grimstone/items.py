@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Grimstone"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Grimstone (o12_*) is a party JRPG. The AP items are quality-of-life only:
 #   +20% XP Multiplier (useful) -- each copy adds 20% to a battle's XP (ADDITIVE:

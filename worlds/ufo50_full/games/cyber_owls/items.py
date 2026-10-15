@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Cyber Owls"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Cyber Owls is a squad-based run-and-gun (o45__Game). Nothing from this game enters
 # the multiworld pool -- its only item is the Encouragement filler (a nothing item,

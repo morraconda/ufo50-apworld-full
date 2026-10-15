@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Campanella 2"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "+1 Max HP"
 
 MAX_HP = "+1 Max HP"
 MAX_FUEL = "+100 Max Fuel"

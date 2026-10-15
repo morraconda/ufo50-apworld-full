@@ -16,6 +16,8 @@ Three groups:
     paths the above miss (small multiworlds, per-game ``create_items`` branches).
 """
 
+from BaseClasses import CollectionState
+
 from . import ALL_GAMES, UFO50GenTestBase, generate
 
 
@@ -279,26 +281,52 @@ class OptionMatrixTest(UFO50GenTestBase):
                        "pilot_quest_start": True}, seed=1)
         self.assertNotIn("Pilot Quest", mw.worlds[1].starting_games)
 
-    def test_velgress_pool_shrinks_without_cherry(self) -> None:
-        # Velgress drops one item (Progressive Gun x3->x2) when it has no Cherry, so
-        # its tight pool still fits the location count.
-        name, dup_item, full, cut = "Velgress", "Progressive Gun", 3, 2
-        with_cherry = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
-                                "cherry_enabled_games": [name]}, seed=3)
-        without = generate({"games": ["Barbuta", name], "starting_game_amount": 2,
-                            "cherry_enabled_games": []}, seed=3)
-        n_with = sum(i.name == f"{name} - {dup_item}" for i in with_cherry.itempool)
-        n_without = sum(i.name == f"{name} - {dup_item}" for i in without.itempool)
-        self.assertEqual(n_with, full, name)
-        self.assertEqual(n_without, cut, name)
+    @staticmethod
+    def _all_items(mw) -> list[str]:
+        return [i.name for i in mw.itempool] + [i.name for i in mw.precollected_items[1]]
 
-    def test_mortol_ii_door_groups_collapsed(self) -> None:
-        # Doors 1-4 (Hearts Upper) and doors 5-8 (Hearts Lower) each share a single
-        # item, so the pool has exactly one copy of each regardless of Cherry, and
-        # door(1)..door(4) / door(5)..door(8) all resolve to their shared item.
-        for cherry_enabled_games in ([], ["Mortol II"]):
-            mw = generate({"games": ["Barbuta", "Mortol II"], "starting_game_amount": 2,
-                           "cherry_enabled_games": cherry_enabled_games}, seed=3)
-            for door_name in ("Hearts Upper Doors", "Hearts Lower Doors"):
-                n = sum(i.name == f"Mortol II - {door_name}" for i in mw.itempool)
-                self.assertEqual(n, 1, (door_name, cherry_enabled_games))
+    def test_cartridge_item_chains_on(self) -> None:
+        # Magic Garden's +1 Red Oppy (x4) -> 5 chained copies; Paint Chase's single Turn
+        # Left -> 3 chained copies; neither keeps a plain copy or a Cartridge. Barbuta
+        # ("N/A") keeps its Cartridge.
+        mw = generate({"games": ["Barbuta", "Magic Garden", "Paint Chase"],
+                       "starting_game_amount": 1}, seed=3)
+        names = self._all_items(mw)
+        self.assertEqual(names.count("Magic Garden - Cartridge / +1 Red Oppy"), 5)
+        self.assertEqual(names.count("Magic Garden - +1 Red Oppy"), 0)
+        self.assertEqual(names.count("Magic Garden Cartridge"), 0)
+        self.assertEqual(names.count("Paint Chase - Cartridge / Turn Left"), 3)
+        self.assertEqual(names.count("Paint Chase - Turn Left"), 0)
+        self.assertEqual(names.count("Paint Chase Cartridge"), 0)
+        self.assertEqual(names.count("Barbuta Cartridge"), 1)
+        self.assert_all_reachable(mw)
+        self.assert_beatable_after_fill(mw)
+
+    def test_cartridge_item_chains_off(self) -> None:
+        mw = generate({"games": ["Barbuta", "Magic Garden"], "starting_game_amount": 1,
+                       "cartridge_item_chains": False}, seed=3)
+        names = self._all_items(mw)
+        self.assertEqual(names.count("Magic Garden - Cartridge / +1 Red Oppy"), 0)
+        self.assertEqual(names.count("Magic Garden - +1 Red Oppy"), 4)
+        self.assertEqual(names.count("Magic Garden Cartridge"), 1)
+        self.assert_beatable_after_fill(mw)
+
+    def test_cartridge_item_chains_logic_split(self) -> None:
+        # first chained copy counts as the Cartridge, later ones as the original item,
+        # and removing them unwinds it in reverse
+        mw = generate({"games": ["Barbuta", "Magic Garden"], "starting_game_amount": 1}, seed=3)
+        world = mw.worlds[1]
+        state = CollectionState(mw)
+        state.prog_items[1].clear()
+        chained = [world.create_item("Magic Garden - Cartridge / +1 Red Oppy") for _ in range(3)]
+        cart, oppy = "Magic Garden Cartridge", "Magic Garden - +1 Red Oppy"
+        world.collect(state, chained[0])
+        self.assertEqual((state.count(cart, 1), state.count(oppy, 1)), (1, 0))
+        world.collect(state, chained[1])
+        world.collect(state, chained[2])
+        self.assertEqual((state.count(cart, 1), state.count(oppy, 1)), (1, 2))
+        world.remove(state, chained[2])
+        world.remove(state, chained[1])
+        self.assertEqual((state.count(cart, 1), state.count(oppy, 1)), (1, 0))
+        world.remove(state, chained[0])
+        self.assertEqual((state.count(cart, 1), state.count(oppy, 1)), (0, 0))

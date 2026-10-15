@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 GAME_NAME = "Magic Garden"
 
 POTION = f"{GAME_NAME} - Progressive Potion"
-OPPY = f"{GAME_NAME} - +1 Starting Red Oppy"
+OPPY = f"{GAME_NAME} - +1 Red Oppy"
 POTION_TIME = f"{GAME_NAME} - Progressive Potion Time"
 JUMP = f"{GAME_NAME} - Jump"
 
 # A run starts with one red oppy and no potions. "Progressive Potion" x6 unlock
 # progressively stronger brews (only 4 tiers, so copies 5-6 do nothing);
-# "+1 Starting Red Oppy" x4 each add an oppy to the field at the start of a run;
+# "+1 Red Oppy" x4 each add an oppy to the field at the start of a run;
 # "Progressive Potion Time" x10 lengthen a potion's eating frenzy from 20 (on the
 # in-game counter) by +5 each -- 6 copies = 50, just past vanilla's 48. Potion Time is
 # also the filler item; copies beyond what logic needs are harmless. "Jump" x1 unlocks
@@ -27,8 +27,8 @@ JUMP = f"{GAME_NAME} - Jump"
 #
 # Tiers (potion-time counts ramp up so solo Magic Garden always has room to place them):
 #   sphere 1                                : Gift, 10 Oppies Saved
-#   >=1 potion or >=1 starting oppy         : 20 / 30 Oppies Saved
-#   >=1 potion AND (>=2 starting oppy OR    : 40 / 50 Oppies Saved, 8x Multiplier,
+#   >=1 potion or >=1 red oppy         : 20 / 30 Oppies Saved
+#   >=1 potion AND (>=2 red oppy OR    : 40 / 50 Oppies Saved, 8x Multiplier,
 #     all 4 potions)                          1000..5000 Score
 #   all 4 potions AND >=2 potion time       : 60..100 Oppies Saved
 #   all 4 potions AND >=6 potion time       : 110..200 Oppies Saved, 10000 / 15000 /

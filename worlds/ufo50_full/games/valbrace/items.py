@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Valbrace"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Valbrace is a first-person turn-based dungeon crawler (o35_Game). Nothing from this
 # game enters the multiworld pool -- its only item is the Encouragement filler (a nothing

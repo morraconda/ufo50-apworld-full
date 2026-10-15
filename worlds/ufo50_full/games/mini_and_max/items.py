@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Mini & Max"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Progressive Magic Potion"
 
 # Mini & Max is a big shrinking adventure: the storage room (Regular) shrinks to the
 # 8x5 grid of the Small world (vanilla calls each cell an "atom"), and each cell can

@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Planet Zoldath"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Energy Cube"
 
 # Planet Zoldath (o48_*) is a procedurally-generated survival-adventure. In-game energy
 # cubes become AP location pickups; the eight equipment items, extra health and carry

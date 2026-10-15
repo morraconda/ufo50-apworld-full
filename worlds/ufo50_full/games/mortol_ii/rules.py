@@ -17,7 +17,7 @@ GAME_NAME = "Mortol II"
 # in logic). Each region has a hardcoded life requirement; an edge into it also needs
 # `lives(state) >= that`. With 20 base you need 3 "+10 Lives" to reach "Ending" (50).
 STARTING_LIVES = 20
-LIFE_PICKUP_ITEM = f"{GAME_NAME} - {LIFE_PICKUP}"    # "+10 Lives" (progression, x7)
+LIFE_PICKUP_ITEM = f"{GAME_NAME} - {LIFE_PICKUP}"    # "+10 Lives" (progression, x9)
 LIFE_FILLER_ITEM = f"{GAME_NAME} - {FILLER}"         # "+3 Lives" (filler, uncounted)
 
 REGION_LIVES: dict[str, int] = {

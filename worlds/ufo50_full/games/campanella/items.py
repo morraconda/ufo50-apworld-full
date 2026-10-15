@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Campanella"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Fuel Tank"
 
 # Campanella (o03_*) is a 50-level lunar-lander shooter (A-1 .. E-Boss).
 #

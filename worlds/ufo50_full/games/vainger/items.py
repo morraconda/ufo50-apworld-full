@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 # adapted from Barbuta, thanks Scipio! <3
 
 GAME_NAME = "Vainger"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Shield Upgrade"
 
 
 item_table: dict[str, ItemInfo] = {

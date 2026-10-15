@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Onion Delivery"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Progressive Top Speed"
 
 # Onion Delivery is a seven-day week (o32_Mas.dayNumber 0..6). Two restrictive items
 # go in the pool, and the mod reads them live every frame (has_item):

@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Velgress"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Progressive Gun"
 
 # The upgrades the Cavian's shop sells. In o15_Game the shuffled shopItems slots map
 # to internal counters: values 0/1 -> iRecov, 2/3 -> iGun, 4/5 -> iFoot, 6 -> iMagnet,

@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Paint Chase"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Turn Left"
 
 # Paint Chase runs 1..26 levels (LAST_LEVEL = 26). Its one pool item is Turn Left:
 # without it the mod refuses every relative left turn, so only Levels 1-4 are in logic.

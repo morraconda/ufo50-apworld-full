@@ -96,7 +96,6 @@ def _build_location_table() -> dict[str, "LocationInfo"]:
         table[name] = LocationInfo(30 + n, LOCATION_REGIONS[name])
     for offset, name in enumerate(WORM_NAMES, start=41):
         table[name] = LocationInfo(offset, LOCATION_REGIONS[name])
-    # goal locations last so create_locations' Cherry/Gold handling can break out safely
     table["Gold"] = LocationInfo(998, LOCATION_REGIONS["Gold"])
     table["Cherry"] = LocationInfo(999, LOCATION_REGIONS["Cherry"])
     return table

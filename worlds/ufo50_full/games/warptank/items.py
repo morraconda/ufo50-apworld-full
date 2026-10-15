@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Warptank"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "N/A"
 
 # Warptank is a warp-tank metroidvania on one big station hub (rm16_Warptank) with 27
 # sectors reached from it via capsule pads.

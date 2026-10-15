@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Waldorf's Journey"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Progressive Max Charge"
 
 # id offset = 100 + the in-game ITEM_* constant (o21_Waldorf: BEACH_BALL=1, HARPOON=2,
 # BALLOON=3, PROPELLER=4, BINOCULARS=5, CANNED_FISH=6). The mod zeroes the vanilla

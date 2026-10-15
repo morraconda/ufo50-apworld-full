@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 GAME_NAME = "Caramel Caramel"
+# with "Cartridge Item Chains" on, this item doubles as the Cartridge (see cartridge_chains.py)
+cartridge_item = "Shooting"
 
 # Caramel Caramel has six photo-shoot levels (o46_Mas normalizedLevel 1..6). One real
 # item, "Shooting" (100) -- the fire1 weapon (o46_pFire1 / o46_pFire2). Without it the
